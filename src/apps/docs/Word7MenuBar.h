@@ -6,13 +6,6 @@
 
 namespace blastmaster::docs {
 
-/**
- * @class Word7MenuBar
- * @brief Implements Microsoft Word 95 (Word 7.0) classic menu bar
- * 
- * Provides traditional top menu layout with nine core drop-down menus:
- * File, Edit, View, Insert, Format, Tools, Table, Window, Help
- */
 class Word7MenuBar {
 public:
     explicit Word7MenuBar(QMainWindow* parent);
@@ -23,7 +16,6 @@ private:
     QMainWindow* m_parent;
     QMenuBar* m_menuBar;
     
-    // Menu instances
     QMenu* m_fileMenu;
     QMenu* m_editMenu;
     QMenu* m_viewMenu;
@@ -43,6 +35,9 @@ private:
     void createTableMenu();
     void createWindowMenu();
     void createHelpMenu();
+    void createToolbars();
+    void createRuler();
+    void wireAction(QAction* action, const QString& label);
 };
 
 } // namespace blastmaster::docs
