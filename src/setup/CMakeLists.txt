@@ -39,6 +39,14 @@ add_executable(blastmaster_uninstaller
     WindowsIntegration.h
 )
 
+if(WIN32)
+    target_sources(blastmaster_uninstaller
+        PRIVATE
+            "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_uninstaller.rc")
+    set_target_properties(blastmaster_uninstaller PROPERTIES
+        WIN32_EXECUTABLE TRUE)
+endif()
+
 target_link_libraries(blastmaster_uninstaller
     PRIVATE
         Qt6::Widgets
