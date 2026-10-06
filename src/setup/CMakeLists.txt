@@ -76,6 +76,17 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
         POST_BUILD
         COMMAND "${WINDEPLOYQT_EXECUTABLE}"
             --no-translations
+            --dir "${BLASTMASTER_SETUP_PAYLOAD}/common"
+            "$<TARGET_FILE:blastmaster_uninstaller>"
+        VERBATIM
+    )
+endif()
+if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
+    add_custom_command(
+        TARGET blastmaster_setup
+        POST_BUILD
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+            --no-translations
             --dir "${BLASTMASTER_SETUP_PAYLOAD}/standard"
             "$<TARGET_FILE:blastmaster_docs>"
         COMMAND "${WINDEPLOYQT_EXECUTABLE}"
