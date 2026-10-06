@@ -16,6 +16,8 @@ class SetupWizard final : public QWizard
 public:
     explicit SetupWizard(QWidget* parent = nullptr);
 
+    blastmaster::Edition detectedEdition() const;
+
 protected:
     bool validateCurrentPage() override;
 
