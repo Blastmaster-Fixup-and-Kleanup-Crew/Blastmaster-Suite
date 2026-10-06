@@ -11,13 +11,83 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QApplication>
+#include <QIcon>
 
 namespace blastmaster::docs {
 
 namespace {
+QString normalizedActionName(const QString& text)
+{
+    QString value = text.toLower();
+    value.replace("&", "");
+    value.replace(" ", "_");
+    value.replace("-", "_");
+    value.replace(".", "_");
+    value.replace("'", "");
+    value = value.trimmed();
+    return value;
+}
+
+QString iconPathForAction(const QString& text)
+{
+    const QString key = normalizedActionName(text);
+
+    if (key == "new") return QStringLiteral(":/docs/icons/file/new.svg");
+    if (key == "open") return QStringLiteral(":/docs/icons/file/open.svg");
+    if (key == "save") return QStringLiteral(":/docs/icons/file/save.svg");
+    if (key == "save_as") return QStringLiteral(":/docs/icons/file/save_as.svg");
+    if (key == "close") return QStringLiteral(":/docs/icons/file/close.svg");
+    if (key == "print") return QStringLiteral(":/docs/icons/file/print.svg");
+    if (key == "export") return QStringLiteral(":/docs/icons/file/export.svg");
+
+    if (key == "undo") return QStringLiteral(":/docs/icons/edit/undo.svg");
+    if (key == "redo") return QStringLiteral(":/docs/icons/edit/redo.svg");
+    if (key == "cut") return QStringLiteral(":/docs/icons/edit/cut.svg");
+    if (key == "copy") return QStringLiteral(":/docs/icons/edit/copy.svg");
+    if (key == "paste") return QStringLiteral(":/docs/icons/edit/paste.svg");
+    if (key == "select_all") return QStringLiteral(":/docs/icons/edit/select_all.svg");
+    if (key == "find") return QStringLiteral(":/docs/icons/edit/find.svg");
+    if (key == "replace") return QStringLiteral(":/docs/icons/edit/replace.svg");
+
+    if (key == "bold") return QStringLiteral(":/docs/icons/format/bold.svg");
+    if (key == "italic") return QStringLiteral(":/docs/icons/format/italic.svg");
+    if (key == "underline") return QStringLiteral(":/docs/icons/format/underline.svg");
+    if (key == "strikethrough") return QStringLiteral(":/docs/icons/format/strikethrough.svg");
+    if (key == "font") return QStringLiteral(":/docs/icons/format/text_color.svg");
+    if (key == "paragraph") return QStringLiteral(":/docs/icons/paragraph/align_left.svg");
+    if (key == "bullets") return QStringLiteral(":/docs/icons/paragraph/bullet_list.svg");
+    if (key == "indent") return QStringLiteral(":/docs/icons/paragraph/indent_increase.svg");
+
+    if (key == "picture") return QStringLiteral(":/docs/icons/insert/image.svg");
+    if (key == "table") return QStringLiteral(":/docs/icons/insert/table.svg");
+    if (key == "comment") return QStringLiteral(":/docs/icons/insert/comment.svg");
+    if (key == "text_box") return QStringLiteral(":/docs/icons/insert/text_box.svg");
+    if (key == "hyperlink") return QStringLiteral(":/docs/icons/insert/hyperlink.svg");
+
+    if (key == "zoom") return QStringLiteral(":/docs/icons/view/zoom_in.svg");
+    if (key == "ruler") return QStringLiteral(":/docs/icons/view/show_grid.svg");
+    if (key == "toolbars") return QStringLiteral(":/docs/icons/tools/settings.svg");
+
+    if (key == "spelling") return QStringLiteral(":/docs/icons/tools/spelling.svg");
+    if (key == "grammar") return QStringLiteral(":/docs/icons/tools/grammar.svg");
+    if (key == "word_count") return QStringLiteral(":/docs/icons/tools/word_count.svg");
+    if (key == "preferences") return QStringLiteral(":/docs/icons/tools/settings.svg");
+    if (key == "options") return QStringLiteral(":/docs/icons/tools/settings.svg");
+
+    if (key == "help_topics") return QStringLiteral(":/docs/icons/app/help.svg");
+    if (key == "about_microsoft_word") return QStringLiteral(":/docs/icons/app/about.svg");
+    if (key == "about") return QStringLiteral(":/docs/icons/app/about.svg");
+
+    return QString();
+}
+
 QAction* addMenuAction(QMenu* menu, const QString& text, const QString& statusTip = QString())
 {
     auto* action = new QAction(text, menu);
+    const QString iconPath = iconPathForAction(text);
+    if (!iconPath.isEmpty()) {
+        action->setIcon(QIcon(iconPath));
+    }
     if (!statusTip.isEmpty()) {
         action->setStatusTip(statusTip);
     }
@@ -28,6 +98,10 @@ QAction* addMenuAction(QMenu* menu, const QString& text, const QString& statusTi
 QAction* addToolbarAction(QToolBar* toolbar, const QString& text, const QString& statusTip = QString())
 {
     auto* action = new QAction(text, toolbar);
+    const QString iconPath = iconPathForAction(text);
+    if (!iconPath.isEmpty()) {
+        action->setIcon(QIcon(iconPath));
+    }
     if (!statusTip.isEmpty()) {
         action->setStatusTip(statusTip);
     }
@@ -497,3 +571,4 @@ void Word7MenuBar::createRuler()
 }
 
 } // namespace blastmaster::docs
+
