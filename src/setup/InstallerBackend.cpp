@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QSaveFile>
+#include <QSettings>
 #include <QTextStream>
 #include <utility>
 
@@ -93,6 +94,38 @@ InstallerBackend::Result InstallerBackend::install(
     }
 
     QString error;
+
+    // Treat an existing activation file as a reinstall/upgrade.
+    // Refuse to overwrite an installation of a different edition.
+    const QString existingActivation =
+        QDir(cleanDestination).filePath(
+            QStringLiteral("config/activation.ini"));
+
+    if (QFile::exists(existingActivation))
+    {
+        QSettings activation(
+            existingActivation,
+            QSettings::IniFormat);
+
+        const QString installedEdition =
+            activation.value(
+                QStringLiteral("Blastmaster Suite/Edition"))
+            .toString();
+
+        if (!installedEdition.isEmpty() &&
+            installedEdition.compare(
+                editionName(edition),
+                Qt::CaseInsensitive) != 0)
+        {
+            result.message =
+                QStringLiteral(
+                    "A different Blastmaster Suite edition is already "
+                    "installed in this folder (%1). Choose another "
+                    "destination or uninstall the existing edition first.")
+                .arg(installedEdition);
+            return result;
+        }
+    }
 
     if (QDir(commonPayload).exists() &&
         !copyTree(commonPayload, cleanDestination, error))
