@@ -1,9 +1,6 @@
 #include <QApplication>
 #include <QHeaderView>
 #include <QMainWindow>
-#include <QMessageBox>
-#include <QSqlQuery>
-#include <QSqlRecord>
 #include <QStatusBar>
 #include <QTableWidget>
 #include <QTableWidgetItem>
@@ -11,77 +8,59 @@
 #include <QWidget>
 
 #include "Access95MenuBar.h"
-#include "DatabaseDocument.h"
+#include "Database.h"
+#include "blastmaster/ProductKeyValidator.h"
 
-using namespace blastmaster::database;
-
-static void refreshTables(QTableWidget* tableView, DatabaseDocument* document)
-{
-    tableView->clear();
-    const QStringList tables = document->tables();
-    tableView->setColumnCount(1);
-    tableView->setHorizontalHeaderLabels({QStringLiteral("Database Objects")});
-    tableView->setRowCount(tables.size());
-
-    for (int row = 0; row < tables.size(); ++row) {
-        tableView->setItem(row, 0, new QTableWidgetItem(tables.at(row)));
-    }
-    tableView->horizontalHeader()->setStretchLastSection(true);
-}
-
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
-    app.setApplicationName(QStringLiteral("Blastmaster Database"));
-    app.setApplicationDisplayName(QStringLiteral("Blastmaster Database"));
-
-    // Classic Windows/Office-era palette and metrics.
-    app.setStyle(QStringLiteral("Windows"));
+    app.setApplicationName("Blastmaster Databases");
+    app.setApplicationDisplayName("Blastmaster Databases");
 
     QMainWindow window;
-    window.resize(1100, 700);
-    window.setWindowTitle(QStringLiteral("Blastmaster Database - Database1"));
+    window.resize(1200, 800);
+    window.setWindowTitle("Blastmaster Databases - Database1");
 
-    auto* document = new DatabaseDocument(&window);
-    if (!document->newDatabase()) {
-        QMessageBox::critical(&window, QStringLiteral("Database Error"), document->lastError());
-        return 1;
-    }
+    auto* database = new blastmaster::database::Database();
+    database->setTitle("Database1");
 
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
-    layout->setContentsMargins(6, 6, 6, 6);
+    layout->setContentsMargins(0, 0, 0, 0);
 
     auto* objects = new QTableWidget(central);
+    objects->setColumnCount(1);
+    objects->setHorizontalHeaderLabels(QStringList() << "Database Objects");
+    objects->setShowGrid(true);
+    objects->setAlternatingRowColors(false);
     objects->setSelectionBehavior(QAbstractItemView::SelectRows);
     objects->setSelectionMode(QAbstractItemView::SingleSelection);
     objects->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    objects->setAlternatingRowColors(false);
-    objects->setShowGrid(true);
     objects->verticalHeader()->setVisible(false);
-    objects->horizontalHeader()->setDefaultSectionSize(180);
+    objects->horizontalHeader()->setStretchLastSection(true);
     layout->addWidget(objects);
 
     window.setCentralWidget(central);
 
-    Access95MenuBar accessMenu(&window, document);
-    window.setMenuBar(accessMenu.menuBar());
+    blastmaster::database::Access95MenuBar menuBar(&window, database);
+    window.setMenuBar(menuBar.menuBar());
 
-    QObject::connect(document, &DatabaseDocument::databaseChanged, [&] {
-        refreshTables(objects, document);
-        window.setWindowTitle(QStringLiteral("Blastmaster Database - %1")
-            .arg(document->filePath().isEmpty()
-                 ? QStringLiteral("Database1")
-                 : document->filePath()));
-    });
+    auto refreshObjects = [&]() {
+        objects->setRowCount(0);
+        const auto tables = database->tables();
+        objects->setRowCount(tables.size());
+        for (int row = 0; row < tables.size(); ++row)
+            objects->setItem(row, 0, new QTableWidgetItem(tables.at(row)));
+    };
 
-    QObject::connect(document, &DatabaseDocument::errorOccurred, [&](const QString& error) {
-        window.statusBar()->showMessage(error, 5000);
-    });
+    // Keep the same product/edition status pattern as the other suite apps.
+    blastmaster::ProductKeyValidator validator(blastmaster::Edition::Standard);
+    const std::string sample_key = "BMSSTD-DATABASE";
+    const bool valid = validator.validate(sample_key);
+    window.statusBar()->showMessage(QString("Edition: %1 | Valid: %2")
+        .arg(QString::fromStdString(validator.edition_name()))
+        .arg(valid ? "Yes" : "No"));
 
-    refreshTables(objects, document);
-    window.statusBar()->showMessage(QStringLiteral("Ready"), 2000);
+    refreshObjects();
     window.show();
-
     return app.exec();
 }
