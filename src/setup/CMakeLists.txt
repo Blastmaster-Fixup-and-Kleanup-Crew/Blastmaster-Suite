@@ -22,6 +22,11 @@ set(BLASTMASTER_SETUP_PAYLOAD
     "$<TARGET_FILE_DIR:blastmaster_setup>/payload"
 )
 
+if(WIN32)
+    find_program(WINDEPLOYQT_EXECUTABLE
+        NAMES windeployqt windeployqt6)
+endif()
+
 add_custom_command(
     TARGET blastmaster_setup
     POST_BUILD
@@ -40,6 +45,23 @@ add_custom_command(
         "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_presentations$<TARGET_FILE_SUFFIX:blastmaster_presentation>"
     VERBATIM
 )
+
+if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
+    add_custom_command(
+        TARGET blastmaster_setup
+        POST_BUILD
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+            --no-translations
+            "$<TARGET_FILE:blastmaster_docs>"
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+            --no-translations
+            "$<TARGET_FILE:blastmaster_spreadsheet>"
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+            --no-translations
+            "$<TARGET_FILE:blastmaster_presentation>"
+        VERBATIM
+    )
+endif()
 
 if(BLASTMASTER_BUILD_PROFESSIONAL)
     add_custom_command(
