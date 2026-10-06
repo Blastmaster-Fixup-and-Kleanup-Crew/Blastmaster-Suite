@@ -38,9 +38,9 @@ public:
     bool createTable(const QString& name);
     bool deleteTable(const QString& name);
 
-    static QString fileExtension() { return ".dbx"; }
-    static QString fileFilter() { return "Blastmaster Databases (*.dbx *.db);;All Files (*.*)"; }
-    static QString defaultSuffix() { return "dbx"; }
+    static QString fileExtension() { return ".dbbx"; }
+    static QString fileFilter() { return "Blastmaster Databases (*.dbbx *.dbbx);;All Files (*.*)"; }
+    static QString defaultSuffix() { return "dbbx"; }
 
 private:
     bool openPath(const QString& path);
