@@ -33,5 +33,10 @@ private:
         const QString& productKey,
         QString& error) const;
 
+    bool installWindowsIntegration(
+        const QString& destination,
+        blastmaster::Edition edition,
+        QString& error) const;
+
     QString payloadRoot_;
 };
