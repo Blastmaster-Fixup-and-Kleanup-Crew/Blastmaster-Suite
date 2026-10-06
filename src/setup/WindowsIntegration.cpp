@@ -20,47 +20,205 @@ QString editionName(blastmaster::Edition edition)
 }
 
 #ifdef Q_OS_WIN
-bool writeRegistry(const QString& destination, blastmaster::Edition edition, QString& error)
+bool writeRegistryString(
+    HKEY key,
+    const wchar_t* name,
+    const QString& value)
 {
-    const QString keyName =
-        QStringLiteral("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Blastmaster Suite");
+    const std::wstring wide = value.toStdWString();
+
+    return RegSetValueExW(
+        key,
+        name,
+        0,
+        REG_SZ,
+        reinterpret_cast<const BYTE*>(wide.c_str()),
+        static_cast<DWORD>((wide.size() + 1) * sizeof(wchar_t)))
+        == ERROR_SUCCESS;
+}
+
+bool writeRegistry(
+    const QString& destination,
+    blastmaster::Edition edition,
+    QString& error)
+{
+    const QString uninstallKey =
+        QStringLiteral(
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Blastmaster Suite");
 
     HKEY key = nullptr;
+
     const LONG result = RegCreateKeyExW(
         HKEY_CURRENT_USER,
-        reinterpret_cast<LPCWSTR>(keyName.utf16()),
-        0, nullptr, REG_OPTION_NON_VOLATILE, KEY_WRITE,
-        nullptr, &key, nullptr);
+        reinterpret_cast<LPCWSTR>(uninstallKey.utf16()),
+        0,
+        nullptr,
+        REG_OPTION_NON_VOLATILE,
+        KEY_WRITE,
+        nullptr,
+        &key,
+        nullptr);
 
-    if (result != ERROR_SUCCESS) {
-        error = QStringLiteral("Could not register Blastmaster Suite for Windows uninstall.");
+    if (result != ERROR_SUCCESS)
+    {
+        error = QStringLiteral(
+            "Could not register Blastmaster Suite for Windows uninstall.");
         return false;
     }
 
-    auto setString = [&](const wchar_t* name, const QString& value) {
-        const std::wstring wide = value.toStdWString();
-        return RegSetValueExW(
-            key, name, 0, REG_SZ,
-            reinterpret_cast<const BYTE*>(wide.c_str()),
-            static_cast<DWORD>((wide.size() + 1) * sizeof(wchar_t))) == ERROR_SUCCESS;
-    };
-
-    const QString uninstall =
+    const QString uninstallPath =
         QDir(destination).filePath(QStringLiteral("Uninstall.exe"));
 
+    QString quotedUninstall =
+        QStringLiteral("\"%1\" \"%2\"")
+            .arg(
+                QDir::toNativeSeparators(uninstallPath),
+                QDir::toNativeSeparators(destination));
+
     const bool ok =
-        setString(L"DisplayName", QStringLiteral("Blastmaster Suite %1").arg(editionName(edition))) &&
-        setString(L"DisplayVersion", QStringLiteral("1.0")) &&
-        setString(L"Publisher", QStringLiteral("Blastmaster Fixup and Kleanup Crew")) &&
-        setString(L"InstallLocation", destination) &&
-        setString(L"UninstallString", uninstall);
+        writeRegistryString(
+            key,
+            L"DisplayName",
+            QStringLiteral("Blastmaster Suite %1").arg(editionName(edition))) &&
+        writeRegistryString(
+            key,
+            L"DisplayVersion",
+            QStringLiteral("0.1.0")) &&
+        writeRegistryString(
+            key,
+            L"Publisher",
+            QStringLiteral("Blastmaster Fixup and Kleanup Crew")) &&
+        writeRegistryString(
+            key,
+            L"InstallLocation",
+            destination) &&
+        writeRegistryString(
+            key,
+            L"UninstallString",
+            quotedUninstall);
 
     RegCloseKey(key);
 
     if (!ok)
-        error = QStringLiteral("Could not write the Windows uninstall registration.");
+    {
+        error = QStringLiteral(
+            "Could not write the Windows uninstall registration.");
+        return false;
+    }
 
-    return ok;
+    return true;
+}
+
+bool writeFileAssociation(
+    const QString& extension,
+    const QString& applicationName,
+    const QString& executable,
+    const QString& description,
+    const QString& destination,
+    QString& error)
+{
+    const QString classesRoot =
+        QStringLiteral("Software\\Classes\\");
+
+    const QString extensionKey =
+        classesRoot + extension;
+
+    const QString progId =
+        QStringLiteral("Blastmaster.%1").arg(applicationName);
+
+    const QString progIdKey =
+        classesRoot + progId;
+
+    HKEY key = nullptr;
+
+    LONG result = RegCreateKeyExW(
+        HKEY_CURRENT_USER,
+        reinterpret_cast<LPCWSTR>(extensionKey.utf16()),
+        0, nullptr, REG_OPTION_NON_VOLATILE,
+        KEY_WRITE, nullptr, &key, nullptr);
+
+    if (result != ERROR_SUCCESS)
+    {
+        error = QStringLiteral(
+            "Could not register the %1 file type.").arg(extension);
+        return false;
+    }
+
+    const bool extensionOk =
+        writeRegistryString(key, L"", progId);
+
+    RegCloseKey(key);
+
+    if (!extensionOk)
+    {
+        error = QStringLiteral(
+            "Could not register the %1 file type.").arg(extension);
+        return false;
+    }
+
+    result = RegCreateKeyExW(
+        HKEY_CURRENT_USER,
+        reinterpret_cast<LPCWSTR>(progIdKey.utf16()),
+        0, nullptr, REG_OPTION_NON_VOLATILE,
+        KEY_WRITE, nullptr, &key, nullptr);
+
+    if (result != ERROR_SUCCESS)
+    {
+        error = QStringLiteral(
+            "Could not register the %1 application type.").arg(extension);
+        return false;
+    }
+
+    const QString command =
+        QStringLiteral("\"%1\" \"%2\"")
+            .arg(
+                QDir::toNativeSeparators(
+                    QDir(destination).filePath(executable)),
+                QStringLiteral("%1"));
+
+    const bool progIdOk =
+        writeRegistryString(key, L"", description) &&
+        writeRegistryString(
+            key,
+            L"FriendlyTypeName",
+            description);
+
+    RegCloseKey(key);
+
+    if (!progIdOk)
+    {
+        error = QStringLiteral(
+            "Could not register the %1 application type.").arg(extension);
+        return false;
+    }
+
+    result = RegCreateKeyExW(
+        HKEY_CURRENT_USER,
+        reinterpret_cast<LPCWSTR>(
+            (progIdKey + QStringLiteral("\\shell\\open\\command")).utf16()),
+        0, nullptr, REG_OPTION_NON_VOLATILE,
+        KEY_WRITE, nullptr, &key, nullptr);
+
+    if (result != ERROR_SUCCESS)
+    {
+        error = QStringLiteral(
+            "Could not register the %1 open command.").arg(extension);
+        return false;
+    }
+
+    const bool commandOk =
+        writeRegistryString(key, L"", command);
+
+    RegCloseKey(key);
+
+    if (!commandOk)
+    {
+        error = QStringLiteral(
+            "Could not register the %1 open command.").arg(extension);
+        return false;
+    }
+
+    return true;
 }
 
 bool createShortcut(
@@ -70,9 +228,13 @@ bool createShortcut(
     const QString& description)
 {
     IShellLinkW* link = nullptr;
+
     HRESULT hr = CoCreateInstance(
-        CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
-        IID_IShellLinkW, reinterpret_cast<void**>(&link));
+        CLSID_ShellLink,
+        nullptr,
+        CLSCTX_INPROC_SERVER,
+        IID_IShellLinkW,
+        reinterpret_cast<void**>(&link));
 
     if (FAILED(hr))
         return false;
@@ -86,17 +248,22 @@ bool createShortcut(
     link->SetDescription(desc.c_str());
 
     IPersistFile* persist = nullptr;
+
     hr = link->QueryInterface(
-        IID_IPersistFile, reinterpret_cast<void**>(&persist));
+        IID_IPersistFile,
+        reinterpret_cast<void**>(&persist));
 
     bool ok = false;
-    if (SUCCEEDED(hr)) {
+
+    if (SUCCEEDED(hr))
+    {
         const std::wstring output = linkPath.toStdWString();
         ok = SUCCEEDED(persist->Save(output.c_str(), TRUE));
         persist->Release();
     }
 
     link->Release();
+
     return ok;
 }
 #endif
@@ -104,51 +271,136 @@ bool createShortcut(
 
 namespace WindowsIntegration
 {
-bool install(const QString& destination, blastmaster::Edition edition, QString& error)
+bool install(
+    const QString& destination,
+    blastmaster::Edition edition,
+    QString& error)
 {
 #ifdef Q_OS_WIN
-    const HRESULT com = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-    if (FAILED(com) && com != RPC_E_CHANGED_MODE) {
-        error = QStringLiteral("Could not initialize Windows shell integration.");
+    const HRESULT com =
+        CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
+    if (FAILED(com) && com != RPC_E_CHANGED_MODE)
+    {
+        error = QStringLiteral(
+            "Could not initialize Windows shell integration.");
         return false;
     }
 
     const QString menuFolder =
-        QDir(QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation))
-            .filePath(QStringLiteral("Blastmaster Suite"));
+        QDir(
+            QStandardPaths::writableLocation(
+                QStandardPaths::ApplicationsLocation))
+        .filePath(QStringLiteral("Blastmaster Suite"));
 
-    if (!QDir().mkpath(menuFolder)) {
-        if (com != RPC_E_CHANGED_MODE) CoUninitialize();
-        error = QStringLiteral("Could not create the Blastmaster Suite Start Menu folder.");
+    if (!QDir().mkpath(menuFolder))
+    {
+        if (com != RPC_E_CHANGED_MODE)
+            CoUninitialize();
+
+        error = QStringLiteral(
+            "Could not create the Blastmaster Suite Start Menu folder.");
+
         return false;
     }
 
-    auto shortcut = [&](const QString& name, const QString& exe, const QString& description) {
+    auto shortcut =
+        [&](const QString& name,
+            const QString& exe,
+            const QString& description)
+    {
         return createShortcut(
-            QDir(menuFolder).filePath(name + QStringLiteral(".lnk")),
+            QDir(menuFolder).filePath(
+                name + QStringLiteral(".lnk")),
             QDir(destination).filePath(exe),
             destination,
             description);
     };
 
     bool ok =
-        shortcut(QStringLiteral("Docs"), QStringLiteral("blastmaster_docs.exe"), QStringLiteral("Blastmaster Suite Docs")) &&
-        shortcut(QStringLiteral("Workbooks"), QStringLiteral("blastmaster_workbooks.exe"), QStringLiteral("Blastmaster Suite Workbooks")) &&
-        shortcut(QStringLiteral("Presentations"), QStringLiteral("blastmaster_presentations.exe"), QStringLiteral("Blastmaster Suite Presentations"));
+        shortcut(
+            QStringLiteral("Docs"),
+            QStringLiteral("blastmaster_docs.exe"),
+            QStringLiteral("Blastmaster Suite Docs")) &&
+        shortcut(
+            QStringLiteral("Workbooks"),
+            QStringLiteral("blastmaster_workbooks.exe"),
+            QStringLiteral("Blastmaster Suite Workbooks")) &&
+        shortcut(
+            QStringLiteral("Presentations"),
+            QStringLiteral("blastmaster_presentations.exe"),
+            QStringLiteral("Blastmaster Suite Presentations"));
 
     if (edition == blastmaster::Edition::Professional)
-        ok = ok && shortcut(QStringLiteral("Databases"), QStringLiteral("blastmaster_database.exe"), QStringLiteral("Blastmaster Suite Databases"));
+    {
+        ok =
+            ok &&
+            shortcut(
+                QStringLiteral("Databases"),
+                QStringLiteral("blastmaster_database.exe"),
+                QStringLiteral("Blastmaster Suite Databases"));
+    }
 
     if (ok)
-        ok = QFile::exists(QDir(destination).filePath(QStringLiteral("Uninstall.exe")));
+        ok = QFile::exists(
+            QDir(destination).filePath(
+                QStringLiteral("Uninstall.exe")));
 
     if (ok)
-        ok = writeRegistry(destination, edition, error);
+    {
+        ok = writeRegistry(
+            destination,
+            edition,
+            error);
+    }
+
+    if (ok)
+    {
+        ok =
+            writeFileAssociation(
+                QStringLiteral(".dccx"),
+                QStringLiteral("Docs"),
+                QStringLiteral("blastmaster_docs.exe"),
+                QStringLiteral("Blastmaster Suite Document"),
+                destination,
+                error) &&
+            writeFileAssociation(
+                QStringLiteral(".wkbx"),
+                QStringLiteral("Workbooks"),
+                QStringLiteral("blastmaster_workbooks.exe"),
+                QStringLiteral("Blastmaster Suite Workbook"),
+                destination,
+                error) &&
+            writeFileAssociation(
+                QStringLiteral(".prex"),
+                QStringLiteral("Presentations"),
+                QStringLiteral("blastmaster_presentations.exe"),
+                QStringLiteral("Blastmaster Suite Presentation"),
+                destination,
+                error);
+    }
+
+    if (ok && edition == blastmaster::Edition::Professional)
+    {
+        ok =
+            writeFileAssociation(
+                QStringLiteral(".dbbx"),
+                QStringLiteral("Databases"),
+                QStringLiteral("blastmaster_database.exe"),
+                QStringLiteral("Blastmaster Suite Database"),
+                destination,
+                error);
+    }
 
     if (!ok && error.isEmpty())
-        error = QStringLiteral("Could not create the Blastmaster Suite Start Menu entries.");
+    {
+        error = QStringLiteral(
+            "Could not create the Blastmaster Suite Windows integration.");
+    }
 
-    if (com != RPC_E_CHANGED_MODE) CoUninitialize();
+    if (com != RPC_E_CHANGED_MODE)
+        CoUninitialize();
+
     return ok;
 #else
     Q_UNUSED(destination)
@@ -158,31 +410,77 @@ bool install(const QString& destination, blastmaster::Edition edition, QString& 
 #endif
 }
 
-bool uninstall(const QString& destination, QString& error)
+bool uninstall(
+    const QString& destination,
+    QString& error)
 {
 #ifdef Q_OS_WIN
     const QString menuFolder =
-        QDir(QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation))
-            .filePath(QStringLiteral("Blastmaster Suite"));
+        QDir(
+            QStandardPaths::writableLocation(
+                QStandardPaths::ApplicationsLocation))
+        .filePath(QStringLiteral("Blastmaster Suite"));
 
     QDir menu(menuFolder);
-    if (menu.exists() && !menu.removeRecursively()) {
-        error = QStringLiteral("Could not remove the Blastmaster Suite Start Menu folder.");
+
+    if (menu.exists() && !menu.removeRecursively())
+    {
+        error = QStringLiteral(
+            "Could not remove the Blastmaster Suite Start Menu folder.");
         return false;
     }
 
-    const QString keyName =
-        QStringLiteral("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Blastmaster Suite");
+    const QString uninstallKey =
+        QStringLiteral(
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Blastmaster Suite");
 
     const LONG result = RegDeleteTreeW(
         HKEY_CURRENT_USER,
-        reinterpret_cast<LPCWSTR>(keyName.utf16()));
+        reinterpret_cast<LPCWSTR>(uninstallKey.utf16()));
 
     if (result != ERROR_SUCCESS &&
         result != ERROR_FILE_NOT_FOUND &&
-        result != ERROR_PATH_NOT_FOUND) {
-        error = QStringLiteral("Could not remove the Windows uninstall registration.");
+        result != ERROR_PATH_NOT_FOUND)
+    {
+        error = QStringLiteral(
+            "Could not remove the Windows uninstall registration.");
         return false;
+    }
+
+    const QStringList extensions = {
+        QStringLiteral(".dccx"),
+        QStringLiteral(".wkbx"),
+        QStringLiteral(".prex"),
+        QStringLiteral(".dbbx")
+    };
+
+    for (const QString& extension : extensions)
+    {
+        const QString extensionKey =
+            QStringLiteral(
+                "Software\\Classes\\%1").arg(extension);
+
+        RegDeleteTreeW(
+            HKEY_CURRENT_USER,
+            reinterpret_cast<LPCWSTR>(extensionKey.utf16()));
+
+        const QString appName =
+            extension == QStringLiteral(".dccx")
+                ? QStringLiteral("Docs")
+                : extension == QStringLiteral(".wkbx")
+                    ? QStringLiteral("Workbooks")
+                    : extension == QStringLiteral(".prex")
+                        ? QStringLiteral("Presentations")
+                        : QStringLiteral("Databases");
+
+        const QString progIdKey =
+            QStringLiteral(
+                "Software\\Classes\\Blastmaster.%1")
+            .arg(appName);
+
+        RegDeleteTreeW(
+            HKEY_CURRENT_USER,
+            reinterpret_cast<LPCWSTR>(progIdKey.utf16()));
     }
 
     Q_UNUSED(destination)
