@@ -8,6 +8,7 @@
 #include <QKeySequence>
 #include <QIcon>
 #include <QStatusBar>
+#include <QFileDialog>
 
 namespace blastmaster::spreadsheet {
 
@@ -73,14 +74,32 @@ void Excel7MenuBar::createFileMenu()
 
     // basic wiring
     QObject::connect(aExit, &QAction::triggered, qApp, &QApplication::quit);
+
+    // Save: if workbook has no file path, prompt Save As, otherwise save
     QObject::connect(aSave, &QAction::triggered, [this]() {
-        if (m_workbook) {
+        if (!m_workbook) return;
+        if (m_workbook->filePath().isEmpty()) {
+            QString path = QFileDialog::getSaveFileName(m_parent, "Save Workbook As", QString(), Workbook::fileFilter());
+            if (path.isEmpty()) return;
+            if (!path.endsWith(Workbook::fileExtension())) path += Workbook::fileExtension();
+            m_workbook->setFilePath(path);
+            m_workbook->save();
+            if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
+        } else {
             m_workbook->save();
             if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
         }
     });
+
+    // Save As: always prompt
     QObject::connect(aSaveAs, &QAction::triggered, [this]() {
-        if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Save As (not implemented)", 3000);
+        if (!m_workbook) return;
+        QString path = QFileDialog::getSaveFileName(m_parent, "Save Workbook As", QString(), Workbook::fileFilter());
+        if (path.isEmpty()) return;
+        if (!path.endsWith(Workbook::fileExtension())) path += Workbook::fileExtension();
+        m_workbook->setFilePath(path);
+        m_workbook->save();
+        if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
     });
 }
 

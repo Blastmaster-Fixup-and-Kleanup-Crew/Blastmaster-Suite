@@ -17,7 +17,7 @@ public:
     void setFilePath(const QString& p) { m_filePath = p; }
 
     bool isDirty() const { return m_isDirty; }
-    void setClean() const { m_isDirty = false; }
+    void setClean() { m_isDirty = false; }
 
     // File operations
     bool save();
@@ -25,8 +25,8 @@ public:
     bool load();
 
     // File metadata helpers
-    static QString fileExtension() { return ".bmsx"; }
-    static QString fileFilter() { return "Blastmaster Workbooks (*.bmsx);;All Files (*.*)"; }
+    static QString fileExtension() { return ".wkbx"; }
+    static QString fileFilter() { return "Blastmaster Workbooks (*.wkbx);;All Files (*.*)"; }
 
 private:
     QJsonObject toJson() const;
