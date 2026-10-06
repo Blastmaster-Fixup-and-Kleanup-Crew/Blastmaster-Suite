@@ -3,15 +3,15 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QSaveFile>
-#include <QTextStream>
 
 #include <cstring>
+#include <limits>
+#include <utility>
 
 namespace
 {
 constexpr char MAGIC[] = "BMSPAY01";
-constexpr qint64 HEADER_SIZE = 16;
+constexpr qint64 FOOTER_SIZE = 16;
 
 bool readExact(
     QFile& file,
@@ -51,6 +51,23 @@ quint64 readU64(const char* p)
 
     return value;
 }
+
+bool isSafeRelativePath(const QString& path)
+{
+    if (path.isEmpty() ||
+        QDir::isAbsolutePath(path))
+        return false;
+
+    const QString clean =
+        QDir::cleanPath(path);
+
+    return clean != QStringLiteral(".") &&
+           clean != QStringLiteral("..") &&
+           !clean.startsWith(
+               QStringLiteral("../")) &&
+           !clean.startsWith(
+               QStringLiteral("..\\"));
+}
 }
 
 EmbeddedPayload::EmbeddedPayload(QString executablePath)
@@ -74,7 +91,7 @@ bool EmbeddedPayload::extractTo(
 
     const qint64 fileSize = file.size();
 
-    if (fileSize < HEADER_SIZE)
+    if (fileSize < FOOTER_SIZE)
     {
         error =
             QStringLiteral(
@@ -82,20 +99,17 @@ bool EmbeddedPayload::extractTo(
         return false;
     }
 
-    // The final 16 bytes contain:
-    //   8 bytes  magic
-    //   8 bytes  payload start offset
-    char footer[HEADER_SIZE];
+    char footer[FOOTER_SIZE];
 
     if (!readExact(
             file,
-            fileSize - HEADER_SIZE,
+            fileSize - FOOTER_SIZE,
             footer,
-            HEADER_SIZE))
+            FOOTER_SIZE))
     {
         error =
             QStringLiteral(
-                "Could not read the embedded Setup payload header.");
+                "Could not read the embedded Setup payload footer.");
         return false;
     }
 
@@ -107,9 +121,11 @@ bool EmbeddedPayload::extractTo(
         return false;
     }
 
-    const quint64 payloadOffset = readU64(footer + 8);
+    const quint64 payloadOffset =
+        readU64(footer + 8);
 
-    if (payloadOffset >= static_cast<quint64>(fileSize - HEADER_SIZE))
+    if (payloadOffset >=
+        static_cast<quint64>(fileSize - FOOTER_SIZE))
     {
         error =
             QStringLiteral(
@@ -121,8 +137,7 @@ bool EmbeddedPayload::extractTo(
     {
         error =
             QStringLiteral(
-                "Could not create the temporary Setup payload directory:
-%1")
+                "Could not create the temporary Setup payload directory:\n%1")
             .arg(directory);
         return false;
     }
@@ -135,21 +150,9 @@ bool EmbeddedPayload::extractTo(
         return false;
     }
 
-    char archiveHeader[8];
-
-    while (file.pos() < fileSize - HEADER_SIZE)
+    while (file.pos() <
+           fileSize - FOOTER_SIZE)
     {
-        const qint64 remaining =
-            fileSize - HEADER_SIZE - file.pos();
-
-        if (remaining < 20)
-        {
-            error =
-                QStringLiteral(
-                    "The embedded Setup payload is corrupt.");
-            return false;
-        }
-
         char entryHeader[20];
 
         if (file.read(entryHeader, sizeof(entryHeader))
@@ -157,17 +160,25 @@ bool EmbeddedPayload::extractTo(
         {
             error =
                 QStringLiteral(
-                    "Could not read an embedded payload entry.");
+                    "The embedded Setup payload is corrupt.");
             return false;
         }
 
-        const quint32 pathLength = readU32(entryHeader);
-        const quint64 dataLength = readU64(entryHeader + 4);
-        const quint64 expectedSize = readU64(entryHeader + 12);
+        const quint32 pathLength =
+            readU32(entryHeader);
+
+        const quint64 dataLength =
+            readU64(entryHeader + 4);
+
+        const quint64 expectedSize =
+            readU64(entryHeader + 12);
 
         if (pathLength == 0 ||
             pathLength > 1024 * 1024 ||
-            dataLength != expectedSize)
+            dataLength != expectedSize ||
+            dataLength >
+                static_cast<quint64>(
+                    std::numeric_limits<qint64>::max()))
         {
             error =
                 QStringLiteral(
@@ -178,7 +189,8 @@ bool EmbeddedPayload::extractTo(
         const QByteArray pathBytes =
             file.read(pathLength);
 
-        if (pathBytes.size() != static_cast<int>(pathLength))
+        if (pathBytes.size() !=
+            static_cast<int>(pathLength))
         {
             error =
                 QStringLiteral(
@@ -189,11 +201,16 @@ bool EmbeddedPayload::extractTo(
         const QString relativePath =
             QString::fromUtf8(pathBytes);
 
+        if (!isSafeRelativePath(relativePath))
+        {
+            error =
+                QStringLiteral(
+                    "The embedded Setup payload contains an unsafe path.");
+            return false;
+        }
+
         const QString outputPath =
             QDir(directory).filePath(relativePath);
-
-        const QString canonicalRoot =
-            QFileInfo(directory).canonicalFilePath();
 
         const QString parent =
             QFileInfo(outputPath).absolutePath();
@@ -202,18 +219,8 @@ bool EmbeddedPayload::extractTo(
         {
             error =
                 QStringLiteral(
-                    "Could not create an embedded payload directory:
-%1")
+                    "Could not create an embedded payload directory:\n%1")
                 .arg(parent);
-            return false;
-        }
-
-        if (dataLength >
-            static_cast<quint64>(std::numeric_limits<qint64>::max()))
-        {
-            error =
-                QStringLiteral(
-                    "An embedded payload file is too large.");
             return false;
         }
 
@@ -223,45 +230,49 @@ bool EmbeddedPayload::extractTo(
         {
             error =
                 QStringLiteral(
-                    "Could not extract embedded payload file:
-%1")
+                    "Could not extract embedded payload file:\n%1")
                 .arg(outputPath);
             return false;
         }
 
-        quint64 remainingData = dataLength;
-        QByteArray buffer(1024 * 1024, Qt::Uninitialized);
+        quint64 remaining =
+            dataLength;
 
-        while (remainingData > 0)
+        QByteArray buffer(
+            1024 * 1024,
+            Qt::Uninitialized);
+
+        while (remaining > 0)
         {
             const qint64 chunk =
                 static_cast<qint64>(
                     qMin<quint64>(
-                        remainingData,
-                        static_cast<quint64>(buffer.size())));
+                        remaining,
+                        static_cast<quint64>(
+                            buffer.size())));
 
             const qint64 read =
-                file.read(buffer.data(), chunk);
+                file.read(
+                    buffer.data(),
+                    chunk);
 
-            if (read != chunk)
+            if (read != chunk ||
+                output.write(
+                    buffer.constData(),
+                    read) != read)
             {
                 output.close();
+
                 error =
                     QStringLiteral(
-                        "Could not read embedded payload data.");
+                        "Could not extract embedded payload data:\n%1")
+                    .arg(outputPath);
+
                 return false;
             }
 
-            if (output.write(buffer.constData(), read) != read)
-            {
-                output.close();
-                error =
-                    QStringLiteral(
-                        "Could not extract embedded payload data.");
-                return false;
-            }
-
-            remainingData -= static_cast<quint64>(read);
+            remaining -=
+                static_cast<quint64>(read);
         }
 
         output.close();
@@ -271,15 +282,11 @@ bool EmbeddedPayload::extractTo(
         {
             error =
                 QStringLiteral(
-                    "Extracted payload file has an unexpected size:
-%1")
+                    "Extracted payload file has an unexpected size:\n%1")
                 .arg(outputPath);
             return false;
         }
     }
-
-    Q_UNUSED(archiveHeader)
-    Q_UNUSED(canonicalRoot)
 
     return true;
 }
