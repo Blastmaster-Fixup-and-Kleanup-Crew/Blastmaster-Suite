@@ -1,11 +1,12 @@
 #pragma once
 
+#include "blastmaster/ProductKeyValidator.h"
+
 #include <QWizard>
 #include <QString>
 
 class QLineEdit;
 class QLabel;
-class QComboBox;
 class QProgressBar;
 
 class SetupWizard final : public QWizard
@@ -14,6 +15,9 @@ class SetupWizard final : public QWizard
 
 public:
     explicit SetupWizard(QWidget* parent = nullptr);
+
+protected:
+    bool validateCurrentPage() override;
 
 private:
     void setupAppearance();
@@ -28,6 +32,8 @@ private:
     QWizardPage* createFinishedPage();
 
     bool validateProductKey();
+    void updateProductKeyStatus();
+    QString editionName() const;
 
     QLineEdit* productKeyEdit_ = nullptr;
     QLabel* keyStatusLabel_ = nullptr;
@@ -38,4 +44,7 @@ private:
     QLabel* readyLabel_ = nullptr;
 
     QProgressBar* progressBar_ = nullptr;
+
+    blastmaster::Edition detectedEdition_ =
+        blastmaster::Edition::Invalid;
 };
