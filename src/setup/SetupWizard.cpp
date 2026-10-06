@@ -341,6 +341,8 @@ QWizardPage* SetupWizard::createReadyPage()
     page->setTitle(
         QStringLiteral("Ready to Install"));
 
+    page->setCommitPage(true);
+
     auto* layout = new QVBoxLayout(page);
 
     readyLabel_ = new QLabel;
