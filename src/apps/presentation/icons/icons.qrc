@@ -1,0 +1,47 @@
+<RCC>
+    <qresource prefix="/presentation/icons">
+        <!-- File -->
+        <file>file/new.svg</file>
+        <file>file/open.svg</file>
+        <file>file/save.svg</file>
+        <file>file/print.svg</file>
+        <file>file/close.svg</file>
+
+        <!-- Edit -->
+        <file>edit/undo.svg</file>
+        <file>edit/redo.svg</file>
+        <file>edit/cut.svg</file>
+        <file>edit/copy.svg</file>
+        <file>edit/paste.svg</file>
+        <file>edit/find.svg</file>
+        <file>edit/replace.svg</file>
+
+        <!-- Format -->
+        <file>format/bold.svg</file>
+        <file>format/italic.svg</file>
+        <file>format/underline.svg</file>
+        <file>format/font.svg</file>
+        <file>format/bullets.svg</file>
+
+        <!-- Draw -->
+        <file>draw/line.svg</file>
+        <file>draw/rectangle.svg</file>
+        <file>draw/oval.svg</file>
+        <file>draw/text_box.svg</file>
+        <file>draw/fill.svg</file>
+        <file>draw/line_color.svg</file>
+
+        <!-- View -->
+        <file>view/zoom.svg</file>
+        <file>view/ruler.svg</file>
+        <file>view/toolbars.svg</file>
+
+        <!-- Tools -->
+        <file>tools/spelling.svg</file>
+        <file>tools/options.svg</file>
+
+        <!-- App -->
+        <file>app/help.svg</file>
+        <file>app/about.svg</file>
+    </qresource>
+</RCC>
