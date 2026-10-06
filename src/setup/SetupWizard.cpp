@@ -412,9 +412,18 @@ QWizardPage* SetupWizard::createInstallPage()
             progressBar_->setValue(10);
             QApplication::processEvents();
 
-            InstallerBackend installer(
-                QDir(QCoreApplication::applicationDirPath())
-                    .filePath(QStringLiteral("payload")));
+            QString payloadRoot =
+                qEnvironmentVariable(
+                    "BLASTMASTER_SETUP_PAYLOAD");
+
+            if (payloadRoot.isEmpty())
+            {
+                payloadRoot =
+                    QDir(QCoreApplication::applicationDirPath())
+                        .filePath(QStringLiteral("payload"));
+            }
+
+            InstallerBackend installer(payloadRoot);
 
             const InstallerBackend::Result result =
                 installer.install(
