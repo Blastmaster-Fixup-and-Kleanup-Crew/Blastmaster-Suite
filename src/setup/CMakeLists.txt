@@ -4,6 +4,8 @@ add_executable(blastmaster_setup
     SetupWizard.h
     InstallerBackend.cpp
     InstallerBackend.h
+    WindowsIntegration.cpp
+    WindowsIntegration.h
 )
 
 target_link_libraries(blastmaster_setup
@@ -12,6 +14,25 @@ target_link_libraries(blastmaster_setup
         Qt6::Core
         blastmaster_common
 )
+
+add_executable(blastmaster_uninstaller
+    Uninstaller.cpp
+    WindowsIntegration.cpp
+    WindowsIntegration.h
+)
+
+target_link_libraries(blastmaster_uninstaller
+    PRIVATE
+        Qt6::Widgets
+        Qt6::Core
+)
+
+target_include_directories(blastmaster_uninstaller
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/common/include
+)
+
+add_dependencies(blastmaster_setup blastmaster_uninstaller)
 
 target_include_directories(blastmaster_setup
     PRIVATE
@@ -34,6 +55,9 @@ add_custom_command(
         "${BLASTMASTER_SETUP_PAYLOAD}/common"
     COMMAND ${CMAKE_COMMAND} -E make_directory
         "${BLASTMASTER_SETUP_PAYLOAD}/standard"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:blastmaster_uninstaller>"
+        "${BLASTMASTER_SETUP_PAYLOAD}/common/Uninstall$<TARGET_FILE_SUFFIX:blastmaster_uninstaller>"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:blastmaster_docs>"
         "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_docs$<TARGET_FILE_SUFFIX:blastmaster_docs>"
