@@ -4,7 +4,10 @@
 #include <QStatusBar>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QPlainTextEdit>
 
+#include "Word7MenuBar.h"
+#include "Document.h"
 #include "blastmaster/ProductKeyValidator.h"
 
 int main(int argc, char* argv[]) {
@@ -14,35 +17,42 @@ int main(int argc, char* argv[]) {
 
     QMainWindow window;
     window.resize(1200, 800);
-    window.setWindowTitle("Blastmaster Docs");
+    window.setWindowTitle("Blastmaster Docs - Untitled");
 
+    // Create the document model
+    auto* document = new blastmaster::docs::Document(&window);
+
+    // Create central widget with text editor
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
+    layout->setContentsMargins(0, 0, 0, 0);
 
-    auto* title = new QLabel("Blastmaster Docs", central);
-    title->setAlignment(Qt::AlignCenter);
-    title->setStyleSheet("font-size: 22px; font-weight: 600; margin-top: 24px;");
-    layout->addWidget(title);
+    auto* editor = new QPlainTextEdit(central);
+    editor->setPlaceholderText("Start typing your document...");
+    editor->setStyleSheet("QPlainTextEdit { font-family: 'Arial'; font-size: 11px; padding: 8px; }");
+    layout->addWidget(editor);
 
-    auto* body = new QLabel("Professional document editing workspace ready.", central);
-    body->setAlignment(Qt::AlignCenter);
-    body->setStyleSheet("font-size: 16px; margin: 12px;");
-    layout->addWidget(body);
+    // Wire document content to editor
+    QObject::connect(editor, &QPlainTextEdit::textChanged, [document, editor]() {
+        document->setContent(editor->toPlainText());
+    });
 
-    auto* status = new QLabel("Edition: Standard | Feature set enabled", central);
-    status->setAlignment(Qt::AlignCenter);
-    status->setStyleSheet("font-size: 12px; color: #4d4d4d;");
-    layout->addWidget(status);
+    window.setCentralWidget(central);
 
+    // Create Word 7.0 menu bar and wire it to the document
+    blastmaster::docs::Word7MenuBar word7MenuBar(&window, document);
+    window.setMenuBar(word7MenuBar.menuBar());
+
+    // Setup status bar
     blastmaster::ProductKeyValidator validator(blastmaster::Edition::Standard);
     const std::string sample_key = "BMSSTD-2026-WORD";
     const bool valid = validator.validate(sample_key);
-    status->setText(QString("Edition: %1 | Sample key valid: %2")
+    
+    QString statusMsg = QString("Edition: %1 | Valid: %2")
         .arg(QString::fromStdString(validator.edition_name()))
-        .arg(valid ? "Yes" : "No"));
+        .arg(valid ? "Yes" : "No");
+    window.statusBar()->showMessage(statusMsg);
 
-    window.setCentralWidget(central);
-    window.statusBar()->showMessage("Word processor initialized");
     window.show();
 
     return app.exec();

@@ -1,4 +1,5 @@
 #include "Word7MenuBar.h"
+#include "Document.h"
 
 #include <QAction>
 #include <QFrame>
@@ -7,6 +8,9 @@
 #include <QMainWindow>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QApplication>
 
 namespace blastmaster::docs {
 
@@ -32,8 +36,9 @@ QAction* addToolbarAction(QToolBar* toolbar, const QString& text, const QString&
 }
 } // namespace
 
-Word7MenuBar::Word7MenuBar(QMainWindow* parent)
+Word7MenuBar::Word7MenuBar(QMainWindow* parent, Document* document)
     : m_parent(parent)
+    , m_document(document)
     , m_menuBar(new QMenuBar(parent))
     , m_fileMenu(nullptr)
     , m_editMenu(nullptr)
@@ -80,16 +85,25 @@ void Word7MenuBar::createFileMenu()
     m_fileMenu = new QMenu("&File", m_parent);
     m_menuBar->addMenu(m_fileMenu);
 
+    auto* newAction = addMenuAction(m_fileMenu, "&New", "Create a new document");
+    QObject::connect(newAction, &QAction::triggered, this, &Word7MenuBar::onFileNew);
+
+    auto* openAction = addMenuAction(m_fileMenu, "&Open", "Open an existing document");
+    QObject::connect(openAction, &QAction::triggered, this, &Word7MenuBar::onFileOpen);
+
     auto add = [this](const QString& text) {
         QAction* action = addMenuAction(m_fileMenu, text, text + " command");
         wireAction(action, text);
     };
 
-    add("&New");
-    add("&Open");
     add("&Close");
-    add("&Save");
-    add("Save &As");
+
+    auto* saveAction = addMenuAction(m_fileMenu, "&Save", "Save the current document");
+    QObject::connect(saveAction, &QAction::triggered, this, &Word7MenuBar::onFileSave);
+
+    auto* saveAsAction = addMenuAction(m_fileMenu, "Save &As", "Save the document with a new name");
+    QObject::connect(saveAsAction, &QAction::triggered, this, &Word7MenuBar::onFileSaveAs);
+
     add("&Version");
     add("Find File");
     add("Page Setup");
@@ -97,7 +111,102 @@ void Word7MenuBar::createFileMenu()
     add("Print");
     add("Send");
     add("Properties");
-    add("E&xit");
+
+    m_fileMenu->addSeparator();
+    auto* exitAction = addMenuAction(m_fileMenu, "E&xit", "Exit the application");
+    QObject::connect(exitAction, &QAction::triggered, [this]() {
+        m_parent->close();
+    });
+}
+
+void Word7MenuBar::onFileNew()
+{
+    if (m_document->isDirty()) {
+        QMessageBox::StandardButton reply = QMessageBox::question(m_parent,
+            "Save Changes?",
+            "The document has been modified. Do you want to save changes?",
+            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+        if (reply == QMessageBox::Cancel) {
+            return;
+        }
+        if (reply == QMessageBox::Yes) {
+            onFileSave();
+        }
+    }
+
+    m_document->setTitle("Untitled Document");
+    m_document->setContent("");
+    m_document->setFilePath("");
+    m_document->setClean();
+    m_parent->setWindowTitle("Blastmaster Docs - Untitled");
+    if (m_parent->statusBar()) {
+        m_parent->statusBar()->showMessage("New document created");
+    }
+}
+
+void Word7MenuBar::onFileOpen()
+{
+    QFileDialog dialog(m_parent, "Open Document", QString(), Document::fileFilter());
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setDefaultSuffix(Document::defaultSuffix());
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    QString filePath = dialog.selectedFiles().first();
+    m_document->setFilePath(filePath);
+    if (!m_document->load()) {
+        QMessageBox::critical(m_parent, "Error", "Failed to open document: " + filePath);
+        return;
+    }
+
+    m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
+    if (m_parent->statusBar()) {
+        m_parent->statusBar()->showMessage("Document opened: " + filePath);
+    }
+}
+
+void Word7MenuBar::onFileSave()
+{
+    if (m_document->filePath().isEmpty()) {
+        onFileSaveAs();
+        return;
+    }
+
+    if (!m_document->save()) {
+        QMessageBox::critical(m_parent, "Error", "Failed to save document");
+        return;
+    }
+
+    if (m_parent->statusBar()) {
+        m_parent->statusBar()->showMessage("Document saved: " + m_document->filePath());
+    }
+}
+
+void Word7MenuBar::onFileSaveAs()
+{
+    QFileDialog dialog(m_parent, "Save Document As", QString(), Document::fileFilter());
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDefaultSuffix(Document::defaultSuffix());
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    QString filePath = dialog.selectedFiles().first();
+    if (!m_document->saveAs(filePath)) {
+        QMessageBox::critical(m_parent, "Error", "Failed to save document to: " + filePath);
+        return;
+    }
+
+    m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
+    if (m_parent->statusBar()) {
+        m_parent->statusBar()->showMessage("Document saved as: " + filePath);
+    }
+}
+
+void Word7MenuBar::onFileExit()
+{
+    m_parent->close();
 }
 
 void Word7MenuBar::createEditMenu()

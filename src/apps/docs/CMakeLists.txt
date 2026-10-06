@@ -1,5 +1,6 @@
 add_executable(blastmaster_docs
     main.cpp
+    Document.cpp
     Word7MenuBar.cpp
 )
 
@@ -11,8 +12,8 @@ target_link_libraries(blastmaster_docs
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES
     main.cpp
+    Document.cpp
+    Document.h
     Word7MenuBar.cpp
     Word7MenuBar.h
 )
-
-commit message
