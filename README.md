@@ -8,10 +8,10 @@ A professional C++ office suite with two editions: Professional and Standard. Fe
   .dccx : Regular Docs document
 
 ### Presentations: 
-  .pres: Presentations slideshow
+  .prex : Presentations slideshow
 
 ### Workbooks:
-  not yet implemented btw
+  .wkbx : Workbooks spreadsheet
 
 ## Features
 
@@ -45,3 +45,11 @@ The suite includes built-in product key recognition during setup. Keys are valid
 
 ## License
 License information here.
+
+
+## Updates:
+### Monday October 5th, 2026 1:00 pm EDT to 9:30 PM EDT
+
+I created this repository with two editions, Professional and Standard, and got Docs, Presentations, and Workbooks finished, (and maybe datacapped Copilot), merged 2 PRs, and started Access
+
+### Tuesday October 6, 2026 5:25 AM to TBA
