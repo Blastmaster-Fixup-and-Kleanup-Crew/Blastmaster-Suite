@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QSaveFile>
 #include <QTextStream>
+#include <utility>
 
 namespace
 {
@@ -41,6 +42,18 @@ InstallerBackend::Result InstallerBackend::install(
     {
         result.message =
             QStringLiteral("No valid Blastmaster Suite edition was selected.");
+        return result;
+    }
+
+    const blastmaster::Edition keyEdition =
+        blastmaster::ProductKeyValidator::detect_edition(
+            productKey.toStdString());
+
+    if (keyEdition != edition)
+    {
+        result.message =
+            QStringLiteral(
+                "The product key does not match the selected edition.");
         return result;
     }
 
