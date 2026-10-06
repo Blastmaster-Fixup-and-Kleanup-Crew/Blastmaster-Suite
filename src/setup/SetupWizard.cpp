@@ -20,7 +20,7 @@
 namespace
 {
 constexpr const char* STANDARD_KEY =
-    "CHKZMF0MKMPWRKIRVYXIV9SV";
+    "CHKZMF0MKMPWRKIRVYXIV9SVY";
 
 constexpr const char* PROFESSIONAL_KEY =
     "JLGCDIQR9ZTNXR79BFUB9OELD";
