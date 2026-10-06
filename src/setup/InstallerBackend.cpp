@@ -1,4 +1,5 @@
 #include "InstallerBackend.h"
+#include "WindowsIntegration.h"
 
 #include <QCryptographicHash>
 #include <QDir>
@@ -128,6 +129,15 @@ InstallerBackend::Result InstallerBackend::install(
             cleanDestination,
             edition,
             productKey,
+            error))
+    {
+        result.message = error;
+        return result;
+    }
+
+    if (!installWindowsIntegration(
+            cleanDestination,
+            edition,
             error))
     {
         result.message = error;
@@ -277,4 +287,16 @@ bool InstallerBackend::writeActivation(
     }
 
     return true;
+}
+
+
+bool InstallerBackend::installWindowsIntegration(
+    const QString& destination,
+    blastmaster::Edition edition,
+    QString& error) const
+{
+    return WindowsIntegration::install(
+        destination,
+        edition,
+        error);
 }
