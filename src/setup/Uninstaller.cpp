@@ -22,13 +22,18 @@ int main(int argc, char* argv[])
             QStringLiteral("Blastmaster Suite"),
             QStringLiteral(
                 "Are you sure you want to uninstall Blastmaster Suite?\n\n"
-                "This will remove the installed applications and Start Menu shortcuts."),
+                "This will remove the installed applications and "
+                "Start Menu shortcuts."),
             QMessageBox::Yes | QMessageBox::No,
             QMessageBox::No) != QMessageBox::Yes)
+    {
         return 0;
+    }
 
     QString error;
-    if (!WindowsIntegration::uninstall(destination, error)) {
+
+    if (!WindowsIntegration::uninstall(destination, error))
+    {
         QMessageBox::critical(
             nullptr,
             QStringLiteral("Uninstall Failed"),
@@ -36,13 +41,16 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+#ifdef Q_OS_WIN
     const QString command =
-        QStringLiteral("ping 127.0.0.1 -n 2 > nul & rmdir /s /q "%1"")
-            .arg(QDir::toNativeSeparators(destination));
+        QStringLiteral(
+            "ping 127.0.0.1 -n 2 > nul & rmdir /s /q \"%1\"")
+        .arg(QDir::toNativeSeparators(destination));
 
     QProcess::startDetached(
         QStringLiteral("cmd.exe"),
         {QStringLiteral("/C"), command});
+#endif
 
     return 0;
 }
