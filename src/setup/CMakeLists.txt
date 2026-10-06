@@ -9,6 +9,8 @@ add_executable(blastmaster_setup
     SetupWizard.h
     InstallerBackend.cpp
     InstallerBackend.h
+    EmbeddedPayload.cpp
+    EmbeddedPayload.h
     WindowsIntegration.cpp
     WindowsIntegration.h
 )
@@ -23,7 +25,8 @@ if(WIN32)
         PROPERTIES
             HEADER_FILE_ONLY TRUE)
     set_target_properties(blastmaster_setup PROPERTIES
-        WIN32_EXECUTABLE TRUE)
+        WIN32_EXECUTABLE TRUE
+        OUTPUT_NAME "BlastmasterSuiteSetup")
 endif()
 
 target_link_libraries(blastmaster_setup
@@ -72,6 +75,8 @@ set(BLASTMASTER_SETUP_PAYLOAD
 if(WIN32)
     find_program(WINDEPLOYQT_EXECUTABLE
         NAMES windeployqt windeployqt6)
+    find_program(POWERSHELL_EXECUTABLE
+        NAMES powershell pwsh)
 endif()
 
 add_custom_command(
@@ -148,6 +153,26 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE AND BLASTMASTER_BUILD_PROFESSIONAL)
             --no-translations
             --dir "${BLASTMASTER_SETUP_PAYLOAD}/professional"
             "$<TARGET_FILE:blastmaster_database>"
+        VERBATIM
+    )
+endif()
+
+
+if(WIN32)
+    if(NOT ${POWERSHELL_EXECUTABLE})
+        message(FATAL_ERROR
+            "PowerShell is required to build the self-extracting Windows setup.")
+    endif()
+
+    add_custom_command(
+        TARGET blastmaster_setup
+        POST_BUILD
+        COMMAND "${POWERSHELL_EXECUTABLE}"
+            -NoProfile
+            -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/EmbedPayload.ps1"
+            -SetupExe "$<TARGET_FILE:blastmaster_setup>"
+            -PayloadRoot "${BLASTMASTER_SETUP_PAYLOAD}"
         VERBATIM
     )
 endif()
