@@ -4,16 +4,11 @@ add_executable(blastmaster_spreadsheet
     Excel7MenuBar.cpp
 )
 
-target_link_libraries(blastmaster_spreadsheet
-    PRIVATE
-        Qt6::Widgets
-        blastmaster_common
-)
+if(WIN32)
+    target_sources(blastmaster_spreadsheet PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_workbooks.rc")
+    set_target_properties(blastmaster_spreadsheet PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES
-    main.cpp
-    Workbook.cpp
-    Workbook.h
-    Excel7MenuBar.cpp
-    Excel7MenuBar.h
-)
+target_link_libraries(blastmaster_spreadsheet
+    PRIVATE Qt6::Widgets blastmaster_common)
