@@ -2,11 +2,14 @@ add_executable(blastmaster_setup
     main.cpp
     SetupWizard.cpp
     SetupWizard.h
+    InstallerBackend.cpp
+    InstallerBackend.h
 )
 
 target_link_libraries(blastmaster_setup
     PRIVATE
         Qt6::Widgets
+        Qt6::Core
         blastmaster_common
 )
 
@@ -14,3 +17,39 @@ target_include_directories(blastmaster_setup
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/common/include
 )
+
+set(BLASTMASTER_SETUP_PAYLOAD
+    "$<TARGET_FILE_DIR:blastmaster_setup>/payload"
+)
+
+add_custom_command(
+    TARGET blastmaster_setup
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${BLASTMASTER_SETUP_PAYLOAD}/common"
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:blastmaster_docs>"
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_docs$<TARGET_FILE_SUFFIX:blastmaster_docs>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:blastmaster_spreadsheet>"
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_workbooks$<TARGET_FILE_SUFFIX:blastmaster_spreadsheet>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:blastmaster_presentation>"
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_presentations$<TARGET_FILE_SUFFIX:blastmaster_presentation>"
+    VERBATIM
+)
+
+if(BLASTMASTER_BUILD_PROFESSIONAL)
+    add_custom_command(
+        TARGET blastmaster_setup
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "${BLASTMASTER_SETUP_PAYLOAD}/professional"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:blastmaster_database>"
+            "${BLASTMASTER_SETUP_PAYLOAD}/professional/blastmaster_database$<TARGET_FILE_SUFFIX:blastmaster_database>"
+        VERBATIM
+    )
+endif()
