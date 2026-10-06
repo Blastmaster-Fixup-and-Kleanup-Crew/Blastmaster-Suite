@@ -4,17 +4,11 @@ add_executable(blastmaster_database
     DatabaseDocument.cpp
 )
 
-target_link_libraries(blastmaster_database
-    PRIVATE
-        Qt6::Widgets
-        Qt6::Sql
-        blastmaster_common
-)
+if(WIN32)
+    target_sources(blastmaster_database PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_database.rc")
+    set_target_properties(blastmaster_database PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES
-    main.cpp
-    DatabaseDocument.cpp
-    DatabaseDocument.h
-    Access95MenuBar.cpp
-    Access95MenuBar.h
-)
+target_link_libraries(blastmaster_database
+    PRIVATE Qt6::Widgets Qt6::Sql blastmaster_common)
