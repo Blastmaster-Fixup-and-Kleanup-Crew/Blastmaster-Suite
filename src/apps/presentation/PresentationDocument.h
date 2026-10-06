@@ -9,7 +9,7 @@ namespace blastmaster::presentation {
 
 /**
  * @class PresentationDocument
- * @brief Represents a presentation document with .pptx-style JSON backing storage.
+ * @brief Represents a presentation document with .prex JSON backing storage.
  */
 class PresentationDocument {
 public:
@@ -32,9 +32,9 @@ public:
     bool saveAs(const QString& filePath);
     bool load();
 
-    static QString fileExtension() { return ".psx"; }
-    static QString fileFilter() { return "Blastmaster Presentations (*.psx);;All Files (*.*)"; }
-    static QString defaultSuffix() { return "psx"; }
+    static QString fileExtension() { return ".prex"; }
+    static QString fileFilter() { return "Blastmaster Presentations (*.prex);;All Files (*.*)"; }
+    static QString defaultSuffix() { return "prex"; }
 
 private:
     QString m_title;
