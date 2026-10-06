@@ -83,7 +83,7 @@ bool writeRegistry(
         writeRegistryString(
             key,
             L"DisplayVersion",
-            QStringLiteral("0.1.0")) &&
+            QStringLiteral("1.0.0.67")) &&
         writeRegistryString(
             key,
             L"Publisher",
