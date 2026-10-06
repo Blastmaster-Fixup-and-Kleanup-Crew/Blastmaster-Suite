@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     window.resize(1200, 800);
     window.setWindowTitle("Blastmaster Databases - Database1");
 
-    auto* database = new blastmaster::database::Database();
+    auto* database = new blastmaster::database::DatabaseDocument();
     database->setTitle("Database1");
 
     auto* central = new QWidget(&window);
