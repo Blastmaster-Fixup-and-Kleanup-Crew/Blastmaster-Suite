@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QDir>
+#include <QFileInfo>
 #include <QFileDialog>
 #include <QFont>
 #include <QHBoxLayout>
@@ -350,6 +351,22 @@ QWizardPage* SetupWizard::createReadyPage()
     layout->addWidget(readyLabel_);
     layout->addStretch();
 
+    connect(
+        page,
+        &QWizardPage::initializePage,
+        this,
+        [this]()
+        {
+            readyLabel_->setText(
+                QStringLiteral(
+                    "Setup is ready to install Blastmaster Suite.\\n\\n"
+                    "Edition: %1\\n\\n"
+                    "Destination:\\n%2\\n\\n"
+                    "Click Install to begin the installation.")
+                    .arg(editionName())
+                    .arg(destinationEdit_->text()));
+        });
+
     return page;
 }
 
@@ -403,8 +420,11 @@ QWizardPage* SetupWizard::createInstallPage()
                     destinationEdit_->text(),
                     productKeyEdit_->text());
 
+            installSucceeded_ = result.success;
+
             if (!result.success)
             {
+                installedLocation_.clear();
                 progressBar_->setValue(0);
 
                 QMessageBox::critical(
@@ -421,6 +441,7 @@ QWizardPage* SetupWizard::createInstallPage()
             }
 
             progressBar_->setValue(100);
+            installedLocation_ = result.installedLocation;
 
             label->setText(
                 QStringLiteral(
@@ -444,17 +465,28 @@ QWizardPage* SetupWizard::createFinishedPage()
 
     auto* layout = new QVBoxLayout(page);
 
-    auto* label = new QLabel(
-        QStringLiteral(
-            "Blastmaster Suite has been successfully "
-            "installed.\n\n"
-            "Click Finish to close Setup."));
-
+    auto* label = new QLabel;
     label->setWordWrap(true);
 
     layout->addSpacing(25);
     layout->addWidget(label);
     layout->addStretch();
+
+    connect(
+        page,
+        &QWizardPage::initializePage,
+        this,
+        [this, label]()
+        {
+            label->setText(
+                QStringLiteral(
+                    "Blastmaster Suite %1 edition has been "
+                    "installed successfully.\\n\\n"
+                    "Installation folder:\\n%2\\n\\n"
+                    "Click Finish to close Setup.")
+                    .arg(editionName())
+                    .arg(installedLocation_));
+        });
 
     return page;
 }
@@ -557,6 +589,27 @@ bool SetupWizard::validateCurrentPage()
     {
         return validateProductKey();
     }
+
+    if (currentId() == 3)
+    {
+        const QString destination = destinationEdit_
+            ? destinationEdit_->text().trimmed()
+            : QString();
+
+        if (destination.isEmpty())
+        {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Installation Folder"),
+                QStringLiteral("Please choose an installation folder."));
+            return false;
+        }
+
+        return true;
+    }
+
+    if (currentId() == 5)
+        return installSucceeded_;
 
     return QWizard::validateCurrentPage();
 }
