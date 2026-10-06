@@ -5,17 +5,11 @@ add_executable(blastmaster_presentation
     icons/icons.qrc
 )
 
-target_link_libraries(blastmaster_presentation
-    PRIVATE
-        Qt6::Widgets
-        blastmaster_common
-)
+if(WIN32)
+    target_sources(blastmaster_presentation PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_presentations.rc")
+    set_target_properties(blastmaster_presentation PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES
-    main.cpp
-    PresentationDocument.cpp
-    PresentationDocument.h
-    PowerPoint7MenuBar.cpp
-    PowerPoint7MenuBar.h
-    icons/icons.qrc
-)
+target_link_libraries(blastmaster_presentation
+    PRIVATE Qt6::Widgets blastmaster_common)
