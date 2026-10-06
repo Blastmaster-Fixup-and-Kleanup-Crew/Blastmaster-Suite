@@ -53,7 +53,7 @@ try {
     $writer.Dispose()
     $output.Dispose()
 
-    Move-Item -LiteralPath $tempExe -Destination $SetupExe -Force
+    [System.IO.File]::Replace($tempExe, $SetupExe, $null)
 }
 catch {
     if (Test-Path -LiteralPath $tempExe) {
