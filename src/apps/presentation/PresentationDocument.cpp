@@ -61,8 +61,8 @@ bool PresentationDocument::saveAs(const QString& filePath)
     }
 
     QString path = filePath;
-    if (!path.endsWith(".psx")) {
-        path += ".psx";
+    if (!path.endsWith(".prex")) {
+        path += ".prex";
     }
 
     QFile file(path);
@@ -104,7 +104,7 @@ bool PresentationDocument::load()
 
     QJsonDocument doc = QJsonDocument::fromJson(jsonData);
     if (!doc.isObject()) {
-        qWarning() << "Invalid .psx presentation format";
+        qWarning() << "Invalid .prex presentation format";
         return false;
     }
 
