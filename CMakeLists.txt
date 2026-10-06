@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(BlastmasterSuite VERSION 0.1.0 LANGUAGES CXX)
+project(BlastmasterSuite VERSION 1.0.0 LANGUAGES CXX)
+
+set(BLASTMASTER_MILESTONE "Milestone 1")
+set(BLASTMASTER_BUILD_NUMBER 67)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,5 +16,5 @@ find_package(SQLite3 REQUIRED)
 
 add_subdirectory(src)
 
-message(STATUS "Blastmaster Suite configured successfully.")
+message(STATUS "Blastmaster Suite configured: Version 1.0.0, Milestone 1, Build 67")
 message(STATUS "Professional edition: ${BLASTMASTER_BUILD_PROFESSIONAL}")
