@@ -1,56 +1,86 @@
 #include <QApplication>
-#include <QLabel>
+#include <QHeaderView>
 #include <QMainWindow>
 #include <QMessageBox>
-#include <QSqlDatabase>
-#include <QSqlError>
+#include <QSqlQuery>
+#include <QSqlRecord>
 #include <QStatusBar>
+#include <QTableWidget>
+#include <QTableWidgetItem>
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include "blastmaster/ProductKeyValidator.h"
+#include "Access95MenuBar.h"
+#include "DatabaseDocument.h"
 
-int main(int argc, char* argv[]) {
+using namespace blastmaster::database;
+
+static void refreshTables(QTableWidget* tableView, DatabaseDocument* document)
+{
+    tableView->clear();
+    const QStringList tables = document->tables();
+    tableView->setColumnCount(1);
+    tableView->setHorizontalHeaderLabels({QStringLiteral("Database Objects")});
+    tableView->setRowCount(tables.size());
+
+    for (int row = 0; row < tables.size(); ++row) {
+        tableView->setItem(row, 0, new QTableWidgetItem(tables.at(row)));
+    }
+    tableView->horizontalHeader()->setStretchLastSection(true);
+}
+
+int main(int argc, char* argv[])
+{
     QApplication app(argc, argv);
-    app.setApplicationName("Blastmaster Database");
-    app.setApplicationDisplayName("Blastmaster Database");
+    app.setApplicationName(QStringLiteral("Blastmaster Database"));
+    app.setApplicationDisplayName(QStringLiteral("Blastmaster Database"));
+
+    // Classic Windows/Office-era palette and metrics.
+    app.setStyle(QStringLiteral("Windows"));
 
     QMainWindow window;
     window.resize(1100, 700);
-    window.setWindowTitle("Blastmaster Database");
+    window.setWindowTitle(QStringLiteral("Blastmaster Database - Database1"));
 
-    auto* central = new QWidget(&window);
-    auto* layout = new QVBoxLayout(central);
-
-    auto* title = new QLabel("Blastmaster Database", central);
-    title->setAlignment(Qt::AlignCenter);
-    title->setStyleSheet("font-size: 22px; font-weight: 600; margin-top: 24px;");
-    layout->addWidget(title);
-
-    auto* body = new QLabel("Professional relational database tools ready.", central);
-    body->setAlignment(Qt::AlignCenter);
-    body->setStyleSheet("font-size: 16px; margin: 12px;");
-    layout->addWidget(body);
-
-    blastmaster::ProductKeyValidator validator(blastmaster::Edition::Professional);
-    const std::string sample_key = "BMSPRO-DATABASE";
-    const bool valid = validator.validate(sample_key);
-    auto* status = new QLabel(QString("Edition: %1 | Sample key valid: %2")
-        .arg(QString::fromStdString(validator.edition_name()))
-        .arg(valid ? "Yes" : "No"), central);
-    status->setAlignment(Qt::AlignCenter);
-    status->setStyleSheet("font-size: 12px; color: #4d4d4d;");
-    layout->addWidget(status);
-
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(":memory:");
-    if (!db.open()) {
-        QMessageBox::critical(nullptr, "Database Error", db.lastError().text());
+    auto* document = new DatabaseDocument(&window);
+    if (!document->newDatabase()) {
+        QMessageBox::critical(&window, QStringLiteral("Database Error"), document->lastError());
         return 1;
     }
 
+    auto* central = new QWidget(&window);
+    auto* layout = new QVBoxLayout(central);
+    layout->setContentsMargins(6, 6, 6, 6);
+
+    auto* objects = new QTableWidget(central);
+    objects->setSelectionBehavior(QAbstractItemView::SelectRows);
+    objects->setSelectionMode(QAbstractItemView::SingleSelection);
+    objects->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    objects->setAlternatingRowColors(false);
+    objects->setShowGrid(true);
+    objects->verticalHeader()->setVisible(false);
+    objects->horizontalHeader()->setDefaultSectionSize(180);
+    layout->addWidget(objects);
+
     window.setCentralWidget(central);
-    window.statusBar()->showMessage("Database module initialized with SQLite");
+
+    Access95MenuBar accessMenu(&window, document);
+    window.setMenuBar(accessMenu.menuBar());
+
+    QObject::connect(document, &DatabaseDocument::databaseChanged, [&] {
+        refreshTables(objects, document);
+        window.setWindowTitle(QStringLiteral("Blastmaster Database - %1")
+            .arg(document->filePath().isEmpty()
+                 ? QStringLiteral("Database1")
+                 : document->filePath()));
+    });
+
+    QObject::connect(document, &DatabaseDocument::errorOccurred, [&](const QString& error) {
+        window.statusBar()->showMessage(error, 5000);
+    });
+
+    refreshTables(objects, document);
+    window.statusBar()->showMessage(QStringLiteral("Ready"), 2000);
     window.show();
 
     return app.exec();
