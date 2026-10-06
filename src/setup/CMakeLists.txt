@@ -52,12 +52,15 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
         POST_BUILD
         COMMAND "${WINDEPLOYQT_EXECUTABLE}"
             --no-translations
+            --dir "${BLASTMASTER_SETUP_PAYLOAD}/standard"
             "$<TARGET_FILE:blastmaster_docs>"
         COMMAND "${WINDEPLOYQT_EXECUTABLE}"
             --no-translations
+            --dir "${BLASTMASTER_SETUP_PAYLOAD}/standard"
             "$<TARGET_FILE:blastmaster_spreadsheet>"
         COMMAND "${WINDEPLOYQT_EXECUTABLE}"
             --no-translations
+            --dir "${BLASTMASTER_SETUP_PAYLOAD}/standard"
             "$<TARGET_FILE:blastmaster_presentation>"
         VERBATIM
     )
@@ -72,6 +75,18 @@ if(BLASTMASTER_BUILD_PROFESSIONAL)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "$<TARGET_FILE:blastmaster_database>"
             "${BLASTMASTER_SETUP_PAYLOAD}/professional/blastmaster_database$<TARGET_FILE_SUFFIX:blastmaster_database>"
+        VERBATIM
+    )
+endif()
+
+if(WIN32 AND WINDEPLOYQT_EXECUTABLE AND BLASTMASTER_BUILD_PROFESSIONAL)
+    add_custom_command(
+        TARGET blastmaster_setup
+        POST_BUILD
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+            --no-translations
+            --dir "${BLASTMASTER_SETUP_PAYLOAD}/professional"
+            "$<TARGET_FILE:blastmaster_database>"
         VERBATIM
     )
 endif()
