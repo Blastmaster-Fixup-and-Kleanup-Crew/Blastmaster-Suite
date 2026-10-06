@@ -1,4 +1,4 @@
-add_subdirectory(word)
+add_subdirectory(docs)
 add_subdirectory(presentation)
 add_subdirectory(spreadsheet)
 
