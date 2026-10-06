@@ -77,6 +77,16 @@ if(WIN32)
         NAMES windeployqt windeployqt6)
     find_program(POWERSHELL_EXECUTABLE
         NAMES powershell pwsh)
+
+    if(NOT WINDEPLOYQT_EXECUTABLE)
+        message(FATAL_ERROR
+            "windeployqt is required to build the self-contained Windows setup.")
+    endif()
+
+    if(NOT POWERSHELL_EXECUTABLE)
+        message(FATAL_ERROR
+            "PowerShell is required to build the self-extracting Windows setup.")
+    endif()
 endif()
 
 add_custom_command(
@@ -159,11 +169,6 @@ endif()
 
 
 if(WIN32)
-    if(NOT ${POWERSHELL_EXECUTABLE})
-        message(FATAL_ERROR
-            "PowerShell is required to build the self-extracting Windows setup.")
-    endif()
-
     add_custom_command(
         TARGET blastmaster_setup
         POST_BUILD
