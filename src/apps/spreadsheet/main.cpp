@@ -9,17 +9,17 @@
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
-    app.setApplicationName("Blastmaster Spreadsheet");
-    app.setApplicationDisplayName("Blastmaster Spreadsheet");
+    app.setApplicationName("Blastmaster Workbooks");
+    app.setApplicationDisplayName("Blastmaster Workbooks");
 
     QMainWindow window;
     window.resize(1200, 800);
-    window.setWindowTitle("Blastmaster Spreadsheet");
+    window.setWindowTitle("Blastmaster Workbooks");
 
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
 
-    auto* title = new QLabel("Blastmaster Spreadsheet", central);
+    auto* title = new QLabel("Blastmaster Workbooks", central);
     title->setAlignment(Qt::AlignCenter);
     title->setStyleSheet("font-size: 22px; font-weight: 600; margin-top: 24px;");
     layout->addWidget(title);
