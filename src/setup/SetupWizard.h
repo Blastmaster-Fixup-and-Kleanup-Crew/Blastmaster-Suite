@@ -49,4 +49,7 @@ private:
 
     blastmaster::Edition detectedEdition_ =
         blastmaster::Edition::Invalid;
+
+    bool installSucceeded_ = false;
+    QString installedLocation_;
 };
