@@ -16,9 +16,9 @@ DatabaseDocument::DatabaseDocument(QObject* parent)
 
 DatabaseDocument::~DatabaseDocument()
 {
-    if (m_db.isValid()) {
+    if (m_db.isValid())
         m_db.close();
-    }
+
     const QString name = m_connectionName;
     m_db = QSqlDatabase();
     QSqlDatabase::removeDatabase(name);
@@ -56,8 +56,7 @@ bool DatabaseDocument::newDatabase()
     if (!query.exec(QStringLiteral(
             "CREATE TABLE IF NOT EXISTS SampleData ("
             "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
-            "Name TEXT, "
-            "Value TEXT)"))) {
+            "Name TEXT, Value TEXT)"))) {
         setError(query.lastError().text());
         return false;
     }
@@ -68,8 +67,7 @@ bool DatabaseDocument::newDatabase()
 
 bool DatabaseDocument::openDatabase(const QString& path)
 {
-    if (!ensureConnection()) return false;
-    if (path.isEmpty()) return false;
+    if (!ensureConnection() || path.isEmpty()) return false;
 
     m_db.close();
     m_db.setDatabaseName(path);
@@ -97,16 +95,10 @@ bool DatabaseDocument::saveDatabaseAs(const QString& path)
 {
     if (!ensureConnection() || path.isEmpty()) return false;
 
-    // SQLite databases can be copied safely while the connection is closed.
-    if (m_db.databaseName() == path && m_db.isOpen()) {
-        m_db.close();
-    }
-
-    if (m_db.isOpen()) {
-        m_db.close();
-    }
-
     const QString source = m_db.databaseName();
+    if (m_db.isOpen())
+        m_db.close();
+
     if (!source.isEmpty() && source != QStringLiteral(":memory:") &&
         QFile::exists(source) && source != path) {
         if (QFile::exists(path) && !QFile::remove(path)) {
@@ -149,14 +141,12 @@ bool DatabaseDocument::createTable(const QString& name)
 {
     if (!m_db.isOpen() || name.trimmed().isEmpty()) return false;
 
-    const QString safeName = name.trimmed();
+    const QString safeName = name.trimmed().replace('"', QStringLiteral(""""));
     QSqlQuery query(m_db);
-    query.prepare(QStringLiteral(
-        "CREATE TABLE IF NOT EXISTS "%1" "
-        "(ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Value TEXT)")
-        .arg(safeName.replace('"', QStringLiteral(""""))));
-
-    if (!query.exec()) {
+    if (!query.exec(QStringLiteral(
+            "CREATE TABLE IF NOT EXISTS "%1" "
+            "(ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Value TEXT)")
+            .arg(safeName))) {
         setError(query.lastError().text());
         return false;
     }
