@@ -23,6 +23,8 @@ try {
 
     $writer = New-Object System.IO.BinaryWriter($output)
 
+    $payloadOffset = $output.Position
+
     $files = Get-ChildItem -LiteralPath $PayloadRoot -File -Recurse
 
     foreach ($file in $files) {
@@ -41,8 +43,6 @@ try {
         $writer.Write($pathBytes)
         $writer.Write($data)
     }
-
-    $payloadOffset = $output.Position
 
     # Footer is written after the entries. Its first 8 bytes are
     # the format marker and the next 8 bytes are the payload offset.
