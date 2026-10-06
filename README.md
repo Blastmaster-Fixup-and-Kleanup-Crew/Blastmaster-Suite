@@ -2,6 +2,17 @@
 
 A professional C++ office suite with two editions: Professional and Standard. Features include a word processor, presentation program, spreadsheet program (all three in both editions), and a database program (Professional edition only).
 
+## File Extensions
+
+### Docs:
+  .dccx : Regular Docs document
+
+### Presentations: 
+  .pres: Presentations slideshow
+
+### Workbooks:
+  not yet implemented btw
+
 ## Features
 
 ### Standard Edition
