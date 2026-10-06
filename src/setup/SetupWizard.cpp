@@ -1,8 +1,11 @@
 #include "SetupWizard.h"
 
+#include "InstallerBackend.h"
 #include "blastmaster/ProductKeyValidator.h"
 
 #include <QApplication>
+#include <QCoreApplication>
+#include <QDir>
 #include <QFileDialog>
 #include <QFont>
 #include <QHBoxLayout>
@@ -12,7 +15,6 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QTextEdit>
-#include <QTimer>
 #include <QVBoxLayout>
 #include <QWizardPage>
 
@@ -360,13 +362,10 @@ QWizardPage* SetupWizard::createInstallPage()
             "Installing Blastmaster Suite"));
 
     auto* layout = new QVBoxLayout(page);
-
     auto* label = new QLabel;
-
     label->setWordWrap(true);
 
     progressBar_ = new QProgressBar;
-
     progressBar_->setRange(0, 100);
     progressBar_->setValue(0);
 
@@ -382,42 +381,54 @@ QWizardPage* SetupWizard::createInstallPage()
         this,
         [this, label]()
         {
-            const QString edition =
-                editionName();
+            const QString edition = editionName();
 
             label->setText(
                 QStringLiteral(
                     "Installing Blastmaster Suite "
-                    "%1 edition.\n\n"
-                    "Please wait while the software "
-                    "is installed.")
+                    "%1 edition.\\n\\n"
+                    "Please wait while the software is installed.")
                     .arg(edition));
 
-            progressBar_->setValue(0);
+            progressBar_->setValue(10);
+            QApplication::processEvents();
 
-            auto* timer = new QTimer(this);
+            InstallerBackend installer(
+                QDir(QCoreApplication::applicationDirPath())
+                    .filePath(QStringLiteral("payload")));
 
-            connect(
-                timer,
-                &QTimer::timeout,
-                this,
-                [this, timer]()
-                {
-                    const int value =
-                        progressBar_->value();
+            const InstallerBackend::Result result =
+                installer.install(
+                    detectedEdition_,
+                    destinationEdit_->text(),
+                    productKeyEdit_->text());
 
-                    if (value >= 100)
-                    {
-                        timer->stop();
-                        timer->deleteLater();
-                        return;
-                    }
+            if (!result.success)
+            {
+                progressBar_->setValue(0);
 
-                    progressBar_->setValue(
-                        value + 5);
-                });
+                QMessageBox::critical(
+                    this,
+                    QStringLiteral("Installation Failed"),
+                    result.message);
 
-            timer->start(100);
+                label->setText(
+                    QStringLiteral(
+                        "Installation failed.\\n\\n"
+                        "Please go back and correct the "
+                        "installation settings, then try again."));
+                return;
+            }
+
+            progressBar_->setValue(100);
+
+            label->setText(
+                QStringLiteral(
+                    "Blastmaster Suite %1 edition was installed "
+                    "successfully.\\n\\n"
+                    "Installed to:\\n%2")
+                    .arg(edition)
+                    .arg(result.installedLocation));
         });
 
     return page;
