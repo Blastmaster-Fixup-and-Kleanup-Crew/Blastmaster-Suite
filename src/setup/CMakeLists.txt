@@ -1,3 +1,8 @@
+if(WIN32)
+    set(BLASTMASTER_SETUP_MANIFEST
+        "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_setup.manifest")
+endif()
+
 add_executable(blastmaster_setup
     main.cpp
     SetupWizard.cpp
@@ -7,6 +12,18 @@ add_executable(blastmaster_setup
     WindowsIntegration.cpp
     WindowsIntegration.h
 )
+
+if(WIN32)
+    target_sources(blastmaster_setup
+        PRIVATE
+            "${BLASTMASTER_SETUP_MANIFEST}")
+    set_source_files_properties(
+        "${BLASTMASTER_SETUP_MANIFEST}"
+        PROPERTIES
+            HEADER_FILE_ONLY TRUE)
+    set_target_properties(blastmaster_setup PROPERTIES
+        WIN32_EXECUTABLE TRUE)
+endif()
 
 target_link_libraries(blastmaster_setup
     PRIVATE
