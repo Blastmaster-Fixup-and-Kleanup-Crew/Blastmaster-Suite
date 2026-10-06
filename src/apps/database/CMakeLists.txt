@@ -1,5 +1,7 @@
 add_executable(blastmaster_database
     main.cpp
+    DatabaseDocument.cpp
+    Access95MenuBar.cpp
 )
 
 target_link_libraries(blastmaster_database
