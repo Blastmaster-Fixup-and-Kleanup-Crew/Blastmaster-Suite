@@ -5,17 +5,11 @@ add_executable(blastmaster_docs
     icons/icons.qrc
 )
 
-target_link_libraries(blastmaster_docs
-    PRIVATE
-        Qt6::Widgets
-        blastmaster_common
-)
+if(WIN32)
+    target_sources(blastmaster_docs PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_docs.rc")
+    set_target_properties(blastmaster_docs PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES
-    main.cpp
-    Document.cpp
-    Document.h
-    Word7MenuBar.cpp
-    Word7MenuBar.h
-    icons/icons.qrc
-)
+target_link_libraries(blastmaster_docs
+    PRIVATE Qt6::Widgets blastmaster_common)
