@@ -13,6 +13,9 @@ A professional C++ office suite with two editions: Professional and Standard. Fe
 ### Workbooks:
   .wkbx : Workbooks spreadsheet
 
+### Databases:
+  .dbbx : Databases database
+
 ## Features
 
 ### Standard Edition
