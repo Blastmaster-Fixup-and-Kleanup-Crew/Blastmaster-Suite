@@ -16,7 +16,8 @@ add_executable(blastmaster_setup
 if(WIN32)
     target_sources(blastmaster_setup
         PRIVATE
-            "${BLASTMASTER_SETUP_MANIFEST}")
+            "${BLASTMASTER_SETUP_MANIFEST}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_setup.rc")
     set_source_files_properties(
         "${BLASTMASTER_SETUP_MANIFEST}"
         PROPERTIES
