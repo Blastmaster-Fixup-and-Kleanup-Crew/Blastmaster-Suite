@@ -3,7 +3,6 @@
 #include "blastmaster/ProductKeyValidator.h"
 
 #include <QApplication>
-#include <QDir>
 #include <QFileDialog>
 #include <QFont>
 #include <QHBoxLayout>
@@ -19,44 +18,9 @@
 
 namespace
 {
-constexpr const char* STANDARD_KEY =
-    "CHKZMF0MKMPWRKIRVYXIV9SVY";
-
-constexpr const char* PROFESSIONAL_KEY =
-    "JLGCDIQR9ZTNXR79BFUB9OELD";
-
-QString normalizeKey(const QString& key)
+std::string toStdString(const QString& value)
 {
-    QString result;
-
-    for (const QChar& ch : key)
-    {
-        if (ch.isLetterOrNumber())
-            result += ch.toUpper();
-    }
-
-    return result;
-}
-
-bool isStandardKey(const QString& key)
-{
-    return normalizeKey(key) == QString::fromLatin1(STANDARD_KEY);
-}
-
-bool isProfessionalKey(const QString& key)
-{
-    return normalizeKey(key) == QString::fromLatin1(PROFESSIONAL_KEY);
-}
-
-QString detectedEdition(const QString& key)
-{
-    if (isStandardKey(key))
-        return QStringLiteral("Standard");
-
-    if (isProfessionalKey(key))
-        return QStringLiteral("Professional");
-
-    return QString();
+    return value.toStdString();
 }
 }
 
@@ -66,13 +30,17 @@ SetupWizard::SetupWizard(QWidget* parent)
     setupAppearance();
     createPages();
 
-    setWindowTitle(QStringLiteral("Blastmaster Suite Setup"));
+    setWindowTitle(
+        QStringLiteral("Blastmaster Suite Setup"));
+
     setFixedSize(520, 360);
 }
 
 void SetupWizard::setupAppearance()
 {
-    QFont systemFont(QStringLiteral("MS Sans Serif"));
+    QFont systemFont(
+        QStringLiteral("MS Sans Serif"));
+
     systemFont.setPointSize(8);
 
     QApplication::setFont(systemFont);
@@ -181,21 +149,30 @@ void SetupWizard::createPages()
 QWizardPage* SetupWizard::createWelcomePage()
 {
     auto* page = new QWizardPage;
-    page->setTitle(QStringLiteral("Welcome to Blastmaster Suite Setup"));
+
+    page->setTitle(
+        QStringLiteral(
+            "Welcome to Blastmaster Suite Setup"));
 
     auto* layout = new QVBoxLayout(page);
 
     auto* title = new QLabel(
-        QStringLiteral("<b>Welcome to Blastmaster Suite Setup</b>"));
+        QStringLiteral(
+            "<b>Welcome to Blastmaster Suite Setup</b>"));
+
     title->setStyleSheet(
-        "font-family: 'MS Sans Serif'; font-size: 10pt;");
+        "font-family: 'MS Sans Serif'; "
+        "font-size: 10pt;");
 
     auto* text = new QLabel(
         QStringLiteral(
-            "This wizard will install Blastmaster Suite on your computer.\n\n"
-            "Blastmaster Suite includes applications for documents, "
-            "spreadsheets, presentations, and other office tasks.\n\n"
+            "This wizard will install Blastmaster Suite "
+            "on your computer.\n\n"
+            "Blastmaster Suite includes applications for "
+            "documents, spreadsheets, presentations, and "
+            "other office tasks.\n\n"
             "Click Next to continue."));
+
     text->setWordWrap(true);
 
     layout->addSpacing(15);
@@ -210,24 +187,28 @@ QWizardPage* SetupWizard::createWelcomePage()
 QWizardPage* SetupWizard::createLicensePage()
 {
     auto* page = new QWizardPage;
-    page->setTitle(QStringLiteral("License Agreement"));
+
+    page->setTitle(
+        QStringLiteral("License Agreement"));
 
     auto* layout = new QVBoxLayout(page);
 
     auto* license = new QTextEdit;
+
     license->setReadOnly(true);
 
     license->setPlainText(
         "BLASTMASTER SUITE LICENSE AGREEMENT\n"
         "\n"
-        "Please read the following license agreement before "
-        "continuing with the installation.\n"
+        "Please read the following license agreement "
+        "before continuing with the installation.\n"
         "\n"
-        "Blastmaster Suite is provided for use in accordance with "
-        "the terms supplied with this software.\n"
+        "Blastmaster Suite is provided for use in "
+        "accordance with the terms supplied with this "
+        "software.\n"
         "\n"
-        "By installing this software, you agree to comply with "
-        "the applicable license terms.\n");
+        "By installing this software, you agree to "
+        "comply with the applicable license terms.\n");
 
     layout->addWidget(license);
 
@@ -238,7 +219,9 @@ QWizardPage* SetupWizard::createProductKeyPage()
 {
     auto* page = new QWizardPage;
 
-    page->setTitle(QStringLiteral("Product Key"));
+    page->setTitle(
+        QStringLiteral("Product Key"));
+
     page->setSubTitle(
         QStringLiteral(
             "Enter your Blastmaster Suite product key."));
@@ -247,18 +230,22 @@ QWizardPage* SetupWizard::createProductKeyPage()
 
     auto* instruction = new QLabel(
         QStringLiteral(
-            "Type the 25-character product key supplied with "
-            "your copy of Blastmaster Suite."));
+            "Type the 25-character product key supplied "
+            "with your copy of Blastmaster Suite."));
+
     instruction->setWordWrap(true);
 
     productKeyEdit_ = new QLineEdit;
+
     productKeyEdit_->setPlaceholderText(
-        QStringLiteral("XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"));
+        QStringLiteral(
+            "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"));
+
     productKeyEdit_->setMaxLength(29);
 
     keyStatusLabel_ = new QLabel;
-    keyStatusLabel_->setText(
-        QStringLiteral(""));
+
+    keyStatusLabel_->setWordWrap(true);
 
     layout->addWidget(instruction);
     layout->addSpacing(12);
@@ -267,29 +254,22 @@ QWizardPage* SetupWizard::createProductKeyPage()
     layout->addWidget(keyStatusLabel_);
     layout->addStretch();
 
-    connect(productKeyEdit_, &QLineEdit::textChanged,
-            this, [this]()
-    {
-        const QString edition = detectedEdition(productKeyEdit_->text());
-
-        if (edition.isEmpty())
-        {
-            keyStatusLabel_->setText(
-                QStringLiteral("Enter a valid Blastmaster Suite product key."));
-        }
-        else
-        {
-            keyStatusLabel_->setText(
-                QStringLiteral("Product key recognized: %1 edition.")
-                    .arg(edition));
-        }
-
-        emit completeChanged();
-    });
-
     registerField(
         QStringLiteral("productKey*"),
         productKeyEdit_);
+
+    connect(
+        productKeyEdit_,
+        &QLineEdit::textChanged,
+        this,
+        [this]()
+        {
+            updateProductKeyStatus();
+
+            emit completeChanged();
+        });
+
+    updateProductKeyStatus();
 
     return page;
 }
@@ -298,10 +278,14 @@ QWizardPage* SetupWizard::createDestinationPage()
 {
     auto* page = new QWizardPage;
 
-    page->setTitle(QStringLiteral("Choose Destination Location"));
+    page->setTitle(
+        QStringLiteral(
+            "Choose Destination Location"));
+
     page->setSubTitle(
         QStringLiteral(
-            "Choose the folder where Blastmaster Suite will be installed."));
+            "Choose the folder where Blastmaster Suite "
+            "will be installed."));
 
     auto* layout = new QVBoxLayout(page);
 
@@ -311,8 +295,10 @@ QWizardPage* SetupWizard::createDestinationPage()
     auto* row = new QHBoxLayout;
 
     destinationEdit_ = new QLineEdit;
+
     destinationEdit_->setText(
-        QStringLiteral("C:/Program Files/Blastmaster Suite"));
+        QStringLiteral(
+            "C:/Program Files/Blastmaster Suite"));
 
     auto* browseButton = new QPushButton(
         QStringLiteral("Browse..."));
@@ -325,18 +311,22 @@ QWizardPage* SetupWizard::createDestinationPage()
     layout->addLayout(row);
     layout->addStretch();
 
-    connect(browseButton, &QPushButton::clicked,
-            this, [this]()
-    {
-        const QString directory =
-            QFileDialog::getExistingDirectory(
-                this,
-                QStringLiteral("Select Destination Folder"),
-                destinationEdit_->text());
+    connect(
+        browseButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            const QString directory =
+                QFileDialog::getExistingDirectory(
+                    this,
+                    QStringLiteral(
+                        "Select Destination Folder"),
+                    destinationEdit_->text());
 
-        if (!directory.isEmpty())
-            destinationEdit_->setText(directory);
-    });
+            if (!directory.isEmpty())
+                destinationEdit_->setText(directory);
+        });
 
     return page;
 }
@@ -345,38 +335,18 @@ QWizardPage* SetupWizard::createReadyPage()
 {
     auto* page = new QWizardPage;
 
-    page->setTitle(QStringLiteral("Ready to Install"));
+    page->setTitle(
+        QStringLiteral("Ready to Install"));
 
     auto* layout = new QVBoxLayout(page);
 
     readyLabel_ = new QLabel;
+
     readyLabel_->setWordWrap(true);
 
     layout->addSpacing(15);
     layout->addWidget(readyLabel_);
     layout->addStretch();
-
-    connect(page, &QWizardPage::completeChanged,
-            this, [this]()
-    {
-        if (!readyLabel_)
-            return;
-
-        const QString edition =
-            detectedEdition(productKeyEdit_->text());
-
-        readyLabel_->setText(
-            QStringLiteral(
-                "Setup is ready to install Blastmaster Suite.\n\n"
-                "Edition: %1\n"
-                "Destination:\n"
-                "%2\n\n"
-                "Click Install to begin the installation.")
-                .arg(edition.isEmpty()
-                         ? QStringLiteral("Unknown")
-                         : edition)
-                .arg(destinationEdit_->text()));
-    });
 
     return page;
 }
@@ -385,16 +355,18 @@ QWizardPage* SetupWizard::createInstallPage()
 {
     auto* page = new QWizardPage;
 
-    page->setTitle(QStringLiteral("Installing Blastmaster Suite"));
+    page->setTitle(
+        QStringLiteral(
+            "Installing Blastmaster Suite"));
 
     auto* layout = new QVBoxLayout(page);
 
-    auto* label = new QLabel(
-        QStringLiteral(
-            "Please wait while Blastmaster Suite is installed."));
+    auto* label = new QLabel;
+
     label->setWordWrap(true);
 
     progressBar_ = new QProgressBar;
+
     progressBar_->setRange(0, 100);
     progressBar_->setValue(0);
 
@@ -404,30 +376,49 @@ QWizardPage* SetupWizard::createInstallPage()
     layout->addWidget(progressBar_);
     layout->addStretch();
 
-    connect(page, &QWizardPage::initializePage,
-            this, [this]()
-    {
-        progressBar_->setValue(0);
-
-        QTimer* timer = new QTimer(this);
-
-        connect(timer, &QTimer::timeout,
-                this, [this, timer]()
+    connect(
+        page,
+        &QWizardPage::initializePage,
+        this,
+        [this, label]()
         {
-            int value = progressBar_->value();
+            const QString edition =
+                editionName();
 
-            if (value >= 100)
-            {
-                timer->stop();
-                timer->deleteLater();
-                return;
-            }
+            label->setText(
+                QStringLiteral(
+                    "Installing Blastmaster Suite "
+                    "%1 edition.\n\n"
+                    "Please wait while the software "
+                    "is installed.")
+                    .arg(edition));
 
-            progressBar_->setValue(value + 5);
+            progressBar_->setValue(0);
+
+            auto* timer = new QTimer(this);
+
+            connect(
+                timer,
+                &QTimer::timeout,
+                this,
+                [this, timer]()
+                {
+                    const int value =
+                        progressBar_->value();
+
+                    if (value >= 100)
+                    {
+                        timer->stop();
+                        timer->deleteLater();
+                        return;
+                    }
+
+                    progressBar_->setValue(
+                        value + 5);
+                });
+
+            timer->start(100);
         });
-
-        timer->start(100);
-    });
 
     return page;
 }
@@ -436,14 +427,18 @@ QWizardPage* SetupWizard::createFinishedPage()
 {
     auto* page = new QWizardPage;
 
-    page->setTitle(QStringLiteral("Installation Complete"));
+    page->setTitle(
+        QStringLiteral(
+            "Installation Complete"));
 
     auto* layout = new QVBoxLayout(page);
 
     auto* label = new QLabel(
         QStringLiteral(
-            "Blastmaster Suite has been successfully installed.\n\n"
+            "Blastmaster Suite has been successfully "
+            "installed.\n\n"
             "Click Finish to close Setup."));
+
     label->setWordWrap(true);
 
     layout->addSpacing(25);
@@ -455,17 +450,102 @@ QWizardPage* SetupWizard::createFinishedPage()
 
 bool SetupWizard::validateProductKey()
 {
-    const QString key = productKeyEdit_->text();
+    if (!productKeyEdit_)
+        return false;
 
-    if (isStandardKey(key) || isProfessionalKey(key))
-        return true;
+    const QString key =
+        productKeyEdit_->text();
 
-    QMessageBox::warning(
-        this,
-        QStringLiteral("Invalid Product Key"),
-        QStringLiteral(
-            "The product key you entered is not recognized.\n\n"
-            "Please check the key and try again."));
+    detectedEdition_ =
+        blastmaster::ProductKeyValidator::detect_edition(
+            toStdString(key));
 
-    return false;
+    if (detectedEdition_ ==
+        blastmaster::Edition::Invalid)
+    {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Invalid Product Key"),
+            QStringLiteral(
+                "The product key you entered is not "
+                "recognized.\n\n"
+                "Please check the key and try again."));
+
+        return false;
+    }
+
+    return true;
+}
+
+void SetupWizard::updateProductKeyStatus()
+{
+    if (!productKeyEdit_ || !keyStatusLabel_)
+        return;
+
+    const QString key =
+        productKeyEdit_->text();
+
+    detectedEdition_ =
+        blastmaster::ProductKeyValidator::detect_edition(
+            toStdString(key));
+
+    switch (detectedEdition_)
+    {
+    case blastmaster::Edition::Standard:
+        keyStatusLabel_->setText(
+            QStringLiteral(
+                "Product key recognized: "
+                "Standard edition."));
+        break;
+
+    case blastmaster::Edition::Professional:
+        keyStatusLabel_->setText(
+            QStringLiteral(
+                "Product key recognized: "
+                "Professional edition."));
+        break;
+
+    case blastmaster::Edition::Invalid:
+    default:
+        keyStatusLabel_->setText(
+            key.isEmpty()
+                ? QString()
+                : QStringLiteral(
+                    "The product key is not valid."));
+        break;
+    }
+}
+
+QString SetupWizard::editionName() const
+{
+    switch (detectedEdition_)
+    {
+    case blastmaster::Edition::Standard:
+        return QStringLiteral("Standard");
+
+    case blastmaster::Edition::Professional:
+        return QStringLiteral("Professional");
+
+    case blastmaster::Edition::Invalid:
+    default:
+        return QStringLiteral("Unknown");
+    }
+}
+
+bool SetupWizard::validateCurrentPage()
+{
+    /*
+     * Product Key is the third page.
+     *
+     * Qt page IDs start at 0:
+     *   0 = Welcome
+     *   1 = License
+     *   2 = Product Key
+     */
+    if (currentId() == 2)
+    {
+        return validateProductKey();
+    }
+
+    return QWizard::validateCurrentPage();
 }
