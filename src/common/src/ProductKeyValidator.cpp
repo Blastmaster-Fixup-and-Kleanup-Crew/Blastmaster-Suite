@@ -24,15 +24,16 @@ std::string ProductKeyValidator::normalize_key(const std::string& key) {
 
 bool ProductKeyValidator::validate(const std::string& key) const {
     const std::string normalized = normalize_key(key);
-    if (normalized.empty()) {
-        return false;
-    }
-
+    
     if (edition_ == Edition::Standard) {
-        return normalized.rfind("BMSSTD", 0) == 0 || normalized.rfind("BMSSTANDARD", 0) == 0;
+        return normalized == "CHKZMF0MKMPWRKIRVYXIV9SVY";
     }
 
-    return normalized.rfind("BMSPRO", 0) == 0 || normalized.rfind("BMSPROFESSIONAL", 0) == 0;
+    if (edition_ == Edition::Professional) {
+        return normalized == "JLGCDIQR9ZTNXR79BFUB9OELD";
+    }
+
+    return false;
 }
 
 std::string ProductKeyValidator::edition_name() const {
