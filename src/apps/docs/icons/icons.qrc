@@ -1,0 +1,73 @@
+<RCC>
+    <qresource prefix="/docs/icons">
+        <!-- File Operations -->
+        <file>file/new.svg</file>
+        <file>file/open.svg</file>
+        <file>file/save.svg</file>
+        <file>file/save_as.svg</file>
+        <file>file/close.svg</file>
+        <file>file/print.svg</file>
+        <file>file/export.svg</file>
+        
+        <!-- Edit Operations -->
+        <file>edit/undo.svg</file>
+        <file>edit/redo.svg</file>
+        <file>edit/cut.svg</file>
+        <file>edit/copy.svg</file>
+        <file>edit/paste.svg</file>
+        <file>edit/select_all.svg</file>
+        <file>edit/find.svg</file>
+        <file>edit/replace.svg</file>
+        
+        <!-- Text Formatting -->
+        <file>format/bold.svg</file>
+        <file>format/italic.svg</file>
+        <file>format/underline.svg</file>
+        <file>format/strikethrough.svg</file>
+        <file>format/subscript.svg</file>
+        <file>format/superscript.svg</file>
+        <file>format/text_color.svg</file>
+        <file>format/highlight.svg</file>
+        <file>format/clear_formatting.svg</file>
+        
+        <!-- Paragraph Formatting -->
+        <file>paragraph/align_left.svg</file>
+        <file>paragraph/align_center.svg</file>
+        <file>paragraph/align_right.svg</file>
+        <file>paragraph/align_justify.svg</file>
+        <file>paragraph/line_spacing.svg</file>
+        <file>paragraph/indent_increase.svg</file>
+        <file>paragraph/indent_decrease.svg</file>
+        <file>paragraph/bullet_list.svg</file>
+        <file>paragraph/numbered_list.svg</file>
+        
+        <!-- Insert Elements -->
+        <file>insert/image.svg</file>
+        <file>insert/table.svg</file>
+        <file>insert/hyperlink.svg</file>
+        <file>insert/shape.svg</file>
+        <file>insert/text_box.svg</file>
+        <file>insert/page_break.svg</file>
+        <file>insert/section_break.svg</file>
+        <file>insert/comment.svg</file>
+        
+        <!-- View Options -->
+        <file>view/zoom_in.svg</file>
+        <file>view/zoom_out.svg</file>
+        <file>view/fit_page.svg</file>
+        <file>view/fit_width.svg</file>
+        <file>view/show_grid.svg</file>
+        <file>view/show_formatting.svg</file>
+        
+        <!-- Tools -->
+        <file>tools/spelling.svg</file>
+        <file>tools/grammar.svg</file>
+        <file>tools/word_count.svg</file>
+        <file>tools/statistics.svg</file>
+        <file>tools/settings.svg</file>
+        
+        <!-- Application -->
+        <file>app/help.svg</file>
+        <file>app/about.svg</file>
+    </qresource>
+</RCC>
