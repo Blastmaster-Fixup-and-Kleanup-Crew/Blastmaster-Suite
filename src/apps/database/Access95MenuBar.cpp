@@ -240,16 +240,17 @@ void Access95MenuBar::createToolbars()
     standard->setFloatable(true);
     standard->setIconSize(QSize(16, 16));
 
-    auto addStatusAction = [this, standard](const QString& text, const QKeySequence& seq = QKeySequence()) {
-        auto* a = action(standard, text, seq);
-        standard->addAction(a);
+    auto addToolbarAction = [this](QToolBar* toolbar, const QString& text,
+                                  const QKeySequence& seq = QKeySequence()) {
+        auto* a = action(toolbar, text, seq);
+        toolbar->addAction(a);
         QObject::connect(a, &QAction::triggered, [this, text] {
             m_parent->statusBar()->showMessage(text, 2000);
         });
         return a;
     };
 
-    addStatusAction(QStringLiteral("New Database"));
+    addToolbarAction(standard, QStringLiteral("New Database"));
     addStatusAction(QStringLiteral("Open"), QKeySequence::Open);
     addStatusAction(QStringLiteral("Save"), QKeySequence::Save);
     addStatusAction(QStringLiteral("Print"));
@@ -289,7 +290,7 @@ void Access95MenuBar::createToolbars()
                                 QStringLiteral("Underline"), QStringLiteral("Align Left"),
                                 QStringLiteral("Center"), QStringLiteral("Align Right"),
                                 QStringLiteral("Font Color"), QStringLiteral("Special Effect")}) {
-        addStatusAction(text);
+        addToolbarAction(formatting, text);
     }
 
     m_parent->addToolBar(Qt::TopToolBarArea, formatting);
