@@ -107,6 +107,9 @@ InstallerBackend::Result InstallerBackend::install(
     }
 
     const bool isUpgrade = !installedEdition.isEmpty();
+    const bool destinationExisted = QDir(cleanDestination).exists();
+    const bool destinationWasEmpty =
+        destinationExisted && isEmptyDirectory(cleanDestination);
 
     // Verify that the destination or its parent is writable before staging an upgrade.
     const QString writeDirectory = destinationExisted ? cleanDestination : destinationInfo.absolutePath();
@@ -124,9 +127,6 @@ InstallerBackend::Result InstallerBackend::install(
     }
     probe.close();
     QFile::remove(writeProbe);
-    const bool destinationExisted = QDir(cleanDestination).exists();
-    const bool destinationWasEmpty =
-        destinationExisted && isEmptyDirectory(cleanDestination);
 
     const QString backupDestination =
         cleanDestination + QStringLiteral(".blastmaster-backup");
