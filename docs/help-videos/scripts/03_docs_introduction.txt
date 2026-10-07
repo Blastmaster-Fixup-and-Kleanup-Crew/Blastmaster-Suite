@@ -1,0 +1,15 @@
+Welcome to Blastmaster Docs.
+
+Docs is the word-processing application in Blastmaster Suite.
+
+The main window uses a classic menu bar together with dockable toolbars. The Standard toolbar contains common document commands. The Formatting toolbar provides text and paragraph controls. The Drawing toolbar contains drawing commands.
+
+The ruler provides a visual reference for document layout.
+
+To create a document, choose New from the File menu.
+
+To open an existing document, choose Open and select a DCCX file.
+
+To save your work, choose Save. When a document has not yet been named, Save As lets you choose its filename and location.
+
+The rest of the Docs help series explores editing, formatting, inserting content, tables, tools, printing, and the Help menu.
