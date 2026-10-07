@@ -34,6 +34,8 @@ int main(int argc, char* argv[])
 
     qputenv("BLASTMASTER_SETUP_PAYLOAD",
             QDir::toNativeSeparators(payloadDirectory.path()).toUtf8());
+    qputenv("BLASTMASTER_SETUP_BRANDING",
+            QDir(payloadDirectory.path()).filePath(QStringLiteral("common/blastmaster_suite_setup.svg")).toUtf8());
 #endif
 
     SetupWizard wizard;
