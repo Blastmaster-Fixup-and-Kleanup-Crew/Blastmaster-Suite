@@ -1,3 +1,5 @@
+option(BLASTMASTER_ENABLE_SIGNING "Sign Windows installer artifacts with SignTool." OFF)
+
 if(WIN32)
     set(BLASTMASTER_SETUP_MANIFEST
         "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_setup.manifest")
