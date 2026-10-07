@@ -1,0 +1,15 @@
+Welcome to Blastmaster Databases.
+
+Databases is the database application in the Professional edition of Blastmaster Suite.
+
+A database is stored using the DBBX file extension.
+
+The Database window is the central place for working with database objects.
+
+The application uses a classic database interface with a Database toolbar and a Formatting toolbar.
+
+Use New Database to create a database, Open to open an existing database, and Save to store changes.
+
+Design View and Grid view provide different ways to work with database content.
+
+The next videos cover tables, queries, forms, reports, and relationships.
