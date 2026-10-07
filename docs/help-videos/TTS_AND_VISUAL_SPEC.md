@@ -22,7 +22,7 @@ Before publishing, listen for pronunciation of:
 - Qt
 - SQLite
 - DCCX
-- WKBCX
+- WKBX
 - PREX
 - DBBX
 
