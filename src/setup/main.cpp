@@ -14,8 +14,7 @@ int main(int argc, char* argv[])
     QApplication application(argc, argv);
 
     QTranslator setupTranslator;
-    const QString localeName = QLocale::system().name();
-    if (setupTranslator.load(QStringLiteral(":/i18n/blastmaster_setup_%1.qm").arg(localeName)))
+    if (setupTranslator.load(QLocale::system(), QStringLiteral("blastmaster_setup"), QStringLiteral("_"), QStringLiteral(":/i18n")))
         application.installTranslator(&setupTranslator);
 
     application.setApplicationName(QStringLiteral("Blastmaster Suite Setup"));
