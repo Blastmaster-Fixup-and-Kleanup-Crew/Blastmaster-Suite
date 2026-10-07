@@ -25,6 +25,10 @@
 - Find and Replace — [Common Commands](common-commands.md)
 - Forms — [Databases](databases.md)
 
+## H
+
+- Help videos — [Help Videos](help-videos.md)
+
 ## I
 
 - Installation — [Installing Blastmaster Suite](installation.md)
