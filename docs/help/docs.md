@@ -119,4 +119,6 @@ The Window menu provides New Window, Arrange All, Split, and Open Document Files
 
 ## Help
 
-The Help menu provides Help Topics, Microsoft on the Web, and About Microsoft Word.
+The Help menu provides **Help Topics** and **About Blastmaster Docs**.
+
+Help Topics opens the application-specific Blastmaster Docs help library.
