@@ -1,0 +1,9 @@
+This video covers inserting content and working with tables in Docs.
+
+The Insert menu provides commands for breaks, page numbers, date and time, fields, symbols, form fields, comments, footnotes, captions, cross-references, indexes and tables, pictures, objects, and files.
+
+The Table menu provides commands for inserting a table and selecting cells, rows, columns, or the complete table.
+
+You can split cells, split a table, open Table Properties, or convert text to a table.
+
+Use these commands when a document needs structured information, page elements, references, or embedded content.
