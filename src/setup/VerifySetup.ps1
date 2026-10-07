@@ -22,6 +22,8 @@ $professional = Join-Path $PayloadRoot "professional"
 
 Assert-True (Test-Path $common -PathType Container) "common payload exists"
 Assert-True (Test-Path $standard -PathType Container) "standard payload exists"
+Assert-True (Test-Path (Join-Path $common "BlastmasterHelp.exe")) "common payload contains Help launcher"
+Assert-True (Test-Path (Join-Path $common "blastmaster_suite_setup.svg")) "common payload contains setup branding"
 
 Assert-True (Test-Path (Join-Path $standard "blastmaster_docs.exe")) "Standard contains Docs"
 Assert-True (Test-Path (Join-Path $standard "blastmaster_workbooks.exe")) "Standard contains Workbooks"
@@ -52,6 +54,7 @@ if ($SetupExe) {
 
 if ($InstallRoot) {
     Assert-True (Test-Path $InstallRoot -PathType Container) "Installed directory exists"
+    Assert-True (Test-Path (Join-Path $InstallRoot "BlastmasterHelp.exe")) "Installed Help launcher exists"
 
     $apps = @(
         @{ Name = "Docs"; Extension = ".dccx"; Exe = "blastmaster_docs.exe"; ProgId = "Blastmaster.Docs" },
@@ -60,28 +63,40 @@ if ($InstallRoot) {
     )
 
     foreach ($app in $apps) {
-        $extPath = "HKCU:\Software\Classes\$($app.Extension)"
-        $progPath = "HKCU:\Software\Classes\$($app.ProgId)"
-        Assert-True ((Get-ItemProperty -Path $extPath -Name '(default)' -ErrorAction SilentlyContinue).'(default)' -eq $app.ProgId) "$($app.Extension) points to $($app.ProgId)"
+        $extPath = "HKCU:SoftwareClasses$($app.Extension)"
+        $progPath = "HKCU:SoftwareClasses$($app.ProgId)"
+        $default = (Get-ItemProperty -Path $extPath -Name '(default)' -ErrorAction SilentlyContinue).'(default)'
+        Assert-True ($default -eq $app.ProgId) "$($app.Extension) points to $($app.ProgId)"
         Assert-True (Test-Path $progPath) "$($app.ProgId) exists"
         Assert-True (Test-Path (Join-Path $InstallRoot $app.Exe)) "$($app.Name) executable exists"
     }
 
+    $startMenu = Join-Path $env:APPDATA "MicrosoftWindowsStart MenuProgramsBlastmaster Suite"
+    Assert-True (Test-Path (Join-Path $startMenu "Blastmaster Suite Help.lnk")) "Start Menu contains Blastmaster Suite Help"
+
     $dbExe = Join-Path $InstallRoot "blastmaster_database.exe"
     if (Test-Path $dbExe) {
-        $extPath = "HKCU:\Software\Classes\.dbbx"
-        Assert-True ((Get-ItemProperty -Path $extPath -Name '(default)' -ErrorAction SilentlyContinue).'(default)' -eq "Blastmaster.Databases") ".dbbx points to Blastmaster.Databases"
-        Assert-True (Test-Path "HKCU:\Software\Classes\Blastmaster.Databases") "Blastmaster.Databases exists"
+        $extPath = "HKCU:SoftwareClasses.dbbx"
+        $default = (Get-ItemProperty -Path $extPath -Name '(default)' -ErrorAction SilentlyContinue).'(default)'
+        Assert-True ($default -eq "Blastmaster.Databases") ".dbbx points to Blastmaster.Databases"
+        Assert-True (Test-Path "HKCU:SoftwareClassesBlastmaster.Databases") "Blastmaster.Databases exists"
+        Assert-True (Test-Path (Join-Path $startMenu "Databases.lnk")) "Professional Start Menu contains Databases"
     } else {
-        Assert-True (-not (Test-Path "HKCU:\Software\Classes\.dbbx")) "Standard install does not register .dbbx"
+        Assert-True (-not (Test-Path "HKCU:SoftwareClasses.dbbx")) "Standard install does not register .dbbx"
+        Assert-True (-not (Test-Path (Join-Path $startMenu "Databases.lnk"))) "Standard Start Menu excludes Databases"
     }
 }
 
 Write-Host ""
 Write-Host "Setup verification completed successfully."
-Write-Host "For uninstall verification, run this script with the install removed and confirm:"
+Write-Host "For upgrade/reinstall verification:"
+Write-Host "  1. Place a test file in the existing installation directory."
+Write-Host "  2. Run Setup again against the same edition and destination."
+Write-Host "  3. Confirm the test file remains and the application files are refreshed."
+Write-Host ""
+Write-Host "For uninstall verification, confirm:"
 Write-Host "  - the install directory is gone"
-Write-Host "  - HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Blastmaster Suite is gone"
+Write-Host "  - HKCU:SoftwareMicrosoftWindowsCurrentVersionUninstallBlastmaster Suite is gone"
 Write-Host "  - the Blastmaster Suite Start Menu folder is gone"
 Write-Host "  - Blastmaster Docs/Workbooks/Presentations/Databases ProgIDs are gone"
 Write-Host "  - Blastmaster-owned extensions are gone or restored to their previous owners"
