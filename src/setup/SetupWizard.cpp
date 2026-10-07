@@ -11,6 +11,7 @@
 #include <QFileInfo>
 #include <QFont>
 #include <QIcon>
+#include <QPixmap>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressBar>
@@ -93,6 +94,14 @@ QWizardPage* SetupWizard::createWelcomePage()
     auto* page = new QWizardPage;
     page->setTitle(QStringLiteral("Welcome to Blastmaster Suite Setup"));
     auto* layout = new QVBoxLayout(page);
+    auto* branding = new QLabel;
+    const QString brandingPath = qEnvironmentVariable("BLASTMASTER_SETUP_BRANDING");
+    if (!brandingPath.isEmpty() && QFile::exists(brandingPath))
+    {
+        const QIcon icon(brandingPath);
+        branding->setPixmap(icon.pixmap(QSize(48, 48)));
+        branding->setFixedSize(48, 48);
+    }
     auto* title = new QLabel(QStringLiteral("<b>Blastmaster Suite</b>"));
     title->setStyleSheet("font-size: 12pt;");
     auto* text = new QLabel(
@@ -101,6 +110,7 @@ QWizardPage* SetupWizard::createWelcomePage()
                        "Click Next to continue."));
     text->setWordWrap(true);
     layout->addSpacing(12);
+    layout->addWidget(branding);
     layout->addWidget(title);
     layout->addSpacing(12);
     layout->addWidget(text);
