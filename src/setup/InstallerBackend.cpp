@@ -55,9 +55,16 @@ InstallerBackend::Result InstallerBackend::install(
     }
 
     const QString cleanDestination = QDir::cleanPath(destination);
-    if (cleanDestination.isEmpty())
+    const QFileInfo destinationInfo(cleanDestination);
+    if (cleanDestination.isEmpty() || !destinationInfo.isAbsolute())
     {
-        result.message = QStringLiteral("No installation destination was specified.");
+        result.message = QStringLiteral("The installation destination must be a valid absolute folder path.");
+        return result;
+    }
+
+    if (cleanDestination.size() > 240)
+    {
+        result.message = QStringLiteral("The installation path is too long. Choose a shorter destination.");
         return result;
     }
 
@@ -100,6 +107,23 @@ InstallerBackend::Result InstallerBackend::install(
     }
 
     const bool isUpgrade = !installedEdition.isEmpty();
+
+    // Verify that the destination or its parent is writable before staging an upgrade.
+    const QString writeDirectory = destinationExisted ? cleanDestination : destinationInfo.absolutePath();
+    if (!QDir(writeDirectory).exists() && !QDir().mkpath(writeDirectory))
+    {
+        result.message = QStringLiteral("Setup could not create the destination folder:\n%1").arg(writeDirectory);
+        return result;
+    }
+    const QString writeProbe = QDir(writeDirectory).filePath(QStringLiteral(".blastmaster_write_test"));
+    QFile probe(writeProbe);
+    if (!probe.open(QIODevice::WriteOnly))
+    {
+        result.message = QStringLiteral("Setup cannot write to the selected installation location.");
+        return result;
+    }
+    probe.close();
+    QFile::remove(writeProbe);
     const bool destinationExisted = QDir(cleanDestination).exists();
     const bool destinationWasEmpty =
         destinationExisted && isEmptyDirectory(cleanDestination);
