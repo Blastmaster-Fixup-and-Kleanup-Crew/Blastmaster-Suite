@@ -1,7 +1,16 @@
+option(BLASTMASTER_ENABLE_SIGNING "Sign Windows installer artifacts with SignTool." OFF)
+
 if(WIN32)
     set(BLASTMASTER_SETUP_MANIFEST
         "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_setup.manifest")
 endif()
+
+add_executable(blastmaster_help_launcher
+    HelpLauncher.cpp
+)
+
+target_link_libraries(blastmaster_help_launcher PRIVATE Qt6::Widgets Qt6::Core blastmaster_common)
+target_include_directories(blastmaster_help_launcher PRIVATE ${CMAKE_SOURCE_DIR}/src/common/include)
 
 add_executable(blastmaster_setup
     main.cpp
@@ -61,7 +70,7 @@ target_include_directories(blastmaster_uninstaller
         ${CMAKE_SOURCE_DIR}/src/common/include
 )
 
-add_dependencies(blastmaster_setup blastmaster_uninstaller)
+add_dependencies(blastmaster_setup blastmaster_uninstaller blastmaster_help_launcher)
 
 target_include_directories(blastmaster_setup
     PRIVATE
@@ -100,6 +109,12 @@ add_custom_command(
         "$<TARGET_FILE:blastmaster_uninstaller>"
         "${BLASTMASTER_SETUP_PAYLOAD}/common/Uninstall$<TARGET_FILE_SUFFIX:blastmaster_uninstaller>"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:blastmaster_help_launcher>"
+        "${BLASTMASTER_SETUP_PAYLOAD}/common/BlastmasterHelp$<TARGET_FILE_SUFFIX:blastmaster_help_launcher>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_suite_setup.svg"
+        "${BLASTMASTER_SETUP_PAYLOAD}/common/blastmaster_suite_setup.svg"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:blastmaster_docs>"
         "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_docs$<TARGET_FILE_SUFFIX:blastmaster_docs>"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -119,6 +134,10 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
             --no-translations
             --dir "${BLASTMASTER_SETUP_PAYLOAD}/common"
             "$<TARGET_FILE:blastmaster_uninstaller>"
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+            --no-translations
+            --dir "${BLASTMASTER_SETUP_PAYLOAD}/common"
+            "$<TARGET_FILE:blastmaster_help_launcher>"
         VERBATIM
     )
 endif()
