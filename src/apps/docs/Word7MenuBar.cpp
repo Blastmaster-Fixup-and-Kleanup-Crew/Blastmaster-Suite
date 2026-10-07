@@ -1,5 +1,6 @@
 #include "Word7MenuBar.h"
 #include "Document.h"
+#include "blastmaster/HelpTopicsWindow.h"
 
 #include <QAction>
 #include <QFrame>
@@ -453,7 +454,10 @@ void Word7MenuBar::createHelpMenu()
         wireAction(action, text);
     };
 
-    add("Help Topics");
+    auto* helpTopics = addMenuAction(m_helpMenu, "Help Topics", "Open Blastmaster Docs Help Topics");
+    QObject::connect(helpTopics, &QAction::triggered, [this]() {
+        blastmaster::HelpTopicsWindow::showFor(m_parent, "docs");
+    });
     add("Microsoft on the Web");
     add("About Microsoft Word");
 }
