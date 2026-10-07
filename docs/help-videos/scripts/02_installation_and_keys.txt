@@ -1,0 +1,23 @@
+This video explains how to install Blastmaster Suite and how product-key recognition works.
+
+Start Setup to open the Blastmaster Suite Setup wizard.
+
+The Welcome page introduces the installer. Select Next to continue.
+
+The License Agreement page displays the license text.
+
+The Product Key page is where you enter your twenty-five-character product key.
+
+As the key is entered, Setup identifies the edition associated with the key. A recognized Standard key selects the Standard edition. A recognized Professional key selects the Professional edition.
+
+Next, choose the destination folder. The default location is the Blastmaster Suite folder under Program Files, but the Browse button can be used to select another location.
+
+The Ready to Install page summarizes the selected edition and destination.
+
+Select Install to begin. The installation page displays progress while the suite is installed.
+
+When installation completes, the final page confirms the installation location.
+
+Select Finish to close Setup.
+
+If a product key is rejected, check the characters carefully and return to the Product Key page before continuing.
