@@ -1,13 +1,15 @@
 #include <QApplication>
+#include <QHBoxLayout>
 #include <QLabel>
+#include <QListWidget>
 #include <QMainWindow>
+#include <QPlainTextEdit>
 #include <QStatusBar>
 #include <QVBoxLayout>
 #include <QWidget>
 
 #include "PowerPoint7MenuBar.h"
 #include "PresentationDocument.h"
-#include "blastmaster/ProductKeyValidator.h"
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
@@ -16,40 +18,69 @@ int main(int argc, char* argv[]) {
 
     QMainWindow window;
     window.resize(1100, 700);
-    window.setWindowTitle("Blastmaster Presentations");
+    window.setWindowTitle("Blastmaster Presentations - Untitled");
+
+    auto* document = new blastmaster::presentation::PresentationDocument(&window);
 
     auto* central = new QWidget(&window);
-    auto* layout = new QVBoxLayout(central);
+    auto* layout = new QHBoxLayout(central);
+    layout->setContentsMargins(4, 4, 4, 4);
 
-    auto* title = new QLabel("Blastmaster Presentations", central);
-    title->setAlignment(Qt::AlignCenter);
-    title->setStyleSheet("font-size: 22px; font-weight: 600; margin-top: 24px;");
-    layout->addWidget(title);
+    auto* slides = new QListWidget(central);
+    slides->setFixedWidth(180);
+    slides->setAlternatingRowColors(true);
 
-    auto* body = new QLabel("Slide editing and presentation tools ready.", central);
-    body->setAlignment(Qt::AlignCenter);
-    body->setStyleSheet("font-size: 16px; margin: 12px;");
-    layout->addWidget(body);
+    auto* editorPane = new QWidget(central);
+    auto* editorLayout = new QVBoxLayout(editorPane);
+    auto* titleEdit = new QLineEdit(editorPane);
+    titleEdit->setPlaceholderText("Slide title");
+    auto* bodyEdit = new QPlainTextEdit(editorPane);
+    bodyEdit->setPlaceholderText("Click to add text");
+    editorLayout->addWidget(titleEdit);
+    editorLayout->addWidget(bodyEdit);
 
-    blastmaster::presentation::PresentationDocument document;
-    document.setTitle("Untitled Presentation");
+    layout->addWidget(slides);
+    layout->addWidget(editorPane, 1);
+    window.setCentralWidget(central);
 
-    blastmaster::presentation::PowerPoint7MenuBar menuBar(&window, &document);
+    auto refresh = [&]() {
+        slides->clear();
+        for (int i = 0; i < document->slideCount(); ++i)
+            slides->addItem(QString("%1. %2").arg(i + 1).arg(document->slide(i).title));
+        if (slides->count() > 0 && slides->currentRow() < 0)
+            slides->setCurrentRow(0);
+    };
+
+    auto loadSlide = [&]() {
+        const int row = slides->currentRow();
+        if (row < 0 || row >= document->slideCount()) return;
+        const auto& slide = document->slide(row);
+        titleEdit->setText(slide.title);
+        bodyEdit->setPlainText(slide.body);
+        window.statusBar()->showMessage(QString("Slide %1 of %2").arg(row + 1).arg(document->slideCount()));
+    };
+
+    QObject::connect(slides, &QListWidget::currentRowChanged, [&](int) { loadSlide(); });
+    QObject::connect(titleEdit, &QLineEdit::textChanged, [&](const QString& text) {
+        const int row = slides->currentRow();
+        if (row >= 0 && row < document->slideCount())
+            document->setSlide(row, text, bodyEdit->toPlainText());
+        if (row >= 0 && row < slides->count())
+            slides->item(row)->setText(QString("%1. %2").arg(row + 1).arg(text));
+    });
+    QObject::connect(bodyEdit, &QPlainTextEdit::textChanged, [&]() {
+        const int row = slides->currentRow();
+        if (row >= 0 && row < document->slideCount())
+            document->setSlide(row, titleEdit->text(), bodyEdit->toPlainText());
+    });
+
+    refresh();
+    loadSlide();
+
+    blastmaster::presentation::PowerPoint7MenuBar menuBar(&window, document);
     window.setMenuBar(menuBar.menuBar());
 
-    blastmaster::ProductKeyValidator validator(blastmaster::Edition::Standard);
-    const std::string sample_key = "BMSSTANDARD-PRES";
-    const bool valid = validator.validate(sample_key);
-    auto* status = new QLabel(QString("Edition: %1 | Sample key valid: %2")
-        .arg(QString::fromStdString(validator.edition_name()))
-        .arg(valid ? "Yes" : "No"), central);
-    status->setAlignment(Qt::AlignCenter);
-    status->setStyleSheet("font-size: 12px; color: #4d4d4d;");
-    layout->addWidget(status);
-
-    window.setCentralWidget(central);
-    window.statusBar()->showMessage("Presentation module initialized");
+    window.statusBar()->showMessage("Ready");
     window.show();
-
     return app.exec();
 }
