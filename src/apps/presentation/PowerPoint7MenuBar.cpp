@@ -1,5 +1,6 @@
 #include "PowerPoint7MenuBar.h"
 #include "PresentationDocument.h"
+#include "blastmaster/HelpTopicsWindow.h"
 
 #include <QAction>
 #include <QApplication>
@@ -474,7 +475,10 @@ void PowerPoint7MenuBar::createHelpMenu()
         wireAction(action, text);
     };
 
-    add("Contents and Index");
+    auto* helpTopics = addMenuAction(m_helpMenu, "Contents and Index", "Open Blastmaster Presentations Help Topics");
+    QObject::connect(helpTopics, &QAction::triggered, [this]() {
+        blastmaster::HelpTopicsWindow::showFor(m_parent, "presentations");
+    });
     add("Getting Assistance");
     add("Microsoft on the Web");
     add("About Microsoft PowerPoint");
