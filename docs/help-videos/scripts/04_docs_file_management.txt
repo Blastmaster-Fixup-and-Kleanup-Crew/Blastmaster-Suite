@@ -1,0 +1,15 @@
+This video covers file management and printing in Blastmaster Docs.
+
+The File menu provides New, Open, Close, Save, and Save As.
+
+Version provides version-related document access. Find File helps locate a document. Page Setup controls page configuration.
+
+Print Preview lets you inspect the document before printing. Print sends the document to the printer.
+
+Send provides document-sending options, while Properties displays document properties.
+
+Export provides an export command when available in the current build.
+
+When you are finished, choose Exit to close Docs.
+
+Use Save regularly so that your latest changes are stored in the DCCX document.
