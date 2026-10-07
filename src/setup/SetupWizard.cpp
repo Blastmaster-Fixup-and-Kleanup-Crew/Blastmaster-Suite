@@ -46,9 +46,9 @@ SetupWizard::SetupWizard(QWidget* parent)
     setButtonText(QWizard::FinishButton, QStringLiteral("Finish"));
     setFixedSize(560, 380);
 
-    const QString brandingIcon =
-        QDir(QCoreApplication::applicationDirPath()).filePath(
-            QStringLiteral("blastmaster_suite_setup.svg"));
+    const QString brandingIcon = qEnvironmentVariable("BLASTMASTER_SETUP_BRANDING").isEmpty()
+        ? QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("blastmaster_suite_setup.svg"))
+        : qEnvironmentVariable("BLASTMASTER_SETUP_BRANDING");
     if (QFile::exists(brandingIcon))
         setWindowIcon(QIcon(brandingIcon));
 
