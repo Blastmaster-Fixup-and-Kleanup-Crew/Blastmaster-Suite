@@ -1,0 +1,11 @@
+This video covers the core editing and formatting commands in Docs.
+
+The Edit menu contains Undo and Repeat, followed by Cut, Copy, Paste, Paste Special, and Clear.
+
+Select All selects the complete document. Find, Replace, and Go To help you locate and change content. AutoText provides reusable text.
+
+The Format menu contains Font and Paragraph controls, along with Tabs, Borders and Shading, Columns, Drop Cap, Bullets and Numbering, Change Case, Heading Numbering, Style, AutoFormat, and Theme.
+
+The Formatting toolbar provides quick access to common text controls such as font, size, bold, italic, underline, alignment, bullets, and indentation.
+
+Use these tools together to create a document with consistent structure and formatting.
