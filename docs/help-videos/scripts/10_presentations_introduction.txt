@@ -1,0 +1,13 @@
+Welcome to Blastmaster Presentations.
+
+Presentations is the slide-creation application in Blastmaster Suite.
+
+Create a new presentation with New, or open an existing PREX presentation with Open.
+
+The main window contains the menu bar and toolbars used to create and format slides.
+
+Use Save to preserve your presentation. Save As creates another copy or saves to a different location.
+
+As you work, move between slides and use the editing and formatting commands to build the presentation.
+
+The next video covers design and slide-show features.
