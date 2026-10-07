@@ -1,26 +1,33 @@
 #pragma once
 
-#include <QString>
-#include <QJsonDocument>
 #include <QJsonObject>
-#include <memory>
+#include <QString>
+#include <QStringList>
 
 namespace blastmaster::presentation {
 
-/**
- * @class PresentationDocument
- * @brief Represents a presentation document with .prex JSON backing storage.
- */
 class PresentationDocument {
 public:
+    struct Slide {
+        QString title;
+        QString body;
+    };
+
     PresentationDocument();
     explicit PresentationDocument(const QString& filePath);
 
     QString title() const { return m_title; }
     void setTitle(const QString& title) { m_title = title; m_isDirty = true; }
 
-    QString content() const { return m_content; }
-    void setContent(const QString& content) { m_content = content; m_isDirty = true; }
+    QString content() const;
+    void setContent(const QString& content);
+
+    int slideCount() const { return m_slides.size(); }
+    const Slide& slide(int index) const { return m_slides.at(index); }
+    void setSlide(int index, const QString& title, const QString& body);
+    void addSlide(const QString& title = QStringLiteral("Title"), const QString& body = QStringLiteral("Click to add text"));
+    void removeSlide(int index);
+    void clearSlides();
 
     QString filePath() const { return m_filePath; }
     void setFilePath(const QString& path) { m_filePath = path; }
@@ -38,7 +45,7 @@ public:
 
 private:
     QString m_title;
-    QString m_content;
+    QList<Slide> m_slides;
     QString m_filePath;
     bool m_isDirty;
 
