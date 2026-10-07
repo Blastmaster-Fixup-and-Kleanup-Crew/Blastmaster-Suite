@@ -2,11 +2,15 @@
 
 #include <QFile>
 #include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
 #include <QTextBrowser>
 #include <QTextDocument>
+#include <QUrl>
 #include <QVBoxLayout>
+#include <QShortcut>
 #include <QKeySequence>
 
 namespace blastmaster {
@@ -71,12 +75,23 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
     , m_applicationId(applicationId)
     , m_topicList(new QListWidget(this))
     , m_topicView(new QTextBrowser(this))
+    , m_searchEdit(new QLineEdit(this))
+    , m_statusLabel(new QLabel(this))
 {
     setWindowTitle(displayName(applicationId) + " - Help Topics");
     resize(900, 620);
 
     auto* layout = new QVBoxLayout(this);
     auto* content = new QHBoxLayout();
+
+    auto* searchRow = new QHBoxLayout();
+    auto* searchLabel = new QLabel(tr("&Search topics:"), this);
+    m_searchEdit->setPlaceholderText(tr("Type a topic name or keyword..."));
+    m_searchEdit->setAccessibleName(tr("Search help topics"));
+    searchLabel->setBuddy(m_searchEdit);
+    searchRow->addWidget(searchLabel);
+    searchRow->addWidget(m_searchEdit, 1);
+    layout->addLayout(searchRow);
 
     m_topicList->setMinimumWidth(240);
     m_topicList->setAccessibleName(tr("Help topics"));
@@ -90,15 +105,34 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
     content->addWidget(m_topicView, 1);
     layout->addLayout(content, 1);
 
+    auto* bottomRow = new QHBoxLayout();
+    m_statusLabel->setAccessibleName(tr("Help topic status"));
+    bottomRow->addWidget(m_statusLabel, 1);
+
     auto* closeButton = new QPushButton(tr("Close"), this);
     closeButton->setDefault(true);
     closeButton->setAutoDefault(true);
     closeButton->setFocusPolicy(Qt::StrongFocus);
     QObject::connect(closeButton, &QPushButton::clicked, this, &QDialog::accept);
-    layout->addWidget(closeButton, 0, Qt::AlignRight);
+    bottomRow->addWidget(closeButton);
+    layout->addLayout(bottomRow);
 
+    setTabOrder(m_searchEdit, m_topicList);
     setTabOrder(m_topicList, m_topicView);
     setTabOrder(m_topicView, closeButton);
+
+    auto* findShortcut = new QShortcut(QKeySequence::Find, this);
+    QObject::connect(findShortcut, &QShortcut::activated, this, [this]() {
+        m_searchEdit->setFocus();
+        m_searchEdit->selectAll();
+    });
+
+    QObject::connect(m_searchEdit, &QLineEdit::textChanged,
+                     this, &HelpTopicsWindow::filterTopics);
+    QObject::connect(m_topicList, &QListWidget::currentItemChanged,
+                     this, [this](QListWidgetItem*) { showCurrentTopic(); });
+    QObject::connect(m_topicView, &QTextBrowser::anchorClicked,
+                     this, &HelpTopicsWindow::activateTopicLink);
 
     loadTopics();
 }
@@ -121,19 +155,70 @@ void HelpTopicsWindow::loadTopics()
         item->setData(Qt::UserRole, QString::fromLatin1(topic.resource));
     }
 
-    QObject::connect(m_topicList, &QListWidget::currentItemChanged,
-                     this, [this](QListWidgetItem* current) {
-        if (!current) {
-            m_topicView->clear();
-            return;
-        }
-        m_topicView->document()->setMarkdown(
-            loadMarkdown(current->data(Qt::UserRole).toString()));
-    });
-
     if (m_topicList->count() > 0) {
         m_topicList->setCurrentRow(0);
         m_topicList->setFocus();
+    }
+    filterTopics(QString());
+}
+
+void HelpTopicsWindow::filterTopics(const QString& text)
+{
+    const QString query = text.trimmed();
+    int visibleCount = 0;
+    QListWidgetItem* firstVisible = nullptr;
+
+    for (int i = 0; i < m_topicList->count(); ++i) {
+        auto* item = m_topicList->item(i);
+        const bool matches = query.isEmpty() ||
+            item->text().contains(query, Qt::CaseInsensitive);
+        item->setHidden(!matches);
+        if (matches) {
+            ++visibleCount;
+            if (!firstVisible) firstVisible = item;
+        }
+    }
+
+    m_statusLabel->setText(
+        visibleCount == 1
+            ? tr("1 topic")
+            : tr("%1 topics").arg(visibleCount));
+
+    if (firstVisible) {
+        if (!m_topicList->currentItem() || m_topicList->currentItem()->isHidden()) {
+            m_topicList->setCurrentItem(firstVisible);
+        }
+    } else {
+        m_topicView->setMarkdown(tr("# No matching topics\n\nTry a different search term."));
+    }
+}
+
+void HelpTopicsWindow::showCurrentTopic()
+{
+    auto* current = m_topicList->currentItem();
+    if (!current || current->isHidden()) {
+        return;
+    }
+
+    m_topicView->document()->setMarkdown(
+        loadMarkdown(current->data(Qt::UserRole).toString()));
+}
+
+void HelpTopicsWindow::activateTopicLink(const QUrl& url)
+{
+    if (!url.isValid()) {
+        return;
+    }
+
+    const QString target = url.path().section('/', -1);
+    for (int i = 0; i < m_topicList->count(); ++i) {
+        auto* item = m_topicList->item(i);
+        const QString resource = item->data(Qt::UserRole).toString();
+        if (resource.endsWith('/' + target)) {
+            m_searchEdit->clear();
+            m_topicList->setCurrentItem(item);
+            return;
+        }
     }
 }
 
