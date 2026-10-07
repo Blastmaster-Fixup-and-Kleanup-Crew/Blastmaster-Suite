@@ -1,7 +1,8 @@
 #pragma once
 
-#include <QString>
+#include <QHash>
 #include <QJsonObject>
+#include <QString>
 
 namespace blastmaster::spreadsheet {
 
@@ -19,12 +20,16 @@ public:
     bool isDirty() const { return m_isDirty; }
     void setClean() { m_isDirty = false; }
 
-    // File operations
+    // Cell data is stored as sheet name -> cell address -> text/formula.
+    QString cell(const QString& sheet, const QString& address) const;
+    void setCell(const QString& sheet, const QString& address, const QString& value);
+    QStringList sheets() const;
+    void ensureSheet(const QString& sheet);
+
     bool save();
     bool saveAs(const QString& filePath);
     bool load();
 
-    // File metadata helpers
     static QString fileExtension() { return ".wkbx"; }
     static QString fileFilter() { return "Blastmaster Workbooks (*.wkbx);;All Files (*.*)"; }
 
@@ -35,6 +40,7 @@ private:
     QString m_title;
     QString m_filePath;
     bool m_isDirty;
+    QHash<QString, QHash<QString, QString>> m_cells;
 };
 
 } // namespace blastmaster::spreadsheet
