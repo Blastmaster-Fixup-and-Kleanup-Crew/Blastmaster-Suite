@@ -86,7 +86,7 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
 
     auto* searchRow = new QHBoxLayout();
     auto* searchLabel = new QLabel(tr("&Search topics:"), this);
-    m_searchEdit->setPlaceholderText(tr("Type a topic name or keyword..."));
+    m_searchEdit->setPlaceholderText(tr("Type a topic name..."));
     m_searchEdit->setAccessibleName(tr("Search help topics"));
     searchLabel->setBuddy(m_searchEdit);
     searchRow->addWidget(searchLabel);
@@ -214,7 +214,7 @@ void HelpTopicsWindow::activateTopicLink(const QUrl& url)
     for (int i = 0; i < m_topicList->count(); ++i) {
         auto* item = m_topicList->item(i);
         const QString resource = item->data(Qt::UserRole).toString();
-        if (resource.endsWith('/' + target)) {
+        if (resource.endsWith(QStringLiteral("/") + target)) {
             m_searchEdit->clear();
             m_topicList->setCurrentItem(item);
             return;
