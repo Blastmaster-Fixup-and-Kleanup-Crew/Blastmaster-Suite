@@ -29,6 +29,12 @@ private:
         QStringList& createdFiles,
         QString& error) const;
 
+    bool restoreUnmanagedFiles(
+        const QString& backupRoot,
+        const QString& destination,
+        const QStringList& payloadRoots,
+        QString& error) const;
+
     bool writeActivation(
         const QString& destination,
         blastmaster::Edition edition,
