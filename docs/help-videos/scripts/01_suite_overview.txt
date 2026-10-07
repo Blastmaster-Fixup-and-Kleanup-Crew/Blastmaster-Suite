@@ -1,0 +1,15 @@
+Welcome to Blastmaster Suite.
+
+Blastmaster Suite is a classic-style office suite containing applications for documents, spreadsheets, presentations, and databases.
+
+The Standard edition includes Docs, Workbooks, and Presentations.
+
+The Professional edition includes all Standard edition applications, plus Databases.
+
+Each application uses its own native file extension. Docs uses DCCX. Workbooks uses WKBCX. Presentations uses PREX. Databases uses DBBX.
+
+In this series, we will cover the current features of the suite, from installation and product keys to everyday work in each application.
+
+There is no presenter on screen. Everything you see is the software itself, with the interface highlighted as each feature is explained.
+
+Let's begin with installation and setup.
