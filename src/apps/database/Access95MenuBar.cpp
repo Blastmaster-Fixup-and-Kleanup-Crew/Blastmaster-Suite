@@ -1,5 +1,6 @@
 #include "Access95MenuBar.h"
 #include "DatabaseDocument.h"
+#include "blastmaster/HelpTopicsWindow.h"
 
 #include <QAction>
 #include <QApplication>
@@ -224,7 +225,11 @@ void Access95MenuBar::createWindowMenu()
 void Access95MenuBar::createHelpMenu()
 {
     m_helpMenu = m_menuBar->addMenu(QStringLiteral("&Help"));
-    m_helpMenu->addAction(action(m_parent, QStringLiteral("Microsoft Access Help &Topics"), QKeySequence::HelpContents));
+    auto* helpTopics = action(m_parent, QStringLiteral("Microsoft Access Help &Topics"), QKeySequence::HelpContents);
+    m_helpMenu->addAction(helpTopics);
+    QObject::connect(helpTopics, &QAction::triggered, [this] {
+        blastmaster::HelpTopicsWindow::showFor(m_parent, QStringLiteral("databases"));
+    });
     m_helpMenu->addAction(action(m_parent, QStringLiteral("&About Microsoft Access")));
     QObject::connect(m_helpMenu->actions().last(), &QAction::triggered, [this] {
         QMessageBox::about(m_parent, QStringLiteral("About Blastmaster Database"),
