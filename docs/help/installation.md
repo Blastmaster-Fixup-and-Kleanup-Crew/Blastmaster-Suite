@@ -9,12 +9,13 @@ Make sure you have the Blastmaster Suite installer and a valid product key.
 The Setup wizard guides you through:
 
 1. Welcome
-2. License Agreement
-3. Product Key
-4. Destination Folder
-5. Ready to Install
-6. Installation
-7. Finish
+2. Product Key
+3. Destination Folder
+4. Ready to Install
+5. Installation
+6. Completion
+
+The installer does not require a separate license-agreement page.
 
 ## Product Key
 
@@ -26,28 +27,32 @@ A Standard key selects Standard.
 
 A Professional key selects Professional.
 
+If the key is rejected, correct the key or cancel Setup and verify that you are using the expected installer build.
+
 ## Destination
 
 The destination page lets you select where Blastmaster Suite is installed.
 
-Use Browse to select another location when necessary.
+Use Browse to select another location when necessary. Setup verifies the selected location before installation proceeds.
 
 ## Ready to Install
 
 Review the edition and destination before choosing Install.
 
-## Installation
+## Installation and Recovery
 
 Setup copies and configures the suite.
 
-Wait for installation to finish before closing the wizard.
+If installation fails, Setup reports the failure and attempts to leave the system in a recoverable state. Do not delete the installation directory while Setup is still running.
+
+After a failed installation, run Setup again to retry or use the uninstaller if the installed build provides one.
 
 ## Completion
 
-Select Finish after Setup reports completion.
+Select Finish after Setup reports successful installation.
 
-## After Installation
+Verify the expected Start Menu shortcuts and application launch before removing the installer.
 
-Launch the installed applications and verify that they start normally.
+## Reinstall or Upgrade
 
-Create a test file in each installed application and save it in the appropriate native format.
+If the same or a newer build is already installed, follow the Setup prompts for the available upgrade or reinstall path. Keep important documents backed up before changing an existing installation.
