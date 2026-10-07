@@ -1,8 +1,11 @@
 #include "Workbook.h"
 
-#include <QFile>
-#include <QJsonDocument>
 #include <QDateTime>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QSaveFile>
 #include <QDebug>
 
 namespace blastmaster::spreadsheet {
@@ -12,6 +15,7 @@ Workbook::Workbook()
     , m_filePath()
     , m_isDirty(false)
 {
+    ensureSheet("Sheet1");
 }
 
 Workbook::Workbook(const QString& filePath)
@@ -19,23 +23,92 @@ Workbook::Workbook(const QString& filePath)
     , m_filePath(filePath)
     , m_isDirty(false)
 {
+    ensureSheet("Sheet1");
+}
+
+QString Workbook::cell(const QString& sheet, const QString& address) const
+{
+    return m_cells.value(sheet).value(address);
+}
+
+void Workbook::setCell(const QString& sheet, const QString& address, const QString& value)
+{
+    ensureSheet(sheet);
+    if (m_cells[sheet].value(address) == value)
+        return;
+
+    if (value.isEmpty())
+        m_cells[sheet].remove(address);
+    else
+        m_cells[sheet][address] = value;
+
+    m_isDirty = true;
+}
+
+QStringList Workbook::sheets() const
+{
+    return m_cells.keys();
+}
+
+void Workbook::ensureSheet(const QString& sheet)
+{
+    if (sheet.isEmpty())
+        return;
+    if (!m_cells.contains(sheet))
+        m_cells.insert(sheet, {});
 }
 
 QJsonObject Workbook::toJson() const
 {
     QJsonObject root;
+    root["format"] = "Blastmaster.Workbook";
     root["version"] = "1.0";
     root["created"] = QDateTime::currentDateTime().toString(Qt::ISODate);
     root["title"] = m_title;
-    // reserve place for sheet metadata, cells, etc.
-    root["sheets"] = QJsonObject();
+
+    QJsonArray sheets;
+    for (auto it = m_cells.cbegin(); it != m_cells.cend(); ++it) {
+        QJsonObject sheet;
+        sheet["name"] = it.key();
+
+        QJsonObject cells;
+        for (auto cellIt = it.value().cbegin(); cellIt != it.value().cend(); ++cellIt)
+            cells[cellIt.key()] = cellIt.value();
+
+        sheet["cells"] = cells;
+        sheets.append(sheet);
+    }
+    root["sheets"] = sheets;
     return root;
 }
 
 void Workbook::fromJson(const QJsonObject& json)
 {
-    if (json.contains("title")) m_title = json["title"].toString();
-    // sheet/content parsing can be added later
+    m_cells.clear();
+
+    if (json.contains("title"))
+        m_title = json["title"].toString();
+
+    const QJsonValue sheetsValue = json.value("sheets");
+    if (sheetsValue.isArray()) {
+        for (const QJsonValue& value : sheetsValue.toArray()) {
+            const QJsonObject sheet = value.toObject();
+            const QString name = sheet.value("name").toString();
+            if (name.isEmpty())
+                continue;
+
+            ensureSheet(name);
+            const QJsonObject cells = sheet.value("cells").toObject();
+            for (auto it = cells.begin(); it != cells.end(); ++it)
+                m_cells[name].insert(it.key(), it.value().toString());
+        }
+    } else if (sheetsValue.isObject()) {
+        // Accept the original prototype's empty/object-shaped sheets field.
+        ensureSheet("Sheet1");
+    }
+
+    if (m_cells.isEmpty())
+        ensureSheet("Sheet1");
 }
 
 bool Workbook::save()
@@ -55,24 +128,27 @@ bool Workbook::saveAs(const QString& filePath)
     }
 
     QString path = filePath;
-    if (!path.endsWith(Workbook::fileExtension())) path += Workbook::fileExtension();
+    if (!path.endsWith(fileExtension(), Qt::CaseInsensitive))
+        path += fileExtension();
 
-    QFile file(path);
+    QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
         qWarning() << "Failed to open file for writing:" << path;
         return false;
     }
 
-    QJsonDocument doc(toJson());
-    QByteArray bytes = doc.toJson();
-
-    if (file.write(bytes) == -1) {
+    const QByteArray bytes = QJsonDocument(toJson()).toJson(QJsonDocument::Indented);
+    if (file.write(bytes) != bytes.size()) {
         qWarning() << "Failed to write workbook data";
-        file.close();
+        file.cancelWriting();
         return false;
     }
 
-    file.close();
+    if (!file.commit()) {
+        qWarning() << "Failed to commit workbook:" << path;
+        return false;
+    }
+
     m_filePath = path;
     m_isDirty = false;
     qDebug() << "Workbook saved to" << path;
@@ -92,12 +168,13 @@ bool Workbook::load()
         return false;
     }
 
-    QByteArray bytes = file.readAll();
+    const QByteArray bytes = file.readAll();
     file.close();
 
-    QJsonDocument doc = QJsonDocument::fromJson(bytes);
+    QJsonParseError error;
+    const QJsonDocument doc = QJsonDocument::fromJson(bytes, &error);
     if (!doc.isObject()) {
-        qWarning() << "Invalid workbook format";
+        qWarning() << "Invalid workbook format:" << error.errorString();
         return false;
     }
 
