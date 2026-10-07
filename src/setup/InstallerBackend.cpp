@@ -132,18 +132,54 @@ InstallerBackend::Result InstallerBackend::install(
 
     auto fail = [&](const QString& message)
     {
+        // Remove any Windows integration created by this attempt first.
+        QString integrationError;
+        WindowsIntegration::uninstall(cleanDestination, integrationError);
+
         QString rollbackError;
-        rollback(cleanDestination, createdFiles, !destinationExisted || destinationWasEmpty, rollbackError);
+        rollback(
+            cleanDestination,
+            createdFiles,
+            !destinationExisted || destinationWasEmpty,
+            rollbackError);
 
         if (backedUpExisting)
         {
             QDir(cleanDestination).removeRecursively();
-            QDir().rename(backupDestination, cleanDestination);
+            if (!QDir().rename(backupDestination, cleanDestination))
+            {
+                if (!rollbackError.isEmpty())
+                    rollbackError += QStringLiteral("\n");
+                rollbackError += QStringLiteral("The previous installation could not be restored.");
+            }
         }
 
         result.message = message;
         if (!rollbackError.isEmpty())
-            result.message += QStringLiteral("\n\nCleanup warning: ") + rollbackError;
+            result.message += QStringLiteral("\n\nRecovery warning: ") + rollbackError;
+        if (!integrationError.isEmpty())
+            result.message += QStringLiteral("\n\nWindows integration cleanup warning: ") + integrationError;
+
+        // Re-establish the old installation's integration after restoring it.
+        if (backedUpExisting && QDir(cleanDestination).exists())
+        {
+            QSettings oldActivation(
+                QDir(cleanDestination).filePath(QStringLiteral("config/activation.ini")),
+                QSettings::IniFormat);
+            const QString oldEdition =
+                oldActivation.value(QStringLiteral("Blastmaster Suite/Edition")).toString();
+
+            const blastmaster::Edition oldEditionValue =
+                oldEdition.compare(QStringLiteral("Professional"), Qt::CaseInsensitive) == 0
+                    ? blastmaster::Edition::Professional
+                    : blastmaster::Edition::Standard;
+
+            QString restoreError;
+            WindowsIntegration::install(cleanDestination, oldEditionValue, restoreError);
+            if (!restoreError.isEmpty())
+                result.message += QStringLiteral("\n\nPrevious Windows integration could not be restored: ") + restoreError;
+        }
+
         return result;
     };
 
