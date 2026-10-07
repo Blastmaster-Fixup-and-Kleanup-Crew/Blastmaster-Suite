@@ -1,0 +1,11 @@
+This video covers the remaining Docs menus and productivity tools.
+
+The View menu includes Normal, Page Layout, Outline, Master Document, Toolbars, Ruler, Header and Footer, Footnotes, Full Screen, and Zoom.
+
+The Tools menu includes Spelling, Grammar, Thesaurus, Hyphenation, Language, Word Count, AutoCorrect, Mail Merge, Envelopes and Labels, Protect Document, Revisions, Macro, Customize, and Options.
+
+The Window menu provides New Window, Arrange All, Split, and Open Document Files.
+
+Finally, the Help menu provides Help Topics, Microsoft on the Web, and About Microsoft Word.
+
+These commands cover navigation, review, productivity, window management, customization, and help.
