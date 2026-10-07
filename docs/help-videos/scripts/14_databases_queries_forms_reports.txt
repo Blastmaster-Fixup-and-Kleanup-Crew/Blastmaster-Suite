@@ -1,0 +1,13 @@
+This video covers queries, forms, reports, and relationships in Blastmaster Databases.
+
+Queries are used to work with selected information from the database. The Query Wizard helps guide the creation of a query.
+
+Forms provide a user interface for entering and viewing records. The Form Wizard assists with form creation.
+
+Reports organize database information for presentation and printing. The Report Wizard assists with report creation.
+
+Relationships connect related database structures so that information can be organized across tables.
+
+The Database toolbar provides quick access to Database Window, Relationships, Table Wizard, Query Wizard, Form Wizard, and Report Wizard.
+
+Use Print and Print Preview when preparing database output.
