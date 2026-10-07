@@ -303,7 +303,9 @@ bool install(
         shortcut(QStringLiteral("Workbooks"), QStringLiteral("blastmaster_workbooks.exe"),
                  QStringLiteral("Blastmaster Suite Workbooks")) &&
         shortcut(QStringLiteral("Presentations"), QStringLiteral("blastmaster_presentations.exe"),
-                 QStringLiteral("Blastmaster Suite Presentations"));
+                 QStringLiteral("Blastmaster Suite Presentations")) &&
+        shortcut(QStringLiteral("Blastmaster Suite Help"), QStringLiteral("BlastmasterHelp.exe"),
+                 QStringLiteral("Blastmaster Suite Help Topics"));
 
     if (edition == blastmaster::Edition::Professional)
     {
