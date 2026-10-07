@@ -1,5 +1,7 @@
 # Blastmaster Suite Help Video Catalog
 
+> Production catalog for the current Help Video series. Final MP4s are optional release assets; the repository stores the scripts and specifications used to produce them.
+
 ## 01 — Suite Overview
 **File:** `BM_HELP_01_SUITE_OVERVIEW.mp4`
 **Length target:** 2–3 minutes
@@ -22,13 +24,13 @@ Topics:
 Topics:
 - Launching Setup
 - Welcome page
-- License page
 - Product key page
 - Standard vs Professional recognition
 - Destination folder
 - Ready to Install
 - Installation progress
 - Finished page
+- Recovery/retry behavior when installation fails
 
 ## 03 — Docs Introduction
 **File:** `BM_HELP_03_DOCS_INTRODUCTION.mp4`
@@ -146,8 +148,7 @@ Topics:
 - Split
 - Open Document Files
 - Help Topics
-- Microsoft on the Web
-- About Microsoft Word
+- About
 
 ## 08 — Workbooks Introduction
 **File:** `BM_HELP_08_WORKBOOKS_INTRODUCTION.mp4`
