@@ -26,7 +26,6 @@ private:
     void createPages();
 
     QWizardPage* createWelcomePage();
-    QWizardPage* createLicensePage();
     QWizardPage* createProductKeyPage();
     QWizardPage* createDestinationPage();
     QWizardPage* createReadyPage();
@@ -35,16 +34,17 @@ private:
 
     bool validateProductKey();
     void updateProductKeyStatus();
+    void formatProductKey();
+    bool validateDestination();
     QString editionName() const;
 
     QLineEdit* productKeyEdit_ = nullptr;
     QLabel* keyStatusLabel_ = nullptr;
 
     QLineEdit* destinationEdit_ = nullptr;
+    QLabel* destinationStatusLabel_ = nullptr;
 
-    QLabel* editionLabel_ = nullptr;
     QLabel* readyLabel_ = nullptr;
-
     QProgressBar* progressBar_ = nullptr;
 
     blastmaster::Edition detectedEdition_ =
