@@ -10,7 +10,5 @@ target_include_directories(blastmaster_common
 
 target_compile_features(blastmaster_common PUBLIC cxx_std_17)
 
-qt_add_resources(blastmaster_common "help_resources"
-    PREFIX "/"
-    FILES help.qrc
-)
+set(CMAKE_AUTORCC ON)
+target_sources(blastmaster_common PRIVATE help.qrc)
