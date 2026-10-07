@@ -1,0 +1,13 @@
+Welcome to Blastmaster Workbooks.
+
+Workbooks is the spreadsheet application in Blastmaster Suite.
+
+A workbook contains the cells used for entering values, labels, and calculations.
+
+To create a workbook, use the New command. To open an existing workbook, choose Open and select a WKBCX file.
+
+Use Save to store your changes and Save As when a workbook needs a new name or location.
+
+The menu bar and toolbars provide access to editing, formatting, data, view, printing, and calculation-related commands.
+
+In the next video, we will work through editing, formatting, and data operations.
