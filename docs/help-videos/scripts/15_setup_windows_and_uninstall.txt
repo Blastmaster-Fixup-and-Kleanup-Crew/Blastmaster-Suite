@@ -1,0 +1,13 @@
+This video covers installation support, Windows integration, and uninstalling Blastmaster Suite.
+
+Setup installs the selected edition into the destination chosen during the wizard.
+
+The installer uses an embedded payload when available and installs the selected edition through the installer backend.
+
+Windows integration handles the operating-system integration implemented by the current build.
+
+After installation, verify that the installed applications and their file associations or shortcuts behave as expected.
+
+To remove the suite, use the Blastmaster Suite uninstaller.
+
+If an installation fails, review the destination, product key, and installer payload configuration before trying again.
