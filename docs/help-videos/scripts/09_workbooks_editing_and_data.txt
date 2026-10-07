@@ -1,0 +1,17 @@
+This video covers the main Workbooks workflow for editing, formatting, calculations, and data.
+
+Begin by entering values into worksheet cells.
+
+Use the editing commands to undo changes, cut, copy, paste, find text, replace values, and move directly to a cell.
+
+Formatting commands control how cells, rows, and columns appear.
+
+Insert commands add worksheet elements where supported by the current build.
+
+For calculations, enter formulas into cells and use the workbook's calculation workflow to update results.
+
+Data commands provide operations for organizing worksheet information, including sorting and filtering where implemented.
+
+View commands control the worksheet display, while print and page setup commands prepare the workbook for output.
+
+Use Tools and Options for additional spreadsheet settings.
