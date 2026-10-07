@@ -1,0 +1,19 @@
+This final video explains the two Blastmaster Suite editions and their file formats.
+
+The Standard edition contains Docs, Workbooks, and Presentations.
+
+The Professional edition contains those three applications plus Databases.
+
+Docs documents use the DCCX extension.
+
+Workbooks spreadsheets use the WKBCX extension.
+
+Presentations slideshows use the PREX extension.
+
+Databases databases use the DBBX extension.
+
+Product-key recognition determines whether Setup installs the Standard or Professional edition.
+
+Choose the application that matches the type of file you want to create or open.
+
+That completes the current Blastmaster Suite help-video series.
