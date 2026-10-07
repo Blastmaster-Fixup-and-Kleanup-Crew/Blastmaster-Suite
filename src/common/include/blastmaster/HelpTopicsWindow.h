@@ -2,6 +2,7 @@
 
 #include <QDialog>
 #include <QString>
+#include <QUrl>
 
 class QListWidget;
 class QTextBrowser;
