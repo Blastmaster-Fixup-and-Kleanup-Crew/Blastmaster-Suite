@@ -1,0 +1,15 @@
+This video covers designing slides and presenting them.
+
+Use the editing commands to modify slide content, then use formatting tools to control fonts, alignment, bullets, and other text properties.
+
+The Insert menu provides commands for adding content and objects to a slide.
+
+The Format menu provides presentation formatting commands.
+
+Use design-template commands to give a presentation a consistent visual appearance.
+
+When the slides are ready, use the Slide Show commands to start and control the presentation.
+
+Use the available views to inspect your work, and use printing commands when you need physical copies.
+
+Tools and Options provide additional configuration.
