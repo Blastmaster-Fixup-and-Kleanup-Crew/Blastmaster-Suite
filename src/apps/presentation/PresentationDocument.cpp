@@ -1,85 +1,131 @@
 #include "PresentationDocument.h"
 
 #include <QDateTime>
-#include <QDebug>
 #include <QFile>
+#include <QJsonArray>
 #include <QJsonDocument>
-#include <QJsonObject>
+#include <QSaveFile>
+#include <QDebug>
 
 namespace blastmaster::presentation {
 
 PresentationDocument::PresentationDocument()
-    : m_title("Untitled Presentation")
-    , m_content("")
-    , m_filePath("")
-    , m_isDirty(false)
+    : m_title("Untitled Presentation"), m_filePath(), m_isDirty(false)
 {
+    addSlide();
+    setClean();
 }
 
 PresentationDocument::PresentationDocument(const QString& filePath)
-    : m_title("Untitled Presentation")
-    , m_content("")
-    , m_filePath(filePath)
-    , m_isDirty(false)
+    : m_title("Untitled Presentation"), m_filePath(filePath), m_isDirty(false)
 {
+    addSlide();
+    setClean();
+}
+
+QString PresentationDocument::content() const
+{
+    QStringList parts;
+    for (const auto& slide : m_slides)
+        parts << slide.title + QStringLiteral("\n") + slide.body;
+    return parts.join(QStringLiteral("\n\n"));
+}
+
+void PresentationDocument::setContent(const QString& content)
+{
+    if (m_slides.isEmpty())
+        addSlide();
+    m_slides[0].body = content;
+    m_isDirty = true;
+}
+
+void PresentationDocument::setSlide(int index, const QString& title, const QString& body)
+{
+    if (index < 0 || index >= m_slides.size()) return;
+    m_slides[index].title = title;
+    m_slides[index].body = body;
+    m_isDirty = true;
+}
+
+void PresentationDocument::addSlide(const QString& title, const QString& body)
+{
+    m_slides.append({title, body});
+    m_isDirty = true;
+}
+
+void PresentationDocument::removeSlide(int index)
+{
+    if (index < 0 || index >= m_slides.size() || m_slides.size() == 1) return;
+    m_slides.removeAt(index);
+    m_isDirty = true;
+}
+
+void PresentationDocument::clearSlides()
+{
+    m_slides.clear();
+    addSlide();
+    m_isDirty = true;
 }
 
 QJsonObject PresentationDocument::toJson() const
 {
     QJsonObject root;
+    root["format"] = "Blastmaster.Presentation";
     root["version"] = "1.0";
     root["created"] = QDateTime::currentDateTime().toString(Qt::ISODate);
     root["title"] = m_title;
-    root["content"] = m_content;
+
+    QJsonArray slides;
+    for (const auto& value : m_slides) {
+        QJsonObject slide;
+        slide["title"] = value.title;
+        slide["body"] = value.body;
+        slides.append(slide);
+    }
+    root["slides"] = slides;
     return root;
 }
 
 void PresentationDocument::fromJson(const QJsonObject& json)
 {
-    if (json.contains("title")) {
-        m_title = json["title"].toString();
+    m_slides.clear();
+    m_title = json.value("title").toString(m_title);
+
+    const QJsonValue slides = json.value("slides");
+    if (slides.isArray()) {
+        for (const QJsonValue& value : slides.toArray()) {
+            const QJsonObject slide = value.toObject();
+            m_slides.append({slide.value("title").toString(), slide.value("body").toString()});
+        }
     }
-    if (json.contains("content")) {
-        m_content = json["content"].toString();
+
+    // Backward compatibility with the original single-content prototype.
+    if (m_slides.isEmpty()) {
+        const QString oldContent = json.value("content").toString();
+        m_slides.append({QStringLiteral("Title"), oldContent});
     }
 }
 
 bool PresentationDocument::save()
 {
-    if (m_filePath.isEmpty()) {
-        qWarning() << "Presentation path is empty";
-        return false;
-    }
+    if (m_filePath.isEmpty()) return false;
     return saveAs(m_filePath);
 }
 
 bool PresentationDocument::saveAs(const QString& filePath)
 {
-    if (filePath.isEmpty()) {
-        qWarning() << "Cannot save to empty path";
-        return false;
-    }
+    if (filePath.isEmpty()) return false;
 
     QString path = filePath;
-    if (!path.endsWith(".prex")) {
-        path += ".prex";
-    }
+    if (!path.endsWith(fileExtension(), Qt::CaseInsensitive))
+        path += fileExtension();
 
-    QFile file(path);
-    if (!file.open(QIODevice::WriteOnly)) {
-        qWarning() << "Failed to open file for writing:" << path;
-        return false;
-    }
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) return false;
 
-    QJsonDocument doc(toJson());
-    QByteArray jsonData = doc.toJson();
-    if (file.write(jsonData) == -1) {
-        qWarning() << "Failed to write presentation data";
-        file.close();
-        return false;
-    }
+    const QByteArray data = QJsonDocument(toJson()).toJson(QJsonDocument::Indented);
+    if (file.write(data) != data.size() || !file.commit()) return false;
 
-    file.close();
     m_filePath = path;
     m_isDirty = false;
     qDebug() << "Presentation saved to" << path;
@@ -88,29 +134,20 @@ bool PresentationDocument::saveAs(const QString& filePath)
 
 bool PresentationDocument::load()
 {
-    if (m_filePath.isEmpty()) {
-        qWarning() << "Presentation path is empty";
-        return false;
-    }
+    if (m_filePath.isEmpty()) return false;
 
     QFile file(m_filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Failed to open file for reading:" << m_filePath;
-        return false;
-    }
+    if (!file.open(QIODevice::ReadOnly)) return false;
 
-    QByteArray jsonData = file.readAll();
-    file.close();
-
-    QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+    QJsonParseError error;
+    const QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &error);
     if (!doc.isObject()) {
-        qWarning() << "Invalid .prex presentation format";
+        qWarning() << "Invalid .prex presentation format:" << error.errorString();
         return false;
     }
 
     fromJson(doc.object());
     m_isDirty = false;
-    qDebug() << "Presentation loaded from" << m_filePath;
     return true;
 }
 
