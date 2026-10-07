@@ -5,6 +5,8 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "PowerPoint7MenuBar.h"
+#include "PresentationDocument.h"
 #include "blastmaster/ProductKeyValidator.h"
 
 int main(int argc, char* argv[]) {
@@ -28,6 +30,12 @@ int main(int argc, char* argv[]) {
     body->setAlignment(Qt::AlignCenter);
     body->setStyleSheet("font-size: 16px; margin: 12px;");
     layout->addWidget(body);
+
+    blastmaster::presentation::PresentationDocument document;
+    document.setTitle("Untitled Presentation");
+
+    blastmaster::presentation::PowerPoint7MenuBar menuBar(&window, &document);
+    window.setMenuBar(menuBar.menuBar());
 
     blastmaster::ProductKeyValidator validator(blastmaster::Edition::Standard);
     const std::string sample_key = "BMSSTANDARD-PRES";
