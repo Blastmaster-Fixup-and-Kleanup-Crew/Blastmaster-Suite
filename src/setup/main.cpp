@@ -5,11 +5,18 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QMessageBox>
+#include <QLocale>
+#include <QTranslator>
 #include <QTemporaryDir>
 
 int main(int argc, char* argv[])
 {
     QApplication application(argc, argv);
+
+    QTranslator setupTranslator;
+    const QString localeName = QLocale::system().name();
+    if (setupTranslator.load(QStringLiteral(":/i18n/blastmaster_setup_%1.qm").arg(localeName)))
+        application.installTranslator(&setupTranslator);
 
     application.setApplicationName(QStringLiteral("Blastmaster Suite Setup"));
     application.setApplicationVersion(QStringLiteral("1.0.0.67"));
