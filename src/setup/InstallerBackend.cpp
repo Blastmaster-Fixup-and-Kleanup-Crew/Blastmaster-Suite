@@ -80,10 +80,11 @@ InstallerBackend::Result InstallerBackend::install(
     const QString activationPath =
         QDir(cleanDestination).filePath(QStringLiteral("config/activation.ini"));
 
+    QString installedEdition;
     if (QFile::exists(activationPath))
     {
         QSettings activation(activationPath, QSettings::IniFormat);
-        const QString installedEdition =
+        installedEdition =
             activation.value(QStringLiteral("Blastmaster Suite/Edition")).toString();
 
         if (!installedEdition.isEmpty() &&
@@ -93,14 +94,18 @@ InstallerBackend::Result InstallerBackend::install(
                 QStringLiteral(
                     "A different Blastmaster Suite edition is already installed in this folder (%1). "
                     "Choose another destination or uninstall the existing edition first.")
-                .arg(installedEdition);
+                    .arg(installedEdition);
             return result;
         }
     }
 
+    const bool isUpgrade = !installedEdition.isEmpty();
     const bool destinationExisted = QDir(cleanDestination).exists();
-    const bool destinationWasEmpty = destinationExisted && isEmptyDirectory(cleanDestination);
-    const QString backupDestination = cleanDestination + QStringLiteral(".blastmaster-backup");
+    const bool destinationWasEmpty =
+        destinationExisted && isEmptyDirectory(cleanDestination);
+
+    const QString backupDestination =
+        cleanDestination + QStringLiteral(".blastmaster-backup");
 
     if (QDir(backupDestination).exists())
         QDir(backupDestination).removeRecursively();
@@ -112,7 +117,7 @@ InstallerBackend::Result InstallerBackend::install(
         {
             result.message =
                 QStringLiteral(
-                    "Could not prepare the existing installation for a safe update. "
+                    "Could not prepare the existing installation for a safe upgrade. "
                     "Close Blastmaster Suite and try again.");
             return result;
         }
@@ -123,7 +128,9 @@ InstallerBackend::Result InstallerBackend::install(
     {
         if (backedUpExisting)
             QDir().rename(backupDestination, cleanDestination);
-        result.message = QStringLiteral("Could not create the installation directory:\n%1").arg(cleanDestination);
+        result.message =
+            QStringLiteral("Could not create the installation directory:\n%1")
+                .arg(cleanDestination);
         return result;
     }
 
@@ -132,7 +139,6 @@ InstallerBackend::Result InstallerBackend::install(
 
     auto fail = [&](const QString& message)
     {
-        // Remove any Windows integration created by this attempt first.
         QString integrationError;
         WindowsIntegration::uninstall(cleanDestination, integrationError);
 
@@ -160,7 +166,6 @@ InstallerBackend::Result InstallerBackend::install(
         if (!integrationError.isEmpty())
             result.message += QStringLiteral("\n\nWindows integration cleanup warning: ") + integrationError;
 
-        // Re-establish the old installation's integration after restoring it.
         if (backedUpExisting && QDir(cleanDestination).exists())
         {
             QSettings oldActivation(
@@ -182,6 +187,12 @@ InstallerBackend::Result InstallerBackend::install(
 
         return result;
     };
+
+    // For an upgrade/reinstall, restore the old tree first. This preserves
+    // user-created files while the new application payload overlays it.
+    if (isUpgrade && backedUpExisting &&
+        !copyTree(backupDestination, cleanDestination, createdFiles, error))
+        return fail(QStringLiteral("Could not prepare the existing installation for upgrade:\n%1").arg(error));
 
     if (QDir(commonPayload).exists() &&
         !copyTree(commonPayload, cleanDestination, createdFiles, error))
@@ -206,8 +217,10 @@ InstallerBackend::Result InstallerBackend::install(
     result.success = true;
     result.installedLocation = cleanDestination;
     result.message =
-        QStringLiteral("Blastmaster Suite %1 edition was installed successfully.")
-        .arg(editionName(edition));
+        QStringLiteral("Blastmaster Suite %1 edition was %2 successfully.")
+            .arg(editionName(edition),
+                 isUpgrade ? QStringLiteral("upgraded/reinstalled")
+                           : QStringLiteral("installed"));
     return result;
 }
 
