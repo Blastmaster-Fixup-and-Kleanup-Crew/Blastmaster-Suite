@@ -7,7 +7,7 @@
 #include <QTextBrowser>
 #include <QTextDocument>
 #include <QVBoxLayout>
-#include <QApplication>
+#include <QKeySequence>
 
 namespace blastmaster {
 
@@ -29,6 +29,7 @@ static const Topic kTopics[] = {
     {"Keyboard Navigation", ":/help/keyboard-navigation.md", "suite"},
     {"Troubleshooting", ":/help/troubleshooting.md", "suite"},
     {"Support", ":/help/support.md", "suite"},
+    {"Help Videos", ":/help/help-videos.md", "suite"},
 
     {"Docs Help", ":/help/docs.md", "docs"},
     {"Workbooks Help", ":/help/workbooks.md", "workbooks"},
@@ -78,8 +79,12 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
     auto* content = new QHBoxLayout();
 
     m_topicList->setMinimumWidth(240);
+    m_topicList->setAccessibleName(tr("Help topics"));
+    m_topicList->setFocusPolicy(Qt::StrongFocus);
+
     m_topicView->setOpenExternalLinks(false);
     m_topicView->setReadOnly(true);
+    m_topicView->setAccessibleName(tr("Help topic content"));
 
     content->addWidget(m_topicList);
     content->addWidget(m_topicView, 1);
@@ -87,8 +92,13 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
 
     auto* closeButton = new QPushButton(tr("Close"), this);
     closeButton->setDefault(true);
+    closeButton->setAutoDefault(true);
+    closeButton->setFocusPolicy(Qt::StrongFocus);
     QObject::connect(closeButton, &QPushButton::clicked, this, &QDialog::accept);
     layout->addWidget(closeButton, 0, Qt::AlignRight);
+
+    setTabOrder(m_topicList, m_topicView);
+    setTabOrder(m_topicView, closeButton);
 
     loadTopics();
 }
@@ -123,6 +133,7 @@ void HelpTopicsWindow::loadTopics()
 
     if (m_topicList->count() > 0) {
         m_topicList->setCurrentRow(0);
+        m_topicList->setFocus();
     }
 }
 
