@@ -2,6 +2,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
+#include <QLineEdit>
 #include <QMainWindow>
 #include <QPlainTextEdit>
 #include <QStatusBar>
@@ -20,7 +21,7 @@ int main(int argc, char* argv[]) {
     window.resize(1100, 700);
     window.setWindowTitle("Blastmaster Presentations - Untitled");
 
-    auto* document = new blastmaster::presentation::PresentationDocument(&window);
+    auto* document = new blastmaster::presentation::PresentationDocument();
 
     auto* central = new QWidget(&window);
     auto* layout = new QHBoxLayout(central);
