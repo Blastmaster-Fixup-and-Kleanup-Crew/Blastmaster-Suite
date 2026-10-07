@@ -4,8 +4,6 @@ Start Setup to open the Blastmaster Suite Setup wizard.
 
 The Welcome page introduces the installer. Select Next to continue.
 
-The License Agreement page displays the license text.
-
 The Product Key page is where you enter your twenty-five-character product key.
 
 As the key is entered, Setup identifies the edition associated with the key. A recognized Standard key selects the Standard edition. A recognized Professional key selects the Professional edition.
