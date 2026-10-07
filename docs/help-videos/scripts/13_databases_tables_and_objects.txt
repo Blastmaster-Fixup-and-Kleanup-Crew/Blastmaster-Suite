@@ -1,0 +1,13 @@
+This video introduces database tables and objects.
+
+Tables store structured records in fields and rows.
+
+Use table design features to define the structure of a table, then enter and review records.
+
+The Insert menu provides commands for adding database objects such as tables and other supported objects.
+
+Use the database window to select and manage objects.
+
+Forms provide an interface for working with records, while reports organize information for viewing and printing.
+
+The object and properties commands provide access to the configuration of the selected database object.
