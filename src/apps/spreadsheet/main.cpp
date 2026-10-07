@@ -1,15 +1,14 @@
 #include <QApplication>
 #include <QHeaderView>
-#include <QLabel>
 #include <QMainWindow>
 #include <QStatusBar>
 #include <QTableWidget>
+#include <QTableWidgetItem>
 #include <QVBoxLayout>
 #include <QWidget>
 
 #include "Excel7MenuBar.h"
 #include "Workbook.h"
-#include "blastmaster/ProductKeyValidator.h"
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
@@ -21,54 +20,58 @@ int main(int argc, char* argv[]) {
     window.setWindowTitle("Blastmaster Workbooks - Book1");
 
     auto* workbook = new blastmaster::spreadsheet::Workbook();
-    workbook->setTitle("Book1");
 
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    auto* title = new QLabel("Blastmaster Workbooks", central);
-    title->setAlignment(Qt::AlignCenter);
-    title->setStyleSheet("font-size: 22px; font-weight: 600; margin-top: 12px; margin-bottom: 8px;");
-    layout->addWidget(title);
-
-    auto* sheet = new QTableWidget(20, 10, central);
+    auto* sheet = new QTableWidget(50, 26, central);
     sheet->setShowGrid(true);
-    sheet->setAlternatingRowColors(true);
-    sheet->horizontalHeader()->setDefaultSectionSize(110);
-    sheet->verticalHeader()->setDefaultSectionSize(26);
+    sheet->setAlternatingRowColors(false);
+    sheet->setEditTriggers(QAbstractItemView::DoubleClicked |
+                           QAbstractItemView::EditKeyPressed |
+                           QAbstractItemView::SelectedClicked);
     sheet->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    sheet->setStyleSheet(
-        "QTableWidget { background: #ffffff; border: 1px solid #b8b8b8; }"
-        "QHeaderView::section { background: #e6e6e6; color: #222; border: 1px solid #b8b8b8; }");
+    sheet->setSelectionBehavior(QAbstractItemView::SelectItems);
+    sheet->horizontalHeader()->setDefaultSectionSize(90);
+    sheet->verticalHeader()->setDefaultSectionSize(22);
 
     QStringList columns;
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 26; ++i)
         columns << QString(QChar('A' + i));
-    }
     sheet->setHorizontalHeaderLabels(columns);
 
     for (int row = 0; row < sheet->rowCount(); ++row) {
         for (int col = 0; col < sheet->columnCount(); ++col) {
-            auto* item = new QTableWidgetItem(QString());
-            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-            sheet->setItem(row, col, item);
+            const QString address = QString(QChar('A' + col)) + QString::number(row + 1);
+            sheet->setItem(row, col, new QTableWidgetItem(workbook->cell("Sheet1", address)));
         }
     }
-    layout->addWidget(sheet);
 
+    QObject::connect(sheet, &QTableWidget::cellChanged,
+        [workbook, sheet](int row, int column) {
+            auto* item = sheet->item(row, column);
+            if (!item) return;
+            const QString address = QString(QChar('A' + column)) + QString::number(row + 1);
+            workbook->setCell("Sheet1", address, item->text());
+        });
+
+    layout->addWidget(sheet);
     window.setCentralWidget(central);
 
     blastmaster::spreadsheet::Excel7MenuBar menuBar(&window, workbook);
     window.setMenuBar(menuBar.menuBar());
 
-    blastmaster::ProductKeyValidator validator(blastmaster::Edition::Standard);
-    const std::string sample_key = "BMSSTD-SPREADSHEET";
-    const bool valid = validator.validate(sample_key);
-    window.statusBar()->showMessage(QString("Edition: %1 | Valid: %2")
-        .arg(QString::fromStdString(validator.edition_name()))
-        .arg(valid ? "Yes" : "No"));
+    QObject::connect(sheet, &QTableWidget::itemSelectionChanged, [&window, sheet]() {
+        const auto ranges = sheet->selectedRanges();
+        if (!ranges.isEmpty()) {
+            const auto r = ranges.first();
+            window.statusBar()->showMessage(
+                QString("Cell %1%2").arg(QChar('A' + r.leftColumn())).arg(r.topRow() + 1));
+        }
+    });
 
+    window.statusBar()->showMessage("Ready");
     window.show();
     return app.exec();
 }
