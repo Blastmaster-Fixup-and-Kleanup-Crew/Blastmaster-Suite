@@ -1,3 +1,5 @@
+set(CMAKE_AUTORCC ON)
+
 add_library(blastmaster_common
     src/ProductKeyValidator.cpp
     src/HelpTopicsWindow.cpp
@@ -10,5 +12,4 @@ target_include_directories(blastmaster_common
 
 target_compile_features(blastmaster_common PUBLIC cxx_std_17)
 
-set(CMAKE_AUTORCC ON)
 target_sources(blastmaster_common PRIVATE help.qrc)
