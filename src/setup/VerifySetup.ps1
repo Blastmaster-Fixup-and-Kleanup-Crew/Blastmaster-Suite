@@ -100,3 +100,38 @@ Write-Host "  - HKCU:SoftwareMicrosoftWindowsCurrentVersionUninstallBlastmaster 
 Write-Host "  - the Blastmaster Suite Start Menu folder is gone"
 Write-Host "  - Blastmaster Docs/Workbooks/Presentations/Databases ProgIDs are gone"
 Write-Host "  - Blastmaster-owned extensions are gone or restored to their previous owners"
+
+
+Write-Host ""
+Write-Host "Low-priority setup checks:"
+$setupSource = Join-Path $PSScriptRoot "SetupWizard.cpp"
+if (Test-Path $setupSource) {
+    $setupText = Get-Content -Raw -LiteralPath $setupSource
+    if ($setupText -match 'setAccessibleName' -and $setupText -match 'setAccessibleDescription') {
+        Write-Host "PASS: installer controls expose accessibility metadata."
+    } else {
+        Write-Warning "Accessibility metadata was not found in SetupWizard.cpp."
+    }
+    if ($setupText -match 'tr("') {
+        Write-Host "PASS: installer UI uses Qt translation-aware strings."
+    } else {
+        Write-Warning "Translation-aware strings were not found in SetupWizard.cpp."
+    }
+}
+
+$translationDir = Join-Path $PSScriptRoot "translations"
+if ((Test-Path $translationDir) -and (Get-ChildItem -LiteralPath $translationDir -Filter "*.ts" -File).Count -gt 0) {
+    Write-Host "PASS: Qt Linguist catalogs are present."
+} else {
+    Write-Warning "No Qt Linguist catalogs were found."
+}
+
+if ($env:BLASTMASTER_ENABLE_SIGNING -eq "1") {
+    if ($env:BLASTMASTER_SIGNTOOL -or (Get-Command signtool.exe -ErrorAction SilentlyContinue)) {
+        Write-Host "PASS: signing was requested and SignTool is available."
+    } else {
+        Write-Warning "Signing was requested but SignTool was not found."
+    }
+} else {
+    Write-Host "INFO: code signing is disabled for this verification run."
+}
