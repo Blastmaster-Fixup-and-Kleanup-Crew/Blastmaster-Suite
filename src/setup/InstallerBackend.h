@@ -3,6 +3,7 @@
 #include "blastmaster/ProductKeyValidator.h"
 
 #include <QString>
+#include <QStringList>
 
 class InstallerBackend
 {
@@ -25,17 +26,25 @@ private:
     bool copyTree(
         const QString& source,
         const QString& destination,
+        QStringList& createdFiles,
         QString& error) const;
 
     bool writeActivation(
         const QString& destination,
         blastmaster::Edition edition,
         const QString& productKey,
+        QStringList& createdFiles,
         QString& error) const;
 
     bool installWindowsIntegration(
         const QString& destination,
         blastmaster::Edition edition,
+        QString& error) const;
+
+    bool rollback(
+        const QString& destination,
+        const QStringList& createdFiles,
+        bool destinationWasCreated,
         QString& error) const;
 
     QString payloadRoot_;
