@@ -16,10 +16,14 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     app.setApplicationName("Blastmaster Presentations");
     app.setApplicationDisplayName("Blastmaster Presentations");
+    app.setApplicationVersion("1.0.0");
+    app.setOrganizationName("Blastmaster");
+    app.setOrganizationDomain("blastmaster.local");
 
     QMainWindow window;
     window.resize(1100, 700);
     window.setWindowTitle("Blastmaster Presentations - Untitled");
+    window.setAccessibleName("Blastmaster Presentations");
 
     auto* document = new blastmaster::presentation::PresentationDocument();
 
@@ -28,14 +32,22 @@ int main(int argc, char* argv[]) {
     layout->setContentsMargins(4, 4, 4, 4);
 
     auto* slides = new QListWidget(central);
+    slides->setObjectName("slideList");
+    slides->setAccessibleName("Slide list");
+    slides->setAccessibleDescription("List of slides in the current presentation. Use Up and Down to change slides.");
     slides->setFixedWidth(180);
     slides->setAlternatingRowColors(true);
 
     auto* editorPane = new QWidget(central);
     auto* editorLayout = new QVBoxLayout(editorPane);
     auto* titleEdit = new QLineEdit(editorPane);
+    titleEdit->setObjectName("slideTitle");
+    titleEdit->setAccessibleName("Slide title");
     titleEdit->setPlaceholderText("Slide title");
     auto* bodyEdit = new QPlainTextEdit(editorPane);
+    bodyEdit->setObjectName("slideBody");
+    bodyEdit->setAccessibleName("Slide body");
+    bodyEdit->setAccessibleDescription("Main text content for the selected slide.");
     bodyEdit->setPlaceholderText("Click to add text");
     editorLayout->addWidget(titleEdit);
     editorLayout->addWidget(bodyEdit);
@@ -83,5 +95,6 @@ int main(int argc, char* argv[]) {
 
     window.statusBar()->showMessage("Ready");
     window.show();
+    slides->setFocus();
     return app.exec();
 }
