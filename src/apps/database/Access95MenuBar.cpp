@@ -87,7 +87,7 @@ void Access95MenuBar::createFileMenu()
             m_parent->statusBar()->showMessage(QStringLiteral("Database opened."), 2500);
         }
     });
-    QObject::connect(aSave, &QAction::triggered, [this] {
+    QObject::connect(aSave, &QAction::triggered, [this, aSaveAs] {
         if (m_document->filePath().isEmpty()) {
             aSaveAs->trigger();
         } else if (m_document->saveDatabase()) {
@@ -263,24 +263,24 @@ void Access95MenuBar::createToolbars()
     };
 
     addToolbarAction(standard, QStringLiteral("New Database"));
-    addStatusAction(QStringLiteral("Open"), QKeySequence::Open);
-    addStatusAction(QStringLiteral("Save"), QKeySequence::Save);
-    addStatusAction(QStringLiteral("Print"));
-    addStatusAction(QStringLiteral("Print Preview"));
+    addToolbarAction(standard, QStringLiteral("Open"), QKeySequence::Open);
+    addToolbarAction(standard, QStringLiteral("Save"), QKeySequence::Save);
+    addToolbarAction(standard, QStringLiteral("Print"));
+    addToolbarAction(standard, QStringLiteral("Print Preview"));
     standard->addSeparator();
-    addStatusAction(QStringLiteral("Cut"), QKeySequence::Cut);
-    addStatusAction(QStringLiteral("Copy"), QKeySequence::Copy);
-    addStatusAction(QStringLiteral("Paste"), QKeySequence::Paste);
-    addStatusAction(QStringLiteral("Format Painter"));
+    addToolbarAction(standard, QStringLiteral("Cut"), QKeySequence::Cut);
+    addToolbarAction(standard, QStringLiteral("Copy"), QKeySequence::Copy);
+    addToolbarAction(standard, QStringLiteral("Paste"), QKeySequence::Paste);
+    addToolbarAction(standard, QStringLiteral("Format Painter"));
     standard->addSeparator();
-    addStatusAction(QStringLiteral("Undo"), QKeySequence::Undo);
-    addStatusAction(QStringLiteral("Spelling"));
-    addStatusAction(QStringLiteral("Relationships"));
-    addStatusAction(QStringLiteral("Database Window"));
-    addStatusAction(QStringLiteral("Table Wizard"));
-    addStatusAction(QStringLiteral("Query Wizard"));
-    addStatusAction(QStringLiteral("Form Wizard"));
-    addStatusAction(QStringLiteral("Report Wizard"));
+    addToolbarAction(standard, QStringLiteral("Undo"), QKeySequence::Undo);
+    addToolbarAction(standard, QStringLiteral("Spelling"));
+    addToolbarAction(standard, QStringLiteral("Relationships"));
+    addToolbarAction(standard, QStringLiteral("Database Window"));
+    addToolbarAction(standard, QStringLiteral("Table Wizard"));
+    addToolbarAction(standard, QStringLiteral("Query Wizard"));
+    addToolbarAction(standard, QStringLiteral("Form Wizard"));
+    addToolbarAction(standard, QStringLiteral("Report Wizard"));
     m_parent->addToolBar(Qt::TopToolBarArea, standard);
 
     auto* formatting = new QToolBar(QStringLiteral("Formatting"), m_parent);
