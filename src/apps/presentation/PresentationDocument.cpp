@@ -10,14 +10,14 @@
 namespace blastmaster::presentation {
 
 PresentationDocument::PresentationDocument()
-    : m_title("Untitled Presentation"), m_filePath(), m_isDirty(false)
+    : m_title("Untitled Presentation"), m_filePath(), m_isDirty(false), m_currentSlide(0)
 {
     addSlide();
     setClean();
 }
 
 PresentationDocument::PresentationDocument(const QString& filePath)
-    : m_title("Untitled Presentation"), m_filePath(filePath), m_isDirty(false)
+    : m_title("Untitled Presentation"), m_filePath(filePath), m_isDirty(false), m_currentSlide(0)
 {
     addSlide();
     setClean();
@@ -39,7 +39,7 @@ void PresentationDocument::setContent(const QString& content)
     m_isDirty = true;
 }
 
-void PresentationDocument::setSlide(int index, const QString& title, const QString& body)
+void PresentationDocument::setCurrentSlide(int index)\n{\n    if (index >= 0 && index < m_slides.size()) m_currentSlide = index;\n}\n\nvoid PresentationDocument::setSlide(int index, const QString& title, const QString& body)
 {
     if (index < 0 || index >= m_slides.size()) return;
     m_slides[index].title = title;
@@ -56,7 +56,7 @@ void PresentationDocument::addSlide(const QString& title, const QString& body)
 void PresentationDocument::removeSlide(int index)
 {
     if (index < 0 || index >= m_slides.size() || m_slides.size() == 1) return;
-    m_slides.removeAt(index);
+    m_slides.removeAt(index);\n    if (m_currentSlide >= m_slides.size()) m_currentSlide = m_slides.size() - 1;
     m_isDirty = true;
 }
 
@@ -64,6 +64,7 @@ void PresentationDocument::clearSlides()
 {
     m_slides.clear();
     addSlide();
+    m_currentSlide = 0;
     m_isDirty = true;
 }
 
@@ -104,6 +105,7 @@ void PresentationDocument::fromJson(const QJsonObject& json)
         const QString oldContent = json.value("content").toString();
         m_slides.append({QStringLiteral("Title"), oldContent});
     }
+    m_currentSlide = 0;
 }
 
 bool PresentationDocument::save()
