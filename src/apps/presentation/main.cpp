@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
         window.statusBar()->showMessage(QString("Slide %1 of %2").arg(row + 1).arg(document->slideCount()));
     };
 
-    QObject::connect(slides, &QListWidget::currentRowChanged, [&](int) { loadSlide(); });
+    QObject::connect(slides, &QListWidget::currentRowChanged, [&](int row) { document->setCurrentSlide(row); loadSlide(); });
     QObject::connect(titleEdit, &QLineEdit::textChanged, [&](const QString& text) {
         const int row = slides->currentRow();
         if (row >= 0 && row < document->slideCount())
