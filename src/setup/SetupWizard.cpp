@@ -11,6 +11,7 @@
 #include <QFileInfo>
 #include <QFont>
 #include <QIcon>
+#include <QLabel>
 #include <QPixmap>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -148,7 +149,6 @@ QWizardPage* SetupWizard::createProductKeyPage()
     {
         formatProductKey();
         updateProductKeyStatus();
-        emit completeChanged();
     });
     return page;
 }
@@ -187,10 +187,12 @@ QWizardPage* SetupWizard::createDestinationPage()
     layout->addWidget(new QLabel(tr("Destination folder:")));
 
     auto* row = new QHBoxLayout;
+    QString programFiles = qEnvironmentVariable(QStringLiteral("ProgramFiles"));
+    if (programFiles.isEmpty())
+        programFiles = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     destinationEdit_ = new QLineEdit(
         QDir::fromNativeSeparators(
-            QDir(QStandardPaths::writableLocation(QStandardPaths::ProgramFilesLocation))
-                .filePath(QStringLiteral("Blastmaster Suite"))));
+            QDir(programFiles).filePath(QStringLiteral("Blastmaster Suite"))));
     destinationEdit_->setAccessibleName(tr("Installation destination"));
     destinationEdit_->setAccessibleDescription(tr("Folder where Blastmaster Suite will be installed."));
     auto* browse = new QPushButton(tr("&Browse..."));
@@ -217,7 +219,6 @@ QWizardPage* SetupWizard::createDestinationPage()
     connect(destinationEdit_, &QLineEdit::textChanged, this, [this]()
     {
         validateDestination();
-        emit completeChanged();
     });
 
     validateDestination();
