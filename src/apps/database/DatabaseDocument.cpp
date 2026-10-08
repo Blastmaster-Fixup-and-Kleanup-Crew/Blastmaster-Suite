@@ -141,11 +141,9 @@ bool DatabaseDocument::createTable(const QString& name)
 {
     if (!m_db.isOpen() || name.trimmed().isEmpty()) return false;
 
-    const QString safeName = name.trimmed().replace('"', QStringLiteral(""""));
+    const QString safeName = name.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
-    if (!query.exec(QStringLiteral(
-            "CREATE TABLE IF NOT EXISTS "%1" "
-            "(ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Value TEXT)")
+    if (!query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS \"%1\" (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Value TEXT)")
             .arg(safeName))) {
         setError(query.lastError().text());
         return false;
@@ -161,7 +159,7 @@ bool DatabaseDocument::deleteTable(const QString& name)
 
     const QString safeName = name.trimmed().replace('"', QStringLiteral(""""));
     QSqlQuery query(m_db);
-    if (!query.exec(QStringLiteral("DROP TABLE IF EXISTS "%1"").arg(safeName))) {
+    if (!query.exec(QStringLiteral("DROP TABLE IF EXISTS \\"%1\\"").arg(safeName))) {
         setError(query.lastError().text());
         return false;
     }
@@ -171,3 +169,92 @@ bool DatabaseDocument::deleteTable(const QString& name)
 }
 
 } // namespace blastmaster::database
+
+QStringList DatabaseDocument::columns(const QString& table) const
+{
+    if (!m_db.isOpen() || table.trimmed().isEmpty()) return {};
+    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QSqlQuery query(m_db);
+    if (!query.exec(QStringLiteral("PRAGMA table_info(\"%1\")").arg(safe)))
+        return {};
+    QStringList result;
+    while (query.next())
+        result << query.value(1).toString();
+    return result;
+}
+
+QList<QVariantList> DatabaseDocument::records(const QString& table, int limit) const
+{
+    QList<QVariantList> result;
+    if (!m_db.isOpen() || table.trimmed().isEmpty()) return result;
+    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QSqlQuery query(m_db);
+    if (!query.exec(QStringLiteral("SELECT * FROM \"%1\" LIMIT %2").arg(safe).arg(qMax(1, limit))))
+        return result;
+    while (query.next()) {
+        QVariantList row;
+        for (int i = 0; i < query.record().count(); ++i)
+            row << query.value(i);
+        result << row;
+    }
+    return result;
+}
+
+bool DatabaseDocument::insertRecord(const QString& table, const QVariantMap& values)
+{
+    if (!m_db.isOpen() || values.isEmpty()) return false;
+    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QStringList fields, placeholders;
+    QVariantList bindValues;
+    for (auto it = values.cbegin(); it != values.cend(); ++it) {
+        fields << QStringLiteral("\"%1\"").arg(it.key().replace('"', QStringLiteral("\"\"")));
+        placeholders << "?";
+        bindValues << it.value();
+    }
+    QSqlQuery query(m_db);
+    if (!query.prepare(QStringLiteral("INSERT INTO \"%1\" (%2) VALUES (%3)")
+                       .arg(safe, fields.join(", "), placeholders.join(", ")))) {
+        setError(query.lastError().text()); return false;
+    }
+    for (const auto& value : bindValues) query.addBindValue(value);
+    if (!query.exec()) { setError(query.lastError().text()); return false; }
+    emit databaseChanged();
+    return true;
+}
+
+bool DatabaseDocument::updateRecord(const QString& table, int rowId, const QVariantMap& values)
+{
+    if (!m_db.isOpen() || rowId < 0 || values.isEmpty()) return false;
+    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QStringList assignments;
+    QVariantList bindValues;
+    for (auto it = values.cbegin(); it != values.cend(); ++it) {
+        assignments << QStringLiteral("\"%1\" = ?").arg(it.key().replace('"', QStringLiteral("\"\"")));
+        bindValues << it.value();
+    }
+    QSqlQuery query(m_db);
+    if (!query.prepare(QStringLiteral("UPDATE \"%1\" SET %2 WHERE ID = ?")
+                       .arg(safe, assignments.join(", ")))) {
+        setError(query.lastError().text()); return false;
+    }
+    for (const auto& value : bindValues) query.addBindValue(value);
+    query.addBindValue(rowId);
+    if (!query.exec()) { setError(query.lastError().text()); return false; }
+    emit databaseChanged();
+    return true;
+}
+
+bool DatabaseDocument::deleteRecord(const QString& table, int rowId)
+{
+    if (!m_db.isOpen() || rowId < 0) return false;
+    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QSqlQuery query(m_db);
+    if (!query.prepare(QStringLiteral("DELETE FROM \"%1\" WHERE ID = ?").arg(safe))) {
+        setError(query.lastError().text()); return false;
+    }
+    query.addBindValue(rowId);
+    if (!query.exec()) { setError(query.lastError().text()); return false; }
+    emit databaseChanged();
+    return true;
+}
+
