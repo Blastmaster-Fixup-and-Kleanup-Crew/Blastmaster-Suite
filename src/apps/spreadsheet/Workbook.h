@@ -3,6 +3,7 @@
 #include <QHash>
 #include <QJsonObject>
 #include <QString>
+#include <QStringList>
 
 namespace blastmaster::spreadsheet {
 
@@ -25,6 +26,9 @@ public:
     void setCell(const QString& sheet, const QString& address, const QString& value);
     QStringList sheets() const;
     void ensureSheet(const QString& sheet);
+    bool addSheet(const QString& sheet);
+    bool removeSheet(const QString& sheet);
+    QString evaluateCell(const QString& sheet, const QString& address) const;
 
     bool save();
     bool saveAs(const QString& filePath);
