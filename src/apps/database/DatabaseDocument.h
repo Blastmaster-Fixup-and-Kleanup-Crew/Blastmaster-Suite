@@ -5,6 +5,8 @@
 #include <QSqlDatabase>
 #include <QStringList>
 #include <QVariantList>
+#include <QVariantMap>
+#include <QList>
 
 namespace blastmaster::database {
 
