@@ -261,6 +261,7 @@ void Word7MenuBar::onFileOpen()
     }
 
     m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
+    blastmaster::RecentFiles::add(QStringLiteral("docs"), filePath);
     if (m_parent->statusBar()) {
         m_parent->statusBar()->showMessage("Document opened: " + filePath);
     }
@@ -278,6 +279,7 @@ void Word7MenuBar::onFileSave()
         return;
     }
 
+    blastmaster::RecentFiles::add(QStringLiteral("docs"), m_document->filePath());
     if (m_parent->statusBar()) {
         m_parent->statusBar()->showMessage("Document saved: " + m_document->filePath());
     }
@@ -299,6 +301,7 @@ void Word7MenuBar::onFileSaveAs()
     }
 
     m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
+    blastmaster::RecentFiles::add(QStringLiteral("docs"), filePath);
     if (m_parent->statusBar()) {
         m_parent->statusBar()->showMessage("Document saved as: " + filePath);
     }
