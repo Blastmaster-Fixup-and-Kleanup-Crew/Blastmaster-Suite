@@ -4,6 +4,7 @@
 #include <QString>
 #include <QSqlDatabase>
 #include <QStringList>
+#include <QVariantList>
 
 namespace blastmaster::database {
 
@@ -26,6 +27,11 @@ public:
     QStringList tables() const;
     bool createTable(const QString& name);
     bool deleteTable(const QString& name);
+    QStringList columns(const QString& table) const;
+    QList<QVariantList> records(const QString& table, int limit = 500) const;
+    bool insertRecord(const QString& table, const QVariantMap& values);
+    bool updateRecord(const QString& table, int rowId, const QVariantMap& values);
+    bool deleteRecord(const QString& table, int rowId);
 
 signals:
     void databaseChanged();
