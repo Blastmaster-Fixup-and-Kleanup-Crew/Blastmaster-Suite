@@ -14,10 +14,14 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     app.setApplicationName("Blastmaster Workbooks");
     app.setApplicationDisplayName("Blastmaster Workbooks");
+    app.setApplicationVersion("1.0.0");
+    app.setOrganizationName("Blastmaster");
+    app.setOrganizationDomain("blastmaster.local");
 
     QMainWindow window;
     window.resize(1200, 800);
     window.setWindowTitle("Blastmaster Workbooks - Book1");
+    window.setAccessibleName("Blastmaster Workbooks");
 
     auto* workbook = new blastmaster::spreadsheet::Workbook();
 
@@ -26,6 +30,10 @@ int main(int argc, char* argv[]) {
     layout->setContentsMargins(0, 0, 0, 0);
 
     auto* sheet = new QTableWidget(50, 26, central);
+    sheet->setObjectName("workbookGrid");
+    sheet->setAccessibleName("Workbook grid");
+    sheet->setAccessibleDescription("Editable spreadsheet grid. Use Tab to move across cells and Enter to edit the selected cell.");
+    sheet->setToolTip("Workbook grid");
     sheet->setShowGrid(true);
     sheet->setAlternatingRowColors(false);
     sheet->setEditTriggers(QAbstractItemView::DoubleClicked |
@@ -73,5 +81,6 @@ int main(int argc, char* argv[]) {
 
     window.statusBar()->showMessage("Ready");
     window.show();
+    sheet->setFocus();
     return app.exec();
 }
