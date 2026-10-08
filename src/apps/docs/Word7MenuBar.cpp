@@ -14,6 +14,7 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QIcon>
+#include <QPlainTextEdit>
 
 namespace blastmaster::docs {
 
@@ -238,6 +239,7 @@ void Word7MenuBar::onFileNew()
     m_document->setContent("");
     m_document->setFilePath("");
     m_document->setClean();
+    if (auto* editor = m_parent->findChild<QPlainTextEdit*>("documentEditor")) editor->setPlainText(QString());
     m_parent->setWindowTitle("Blastmaster Docs - Untitled");
     if (m_parent->statusBar()) {
         m_parent->statusBar()->showMessage("New document created");
@@ -260,6 +262,7 @@ void Word7MenuBar::onFileOpen()
         return;
     }
 
+    if (auto* editor = m_parent->findChild<QPlainTextEdit*>("documentEditor")) editor->setPlainText(m_document->content());
     m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
     blastmaster::RecentFiles::add(QStringLiteral("docs"), filePath);
     if (m_parent->statusBar()) {
@@ -320,16 +323,24 @@ void Word7MenuBar::createEditMenu()
     auto add = [this](const QString& text) {
         QAction* action = addMenuAction(m_editMenu, text, text + " command");
         wireAction(action, text);
+        return action;
     };
 
-    add("&Undo");
-    add("&Repeat");
-    add("Cu&t");
-    add("&Copy");
-    add("&Paste");
+    auto* undo = add("&Undo");
+    QObject::connect(undo, &QAction::triggered, [this] { if (auto* e = m_parent->findChild<QPlainTextEdit*>("documentEditor")) e->undo(); });
+    auto* redo = add("&Repeat");
+    QObject::connect(redo, &QAction::triggered, [this] { if (auto* e = m_parent->findChild<QPlainTextEdit*>("documentEditor")) e->redo(); });
+    auto* cut = add("Cu&t");
+    QObject::connect(cut, &QAction::triggered, [this] { if (auto* e = m_parent->findChild<QPlainTextEdit*>("documentEditor")) e->cut(); });
+    auto* copy = add("&Copy");
+    QObject::connect(copy, &QAction::triggered, [this] { if (auto* e = m_parent->findChild<QPlainTextEdit*>("documentEditor")) e->copy(); });
+    auto* paste = add("&Paste");
+    QObject::connect(paste, &QAction::triggered, [this] { if (auto* e = m_parent->findChild<QPlainTextEdit*>("documentEditor")) e->paste(); });
     add("Paste Special");
-    add("Clear");
-    add("Select All");
+    auto* clear = add("Clear");
+    QObject::connect(clear, &QAction::triggered, [this] { if (auto* e = m_parent->findChild<QPlainTextEdit*>("documentEditor")) e->clear(); });
+    auto* selectAll = add("Select All");
+    QObject::connect(selectAll, &QAction::triggered, [this] { if (auto* e = m_parent->findChild<QPlainTextEdit*>("documentEditor")) e->selectAll(); });
     add("Find");
     add("Replace");
     add("Go To");
