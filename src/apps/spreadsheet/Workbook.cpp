@@ -117,7 +117,7 @@ QString Workbook::evaluateCell(const QString& sheet, const QString& address) con
             }
             double result = terms.first().trimmed().toDouble();
             const QRegularExpression ops(QStringLiteral(R"((\+|-|\*|/))"));
-            const auto opMatches = ops.globalMatch(expr);
+            auto opMatches = ops.globalMatch(expr);
             int i = 1;
             while (opMatches.hasNext() && i < terms.size()) {
                 const QString op = opMatches.next().captured(0);
