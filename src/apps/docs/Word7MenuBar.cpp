@@ -487,7 +487,10 @@ void Word7MenuBar::createHelpMenu()
         blastmaster::HelpTopicsWindow::showFor(m_parent, "docs");
     });
     add("Microsoft on the Web");
-    add("About Microsoft Word");
+    auto* about = addMenuAction(m_helpMenu, "About Microsoft Word", "About Blastmaster Docs");
+    QObject::connect(about, &QAction::triggered, [this]() {
+        QMessageBox::about(m_parent, "About Blastmaster Docs", "Blastmaster Docs\nVersion 1.0.0\nClassic office-style word processor.");
+    });
 }
 
 void Word7MenuBar::createToolbars()
