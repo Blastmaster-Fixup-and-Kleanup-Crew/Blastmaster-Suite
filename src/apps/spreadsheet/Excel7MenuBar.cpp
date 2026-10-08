@@ -1,6 +1,7 @@
 #include "Excel7MenuBar.h"
 #include "Workbook.h"
 #include "blastmaster/HelpTopicsWindow.h"
+#include "blastmaster/RecentFiles.h"
 
 #include <QAction>
 #include <QToolBar>
@@ -10,6 +11,7 @@
 #include <QIcon>
 #include <QStatusBar>
 #include <QFileDialog>
+#include <QFileInfo>
 
 namespace blastmaster::spreadsheet {
 
@@ -58,6 +60,35 @@ void Excel7MenuBar::createFileMenu()
 
     m_fileMenu->addAction(aNew);
     m_fileMenu->addAction(aOpen);
+    auto* recentMenu = m_fileMenu->addMenu("Recent Workbooks");
+    QObject::connect(recentMenu, &QMenu::aboutToShow, [this, recentMenu]() {
+        recentMenu->clear();
+        const auto recent = blastmaster::RecentFiles::files(QStringLiteral("workbooks"));
+        if (recent.isEmpty()) {
+            auto* empty = recentMenu->addAction("(No recent workbooks)");
+            empty->setEnabled(false);
+            return;
+        }
+        for (const QString& path : recent) {
+            auto* item = recentMenu->addAction(QFileInfo(path).fileName());
+            item->setToolTip(path);
+            QObject::connect(item, &QAction::triggered, [this, path]() {
+                m_workbook->setFilePath(path);
+                if (!m_workbook->load()) {
+                    if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Failed to open workbook", 3000);
+                    return;
+                }
+                blastmaster::RecentFiles::add(QStringLiteral("workbooks"), path);
+                if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook opened: " + path, 3000);
+            });
+        }
+        recentMenu->addSeparator();
+        auto* clear = recentMenu->addAction("Clear Recent Workbooks");
+        QObject::connect(clear, &QAction::triggered, [recentMenu]() {
+            blastmaster::RecentFiles::clear(QStringLiteral("workbooks"));
+            recentMenu->hide();
+        });
+    });
     m_fileMenu->addAction(aClose);
     m_fileMenu->addSeparator();
     m_fileMenu->addAction(aSave);
@@ -84,7 +115,7 @@ void Excel7MenuBar::createFileMenu()
             if (path.isEmpty()) return;
             if (!path.endsWith(Workbook::fileExtension())) path += Workbook::fileExtension();
             m_workbook->setFilePath(path);
-            m_workbook->save();
+            if (m_workbook->save()) blastmaster::RecentFiles::add(QStringLiteral("workbooks"), m_workbook->filePath());
             if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
         } else {
             m_workbook->save();
@@ -99,7 +130,7 @@ void Excel7MenuBar::createFileMenu()
         if (path.isEmpty()) return;
         if (!path.endsWith(Workbook::fileExtension())) path += Workbook::fileExtension();
         m_workbook->setFilePath(path);
-        m_workbook->save();
+        if (m_workbook->save()) blastmaster::RecentFiles::add(QStringLiteral("workbooks"), m_workbook->filePath());
         if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
     });
 }
