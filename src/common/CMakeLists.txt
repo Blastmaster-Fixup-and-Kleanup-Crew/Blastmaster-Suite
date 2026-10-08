@@ -13,3 +13,6 @@ target_include_directories(blastmaster_common
 target_compile_features(blastmaster_common PUBLIC cxx_std_17)
 
 target_sources(blastmaster_common PRIVATE help.qrc)
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+target_link_libraries(blastmaster_common PUBLIC Qt6::Widgets)
