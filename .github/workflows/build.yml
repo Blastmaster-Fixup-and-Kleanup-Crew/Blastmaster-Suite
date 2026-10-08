@@ -1,0 +1,29 @@
+name: Build Blastmaster Suite
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        professional: [ON, OFF]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build qt6-base-dev libsqlite3-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DBLASTMASTER_BUILD_PROFESSIONAL=${{ matrix.professional }} \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
