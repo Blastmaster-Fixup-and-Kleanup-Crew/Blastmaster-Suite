@@ -516,7 +516,10 @@ void PowerPoint7MenuBar::createHelpMenu()
     });
     add("Getting Assistance");
     add("Microsoft on the Web");
-    add("About Microsoft PowerPoint");
+    auto* about = addMenuAction(m_helpMenu, "About Microsoft PowerPoint", "About Blastmaster Presentations");
+    QObject::connect(about, &QAction::triggered, [this]() {
+        QMessageBox::about(m_parent, "About Blastmaster Presentations", "Blastmaster Presentations\nVersion 1.0.0\nClassic office-style presentation editor.");
+    });
 }
 
 void PowerPoint7MenuBar::createToolbars()
