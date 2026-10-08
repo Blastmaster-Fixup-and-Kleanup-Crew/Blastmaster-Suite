@@ -85,7 +85,7 @@ bool DatabaseDocument::saveDatabaseAs(const QString& path)
             return false;
         }
         QSqlQuery backup(m_db);
-        const QString escapedPath = path;
+        QString escapedPath = path;
         if (!backup.exec(QStringLiteral("VACUUM INTO '%1'").arg(escapedPath.replace("'", "''")))) {
             setError(backup.lastError().text());
             return false;
@@ -129,7 +129,7 @@ QStringList DatabaseDocument::tables() const
 bool DatabaseDocument::createTable(const QString& name)
 {
     if (!m_db.isOpen() || name.trimmed().isEmpty()) return false;
-    const QString safe = name.trimmed().replace('"', QStringLiteral("\"\""));
+    QString safe = name.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
     if (!query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS \"%1\" (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Value TEXT)").arg(safe))) {
         setError(query.lastError().text());
@@ -142,7 +142,7 @@ bool DatabaseDocument::createTable(const QString& name)
 bool DatabaseDocument::deleteTable(const QString& name)
 {
     if (!m_db.isOpen() || name.trimmed().isEmpty()) return false;
-    const QString safe = name.trimmed().replace('"', QStringLiteral("\"\""));
+    QString safe = name.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
     if (!query.exec(QStringLiteral("DROP TABLE IF EXISTS \"%1\"").arg(safe))) {
         setError(query.lastError().text());
@@ -155,7 +155,7 @@ bool DatabaseDocument::deleteTable(const QString& name)
 QStringList DatabaseDocument::columns(const QString& table) const
 {
     if (!m_db.isOpen() || table.trimmed().isEmpty()) return {};
-    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
     if (!query.exec(QStringLiteral("PRAGMA table_info(\"%1\")").arg(safe))) return {};
     QStringList result;
@@ -167,7 +167,7 @@ QList<QVariantList> DatabaseDocument::records(const QString& table, int limit) c
 {
     QList<QVariantList> result;
     if (!m_db.isOpen() || table.trimmed().isEmpty()) return result;
-    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
     if (!query.exec(QStringLiteral("SELECT * FROM \"%1\" LIMIT %2").arg(safe).arg(qMax(1, limit)))) return result;
     while (query.next()) {
@@ -181,7 +181,7 @@ QList<QVariantList> DatabaseDocument::records(const QString& table, int limit) c
 bool DatabaseDocument::insertRecord(const QString& table, const QVariantMap& values)
 {
     if (!m_db.isOpen() || values.isEmpty()) return false;
-    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
     QStringList fields, placeholders;
     QVariantList bindValues;
     for (auto it = values.cbegin(); it != values.cend(); ++it) {
@@ -202,7 +202,7 @@ bool DatabaseDocument::insertRecord(const QString& table, const QVariantMap& val
 bool DatabaseDocument::updateRecord(const QString& table, int rowId, const QVariantMap& values)
 {
     if (!m_db.isOpen() || rowId < 0 || values.isEmpty()) return false;
-    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
     QStringList assignments;
     QVariantList bindValues;
     for (auto it = values.cbegin(); it != values.cend(); ++it) {
@@ -223,7 +223,7 @@ bool DatabaseDocument::updateRecord(const QString& table, int rowId, const QVari
 bool DatabaseDocument::deleteRecord(const QString& table, int rowId)
 {
     if (!m_db.isOpen() || rowId < 0) return false;
-    const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
+    QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
     if (!query.prepare(QStringLiteral("DELETE FROM \"%1\" WHERE ID = ?").arg(safe))) {
         setError(query.lastError().text()); return false;
