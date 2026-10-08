@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     window.setWindowTitle("Blastmaster Docs - Untitled");
     window.setAccessibleName("Blastmaster Docs");
 
-    auto* document = new blastmaster::docs::Document(&window);
+    auto* document = new blastmaster::docs::Document();
 
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
