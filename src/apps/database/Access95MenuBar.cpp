@@ -82,13 +82,16 @@ void Access95MenuBar::createFileMenu()
         const QString path = QFileDialog::getOpenFileName(
             m_parent, QStringLiteral("Open Database"), QString(),
             QStringLiteral("SQLite databases (*.db *.sqlite *.sqlite3);;All files (*.*)"));
-        if (!path.isEmpty() && m_document->openDatabase(path))
+        if (!path.isEmpty() && m_document->openDatabase(path)) {
+            blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
             m_parent->statusBar()->showMessage(QStringLiteral("Database opened."), 2500);
+        }
     });
     QObject::connect(aSave, &QAction::triggered, [this] {
         if (m_document->filePath().isEmpty()) {
             aSaveAs->trigger();
         } else if (m_document->saveDatabase()) {
+            blastmaster::RecentFiles::add(QStringLiteral("databases"), m_document->filePath());
             m_parent->statusBar()->showMessage(QStringLiteral("Database saved."), 2500);
         }
     });
@@ -96,8 +99,10 @@ void Access95MenuBar::createFileMenu()
         const QString path = QFileDialog::getSaveFileName(
             m_parent, QStringLiteral("Save Database As"), QStringLiteral("Database.db"),
             QStringLiteral("SQLite databases (*.db *.sqlite *.sqlite3);;All files (*.*)"));
-        if (!path.isEmpty() && m_document->saveDatabaseAs(path))
+        if (!path.isEmpty() && m_document->saveDatabaseAs(path)) {
+            blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
             m_parent->statusBar()->showMessage(QStringLiteral("Database saved."), 2500);
+        }
     });
     QObject::connect(aClose, &QAction::triggered, [this] { m_document->closeDatabase(); });
     QObject::connect(aExit, &QAction::triggered, qApp, &QApplication::quit);
