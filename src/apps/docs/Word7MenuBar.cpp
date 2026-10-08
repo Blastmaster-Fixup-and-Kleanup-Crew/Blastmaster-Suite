@@ -15,6 +15,7 @@
 #include <QApplication>
 #include <QIcon>
 #include <QPlainTextEdit>
+#include <QSignalBlocker>
 
 namespace blastmaster::docs {
 
@@ -239,7 +240,7 @@ void Word7MenuBar::onFileNew()
     m_document->setContent("");
     m_document->setFilePath("");
     m_document->setClean();
-    if (auto* editor = m_parent->findChild<QPlainTextEdit*>("documentEditor")) editor->setPlainText(QString());
+    if (auto* editor = m_parent->findChild<QPlainTextEdit*>("documentEditor")) { QSignalBlocker blocker(editor); editor->setPlainText(QString()); }
     m_parent->setWindowTitle("Blastmaster Docs - Untitled");
     if (m_parent->statusBar()) {
         m_parent->statusBar()->showMessage("New document created");
@@ -262,7 +263,7 @@ void Word7MenuBar::onFileOpen()
         return;
     }
 
-    if (auto* editor = m_parent->findChild<QPlainTextEdit*>("documentEditor")) editor->setPlainText(m_document->content());
+    if (auto* editor = m_parent->findChild<QPlainTextEdit*>("documentEditor")) { QSignalBlocker blocker(editor); editor->setPlainText(m_document->content()); }
     m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
     blastmaster::RecentFiles::add(QStringLiteral("docs"), filePath);
     if (m_parent->statusBar()) {
