@@ -39,7 +39,12 @@ void PresentationDocument::setContent(const QString& content)
     m_isDirty = true;
 }
 
-void PresentationDocument::setCurrentSlide(int index)\n{\n    if (index >= 0 && index < m_slides.size()) m_currentSlide = index;\n}\n\nvoid PresentationDocument::setSlide(int index, const QString& title, const QString& body)
+void PresentationDocument::setCurrentSlide(int index)
+{
+    if (index >= 0 && index < m_slides.size()) m_currentSlide = index;
+}
+
+void PresentationDocument::setSlide(int index, const QString& title, const QString& body)
 {
     if (index < 0 || index >= m_slides.size()) return;
     m_slides[index].title = title;
