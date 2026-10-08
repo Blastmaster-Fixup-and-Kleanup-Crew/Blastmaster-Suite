@@ -261,7 +261,7 @@ void PowerPoint7MenuBar::createFileMenu()
 
     m_fileMenu->addSeparator();
     auto* exitAction = addMenuAction(m_fileMenu, "E&xit", "Exit the application");
-    QObject::connect(exitAction, &QAction::triggered, this, &PowerPoint7MenuBar::onFileExit);
+    QObject::connect(exitAction, &QAction::triggered, [this]() { onFileExit(); });
 }
 
 void PowerPoint7MenuBar::onFileNew()
