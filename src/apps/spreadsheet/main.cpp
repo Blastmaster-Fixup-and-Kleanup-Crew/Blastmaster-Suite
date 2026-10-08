@@ -5,7 +5,11 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QWidget>
+#include <QTabWidget>
+#include <QPushButton>
+#include <QLineEdit>
 
 #include "Excel7MenuBar.h"
 #include "Workbook.h"
@@ -24,63 +28,89 @@ int main(int argc, char* argv[]) {
     window.setAccessibleName("Blastmaster Workbooks");
 
     auto* workbook = new blastmaster::spreadsheet::Workbook();
-
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    auto* sheet = new QTableWidget(50, 26, central);
-    sheet->setObjectName("workbookGrid");
-    sheet->setAccessibleName("Workbook grid");
-    sheet->setAccessibleDescription("Editable spreadsheet grid. Use Tab to move across cells and Enter to edit the selected cell.");
-    sheet->setToolTip("Workbook grid");
-    sheet->setShowGrid(true);
-    sheet->setAlternatingRowColors(false);
-    sheet->setEditTriggers(QAbstractItemView::DoubleClicked |
-                           QAbstractItemView::EditKeyPressed |
-                           QAbstractItemView::SelectedClicked);
-    sheet->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    sheet->setSelectionBehavior(QAbstractItemView::SelectItems);
-    sheet->horizontalHeader()->setDefaultSectionSize(90);
-    sheet->verticalHeader()->setDefaultSectionSize(22);
+    auto* controls = new QHBoxLayout();
+    auto* addSheet = new QPushButton("New Sheet", central);
+    auto* deleteSheet = new QPushButton("Delete Sheet", central);
+    auto* formulaBar = new QLineEdit(central);
+    formulaBar->setPlaceholderText("Formula / value");
+    formulaBar->setAccessibleName("Formula bar");
+    controls->addWidget(addSheet);
+    controls->addWidget(deleteSheet);
+    controls->addWidget(formulaBar, 1);
+    layout->addLayout(controls);
 
-    QStringList columns;
-    for (int i = 0; i < 26; ++i)
-        columns << QString(QChar('A' + i));
-    sheet->setHorizontalHeaderLabels(columns);
+    auto* tabs = new QTabWidget(central);
+    tabs->setAccessibleName("Worksheets");
+    layout->addWidget(tabs);
 
-    for (int row = 0; row < sheet->rowCount(); ++row) {
-        for (int col = 0; col < sheet->columnCount(); ++col) {
-            const QString address = QString(QChar('A' + col)) + QString::number(row + 1);
-            sheet->setItem(row, col, new QTableWidgetItem(workbook->cell("Sheet1", address)));
-        }
-    }
-
-    QObject::connect(sheet, &QTableWidget::cellChanged,
-        [workbook, sheet](int row, int column) {
-            auto* item = sheet->item(row, column);
-            if (!item) return;
-            const QString address = QString(QChar('A' + column)) + QString::number(row + 1);
-            workbook->setCell("Sheet1", address, item->text());
+    auto makeSheet = [&](const QString& name) {
+        auto* view = new QTableWidget(100, 26, tabs);
+        view->setAccessibleName(name + " worksheet");
+        view->setEditTriggers(QAbstractItemView::DoubleClicked |
+                              QAbstractItemView::EditKeyPressed |
+                              QAbstractItemView::SelectedClicked);
+        view->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        view->setSelectionBehavior(QAbstractItemView::SelectItems);
+        view->horizontalHeader()->setDefaultSectionSize(90);
+        view->verticalHeader()->setDefaultSectionSize(22);
+        QStringList columns;
+        for (int i = 0; i < 26; ++i) columns << QString(QChar('A' + i));
+        view->setHorizontalHeaderLabels(columns);
+        for (int row = 0; row < view->rowCount(); ++row)
+            for (int col = 0; col < view->columnCount(); ++col) {
+                const QString address = QString(QChar('A' + col)) + QString::number(row + 1);
+                view->setItem(row, col, new QTableWidgetItem(workbook->cell(name, address)));
+            }
+        QObject::connect(view, &QTableWidget::cellChanged, [workbook, name, view](int row, int col) {
+            if (auto* item = view->item(row, col))
+                workbook->setCell(name, QString(QChar('A' + col)) + QString::number(row + 1), item->text());
         });
+        QObject::connect(view, &QTableWidget::itemSelectionChanged, [&window, workbook, tabs, formulaBar, view, name]() {
+            const auto ranges = view->selectedRanges();
+            if (ranges.isEmpty()) return;
+            const auto range = ranges.first();
+            const QString address = QString(QChar('A' + range.leftColumn())) + QString::number(range.topRow() + 1);
+            formulaBar->setText(workbook->cell(name, address));
+            window.statusBar()->showMessage(QString("Cell %1 | Result: %2").arg(address, workbook->evaluateCell(name, address)));
+        });
+        return view;
+    };
 
-    layout->addWidget(sheet);
-    window.setCentralWidget(central);
+    for (const QString& name : workbook->sheets())
+        tabs->addTab(makeSheet(name), name);
 
-    blastmaster::spreadsheet::Excel7MenuBar menuBar(&window, workbook);
-    window.setMenuBar(menuBar.menuBar());
-
-    QObject::connect(sheet, &QTableWidget::itemSelectionChanged, [&window, sheet]() {
-        const auto ranges = sheet->selectedRanges();
-        if (!ranges.isEmpty()) {
-            const auto r = ranges.first();
-            window.statusBar()->showMessage(
-                QString("Cell %1%2").arg(QChar('A' + r.leftColumn())).arg(r.topRow() + 1));
+    QObject::connect(addSheet, &QPushButton::clicked, [&]() {
+        const QString name = QString("Sheet%1").arg(workbook->sheets().size() + 1);
+        if (workbook->addSheet(name)) {
+            tabs->addTab(makeSheet(name), name);
+            tabs->setCurrentIndex(tabs->count() - 1);
         }
     });
+    QObject::connect(deleteSheet, &QPushButton::clicked, [&]() {
+        if (tabs->count() <= 1) return;
+        const int index = tabs->currentIndex();
+        const QString name = tabs->tabText(index);
+        if (workbook->removeSheet(name)) {
+            delete tabs->widget(index);
+            window.statusBar()->showMessage("Worksheet deleted", 2000);
+        }
+    });
+    QObject::connect(formulaBar, &QLineEdit::returnPressed, [&]() {
+        auto* view = qobject_cast<QTableWidget*>(tabs->currentWidget());
+        if (!view || !view->currentItem()) return;
+        view->currentItem()->setText(formulaBar->text());
+    });
 
+    window.setCentralWidget(central);
+    blastmaster::spreadsheet::Excel7MenuBar menuBar(&window, workbook);
+    window.setMenuBar(menuBar.menuBar());
     window.statusBar()->showMessage("Ready");
     window.show();
-    sheet->setFocus();
+    if (auto* view = qobject_cast<QTableWidget*>(tabs->currentWidget()))
+        view->setFocus();
     return app.exec();
 }
