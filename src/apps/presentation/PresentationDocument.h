@@ -29,6 +29,8 @@ public:
     void addSlide(const QString& title = QStringLiteral("Title"), const QString& body = QStringLiteral("Click to add text"));
     void removeSlide(int index);
     void clearSlides();
+    int currentSlide() const { return m_currentSlide; }
+    void setCurrentSlide(int index);
 
     QString filePath() const { return m_filePath; }
     void setFilePath(const QString& path) { m_filePath = path; }
@@ -49,6 +51,7 @@ private:
     QList<Slide> m_slides;
     QString m_filePath;
     bool m_isDirty;
+    int m_currentSlide;
 
     QJsonObject toJson() const;
     void fromJson(const QJsonObject& json);
