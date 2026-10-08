@@ -9,7 +9,6 @@
 
 #include "Access95MenuBar.h"
 #include "Database.h"
-#include "blastmaster/ProductKeyValidator.h"
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
@@ -59,13 +58,7 @@ int main(int argc, char* argv[]) {
             objects->setItem(row, 0, new QTableWidgetItem(tables.at(row)));
     };
 
-    blastmaster::ProductKeyValidator validator(blastmaster::Edition::Standard);
-    const std::string sample_key = "BMSSTD-DATABASE";
-    const bool valid = validator.validate(sample_key);
-    window.statusBar()->showMessage(QString("Edition: %1 | Valid: %2")
-        .arg(QString::fromStdString(validator.edition_name()))
-        .arg(valid ? "Yes" : "No"));
-
+    window.statusBar()->showMessage("Ready");
     refreshObjects();
     window.show();
     objects->setFocus();
