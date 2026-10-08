@@ -8,7 +8,6 @@
 
 #include "Word7MenuBar.h"
 #include "Document.h"
-#include "blastmaster/ProductKeyValidator.h"
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
