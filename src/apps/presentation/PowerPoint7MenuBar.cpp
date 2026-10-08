@@ -377,7 +377,11 @@ void PowerPoint7MenuBar::createEditMenu()
     add("Clear");
     add("Select All");
     add("Duplicate");
-    add("Delete Slide");
+    auto* deleteSlide = addMenuAction(m_editMenu, "Delete Slide", "Delete the selected slide");
+    QObject::connect(deleteSlide, &QAction::triggered, [this]() {
+        m_document->removeSlide(0);
+        m_parent->statusBar()->showMessage("Slide deleted", 2000);
+    });
     add("Find");
     add("Replace");
     add("Object");
@@ -416,8 +420,19 @@ void PowerPoint7MenuBar::createInsertMenu()
         wireAction(action, text);
     };
 
-    add("New Slide");
-    add("Duplicate Slide");
+    auto* newSlide = addMenuAction(m_insertMenu, "New Slide", "Insert a new slide");
+    QObject::connect(newSlide, &QAction::triggered, [this]() {
+        m_document->addSlide();
+        m_parent->statusBar()->showMessage("New slide inserted", 2000);
+    });
+    auto* duplicate = addMenuAction(m_insertMenu, "Duplicate Slide", "Duplicate the current slide");
+    QObject::connect(duplicate, &QAction::triggered, [this]() {
+        if (m_document->slideCount() > 0) {
+            const auto& source = m_document->slide(m_document->slideCount() - 1);
+            m_document->addSlide(source.title + " Copy", source.body);
+            m_parent->statusBar()->showMessage("Slide duplicated", 2000);
+        }
+    });
     add("Slide Numbers");
     add("Date and Time");
     add("Symbol");
