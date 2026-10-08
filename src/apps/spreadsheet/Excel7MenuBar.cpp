@@ -4,6 +4,7 @@
 #include "blastmaster/RecentFiles.h"
 
 #include <QAction>
+#include <QApplication>
 #include <QToolBar>
 #include <QFontComboBox>
 #include <QComboBox>
