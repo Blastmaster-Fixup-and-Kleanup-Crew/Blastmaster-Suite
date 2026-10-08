@@ -11,6 +11,7 @@
 #include <QIcon>
 #include <QStatusBar>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QFileInfo>
 
 namespace blastmaster::spreadsheet {
@@ -238,7 +239,11 @@ void Excel7MenuBar::createHelpMenu()
     });
     m_helpMenu->addAction(makeAction("What's This?", QKeySequence::WhatsThis, m_parent));
     m_helpMenu->addAction(makeAction("Tip of the Day", QKeySequence(), m_parent));
-    m_helpMenu->addAction(makeAction("About Microsoft Excel", QKeySequence(), m_parent));
+    auto* about = makeAction("About Microsoft Excel", QKeySequence(), m_parent);
+    m_helpMenu->addAction(about);
+    QObject::connect(about, &QAction::triggered, [this]() {
+        QMessageBox::about(m_parent, "About Blastmaster Workbooks", "Blastmaster Workbooks\nVersion 1.0.0\nClassic office-style spreadsheet application.");
+    });
 }
 
 void Excel7MenuBar::createToolbars()
