@@ -8,7 +8,7 @@
 #include <QWidget>
 
 #include "Access95MenuBar.h"
-#include "Database.h"
+#include "DatabaseDocument.h"
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
