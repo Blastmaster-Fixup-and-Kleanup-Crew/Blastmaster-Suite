@@ -56,7 +56,8 @@ void PresentationDocument::addSlide(const QString& title, const QString& body)
 void PresentationDocument::removeSlide(int index)
 {
     if (index < 0 || index >= m_slides.size() || m_slides.size() == 1) return;
-    m_slides.removeAt(index);\n    if (m_currentSlide >= m_slides.size()) m_currentSlide = m_slides.size() - 1;
+    m_slides.removeAt(index);
+    if (m_currentSlide >= m_slides.size()) m_currentSlide = m_slides.size() - 1;
     m_isDirty = true;
 }
 
