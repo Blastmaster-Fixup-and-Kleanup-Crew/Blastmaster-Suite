@@ -1,6 +1,7 @@
 #include "Access95MenuBar.h"
 #include "DatabaseDocument.h"
 #include "blastmaster/HelpTopicsWindow.h"
+#include "blastmaster/RecentFiles.h"
 
 #include <QAction>
 #include <QApplication>
@@ -12,6 +13,7 @@
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QFileInfo>
 
 namespace blastmaster::database {
 
