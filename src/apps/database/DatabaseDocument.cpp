@@ -3,22 +3,20 @@
 #include <QFile>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QSqlRecord>
 
 namespace blastmaster::database {
 
 DatabaseDocument::DatabaseDocument(QObject* parent)
     : QObject(parent)
-    , m_connectionName(QStringLiteral("blastmaster_database_%1")
-          .arg(reinterpret_cast<quintptr>(this)))
+    , m_connectionName(QStringLiteral("blastmaster_database_%1").arg(reinterpret_cast<quintptr>(this)))
 {
     m_db = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), m_connectionName);
 }
 
 DatabaseDocument::~DatabaseDocument()
 {
-    if (m_db.isValid())
-        m_db.close();
-
+    if (m_db.isValid()) m_db.close();
     const QString name = m_connectionName;
     m_db = QSqlDatabase();
     QSqlDatabase::removeDatabase(name);
@@ -42,25 +40,16 @@ void DatabaseDocument::setError(const QString& error)
 bool DatabaseDocument::newDatabase()
 {
     if (!ensureConnection()) return false;
-
     m_db.close();
     m_filePath.clear();
     m_db.setDatabaseName(QStringLiteral(":memory:"));
-
-    if (!m_db.open()) {
-        setError(m_db.lastError().text());
-        return false;
-    }
+    if (!m_db.open()) { setError(m_db.lastError().text()); return false; }
 
     QSqlQuery query(m_db);
-    if (!query.exec(QStringLiteral(
-            "CREATE TABLE IF NOT EXISTS SampleData ("
-            "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
-            "Name TEXT, Value TEXT)"))) {
+    if (!query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS SampleData (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Value TEXT)"))) {
         setError(query.lastError().text());
         return false;
     }
-
     emit databaseChanged();
     return true;
 }
@@ -68,15 +57,9 @@ bool DatabaseDocument::newDatabase()
 bool DatabaseDocument::openDatabase(const QString& path)
 {
     if (!ensureConnection() || path.isEmpty()) return false;
-
     m_db.close();
     m_db.setDatabaseName(path);
-
-    if (!m_db.open()) {
-        setError(m_db.lastError().text());
-        return false;
-    }
-
+    if (!m_db.open()) { setError(m_db.lastError().text()); return false; }
     m_filePath = path;
     emit databaseChanged();
     return true;
@@ -94,13 +77,10 @@ bool DatabaseDocument::saveDatabase()
 bool DatabaseDocument::saveDatabaseAs(const QString& path)
 {
     if (!ensureConnection() || path.isEmpty()) return false;
-
     const QString source = m_db.databaseName();
-    if (m_db.isOpen())
-        m_db.close();
+    if (m_db.isOpen()) m_db.close();
 
-    if (!source.isEmpty() && source != QStringLiteral(":memory:") &&
-        QFile::exists(source) && source != path) {
+    if (!source.isEmpty() && source != QStringLiteral(":memory:") && QFile::exists(source) && source != path) {
         if (QFile::exists(path) && !QFile::remove(path)) {
             setError(QStringLiteral("Could not replace the existing database file."));
             return false;
@@ -110,13 +90,8 @@ bool DatabaseDocument::saveDatabaseAs(const QString& path)
             return false;
         }
     }
-
     m_db.setDatabaseName(path);
-    if (!m_db.open()) {
-        setError(m_db.lastError().text());
-        return false;
-    }
-
+    if (!m_db.open()) { setError(m_db.lastError().text()); return false; }
     m_filePath = path;
     emit databaseChanged();
     return true;
@@ -140,15 +115,12 @@ QStringList DatabaseDocument::tables() const
 bool DatabaseDocument::createTable(const QString& name)
 {
     if (!m_db.isOpen() || name.trimmed().isEmpty()) return false;
-
-    const QString safeName = name.trimmed().replace('"', QStringLiteral("\"\""));
+    const QString safe = name.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
-    if (!query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS \"%1\" (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Value TEXT)")
-            .arg(safeName))) {
+    if (!query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS \"%1\" (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Value TEXT)").arg(safe))) {
         setError(query.lastError().text());
         return false;
     }
-
     emit databaseChanged();
     return true;
 }
@@ -156,30 +128,24 @@ bool DatabaseDocument::createTable(const QString& name)
 bool DatabaseDocument::deleteTable(const QString& name)
 {
     if (!m_db.isOpen() || name.trimmed().isEmpty()) return false;
-
-    const QString safeName = name.trimmed().replace('"', QStringLiteral(""""));
+    const QString safe = name.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
-    if (!query.exec(QStringLiteral("DROP TABLE IF EXISTS \\"%1\\"").arg(safeName))) {
+    if (!query.exec(QStringLiteral("DROP TABLE IF EXISTS \"%1\"").arg(safe))) {
         setError(query.lastError().text());
         return false;
     }
-
     emit databaseChanged();
     return true;
 }
-
-} // namespace blastmaster::database
 
 QStringList DatabaseDocument::columns(const QString& table) const
 {
     if (!m_db.isOpen() || table.trimmed().isEmpty()) return {};
     const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
-    if (!query.exec(QStringLiteral("PRAGMA table_info(\"%1\")").arg(safe)))
-        return {};
+    if (!query.exec(QStringLiteral("PRAGMA table_info(\"%1\")").arg(safe))) return {};
     QStringList result;
-    while (query.next())
-        result << query.value(1).toString();
+    while (query.next()) result << query.value(1).toString();
     return result;
 }
 
@@ -189,12 +155,10 @@ QList<QVariantList> DatabaseDocument::records(const QString& table, int limit) c
     if (!m_db.isOpen() || table.trimmed().isEmpty()) return result;
     const QString safe = table.trimmed().replace('"', QStringLiteral("\"\""));
     QSqlQuery query(m_db);
-    if (!query.exec(QStringLiteral("SELECT * FROM \"%1\" LIMIT %2").arg(safe).arg(qMax(1, limit))))
-        return result;
+    if (!query.exec(QStringLiteral("SELECT * FROM \"%1\" LIMIT %2").arg(safe).arg(qMax(1, limit)))) return result;
     while (query.next()) {
         QVariantList row;
-        for (int i = 0; i < query.record().count(); ++i)
-            row << query.value(i);
+        for (int i = 0; i < query.record().count(); ++i) row << query.value(i);
         result << row;
     }
     return result;
@@ -208,12 +172,11 @@ bool DatabaseDocument::insertRecord(const QString& table, const QVariantMap& val
     QVariantList bindValues;
     for (auto it = values.cbegin(); it != values.cend(); ++it) {
         fields << QStringLiteral("\"%1\"").arg(it.key().replace('"', QStringLiteral("\"\"")));
-        placeholders << "?";
+        placeholders << QStringLiteral("?");
         bindValues << it.value();
     }
     QSqlQuery query(m_db);
-    if (!query.prepare(QStringLiteral("INSERT INTO \"%1\" (%2) VALUES (%3)")
-                       .arg(safe, fields.join(", "), placeholders.join(", ")))) {
+    if (!query.prepare(QStringLiteral("INSERT INTO \"%1\" (%2) VALUES (%3)").arg(safe, fields.join(", "), placeholders.join(", ")))) {
         setError(query.lastError().text()); return false;
     }
     for (const auto& value : bindValues) query.addBindValue(value);
@@ -233,8 +196,7 @@ bool DatabaseDocument::updateRecord(const QString& table, int rowId, const QVari
         bindValues << it.value();
     }
     QSqlQuery query(m_db);
-    if (!query.prepare(QStringLiteral("UPDATE \"%1\" SET %2 WHERE ID = ?")
-                       .arg(safe, assignments.join(", ")))) {
+    if (!query.prepare(QStringLiteral("UPDATE \"%1\" SET %2 WHERE ID = ?").arg(safe, assignments.join(", ")))) {
         setError(query.lastError().text()); return false;
     }
     for (const auto& value : bindValues) query.addBindValue(value);
@@ -258,3 +220,4 @@ bool DatabaseDocument::deleteRecord(const QString& table, int rowId)
     return true;
 }
 
+} // namespace blastmaster::database
