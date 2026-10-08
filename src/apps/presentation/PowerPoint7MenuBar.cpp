@@ -1,6 +1,7 @@
 #include "PowerPoint7MenuBar.h"
 #include "PresentationDocument.h"
 #include "blastmaster/HelpTopicsWindow.h"
+#include "blastmaster/RecentFiles.h"
 
 #include <QAction>
 #include <QApplication>
@@ -12,6 +13,7 @@
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QFileInfo>
 
 namespace {
 QString normalizedActionName(const QString& text)
@@ -205,6 +207,36 @@ void PowerPoint7MenuBar::createFileMenu()
     auto* openAction = addMenuAction(m_fileMenu, "&Open", "Open an existing presentation");
     QObject::connect(openAction, &QAction::triggered, this, &PowerPoint7MenuBar::onFileOpen);
 
+    auto* recentMenu = m_fileMenu->addMenu("Recent Presentations");
+    QObject::connect(recentMenu, &QMenu::aboutToShow, [this, recentMenu]() {
+        recentMenu->clear();
+        const auto recent = blastmaster::RecentFiles::files(QStringLiteral("presentations"));
+        if (recent.isEmpty()) {
+            auto* empty = recentMenu->addAction("(No recent presentations)");
+            empty->setEnabled(false);
+            return;
+        }
+        for (const QString& path : recent) {
+            auto* item = recentMenu->addAction(QFileInfo(path).fileName());
+            item->setToolTip(path);
+            QObject::connect(item, &QAction::triggered, [this, path]() {
+                m_document->setFilePath(path);
+                if (!m_document->load()) {
+                    QMessageBox::critical(m_parent, "Error", "Failed to open presentation: " + path);
+                    return;
+                }
+                blastmaster::RecentFiles::add(QStringLiteral("presentations"), path);
+                m_parent->setWindowTitle(QString("Blastmaster Presentations - %1").arg(m_document->title()));
+            });
+        }
+        recentMenu->addSeparator();
+        auto* clear = recentMenu->addAction("Clear Recent Presentations");
+        QObject::connect(clear, &QAction::triggered, [recentMenu]() {
+            blastmaster::RecentFiles::clear(QStringLiteral("presentations"));
+            recentMenu->hide();
+        });
+    });
+
     auto add = [this](const QString& text) {
         QAction* action = addMenuAction(m_fileMenu, text, text + " command");
         wireAction(action, text);
@@ -275,6 +307,7 @@ void PowerPoint7MenuBar::onFileOpen()
     if (m_parent->statusBar()) {
         m_parent->statusBar()->showMessage("Presentation opened: " + filePath);
     }
+    blastmaster::RecentFiles::add(QStringLiteral("presentations"), filePath);
 }
 
 void PowerPoint7MenuBar::onFileSave()
@@ -295,6 +328,7 @@ void PowerPoint7MenuBar::onFileSave()
     if (m_parent->statusBar()) {
         m_parent->statusBar()->showMessage("Presentation saved: " + m_document->filePath());
     }
+    blastmaster::RecentFiles::add(QStringLiteral("presentations"), m_document->filePath());
 }
 
 void PowerPoint7MenuBar::onFileSaveAs()
@@ -316,6 +350,7 @@ void PowerPoint7MenuBar::onFileSaveAs()
     if (m_parent->statusBar()) {
         m_parent->statusBar()->showMessage("Presentation saved as: " + filePath);
     }
+    blastmaster::RecentFiles::add(QStringLiteral("presentations"), filePath);
 }
 
 void PowerPoint7MenuBar::onFileExit()
