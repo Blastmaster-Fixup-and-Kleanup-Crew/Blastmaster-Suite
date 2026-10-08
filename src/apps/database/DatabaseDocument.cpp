@@ -78,16 +78,30 @@ bool DatabaseDocument::saveDatabaseAs(const QString& path)
 {
     if (!ensureConnection() || path.isEmpty()) return false;
     const QString source = m_db.databaseName();
-    if (m_db.isOpen()) m_db.close();
 
-    if (!source.isEmpty() && source != QStringLiteral(":memory:") && QFile::exists(source) && source != path) {
+    if (source == QStringLiteral(":memory:")) {
         if (QFile::exists(path) && !QFile::remove(path)) {
             setError(QStringLiteral("Could not replace the existing database file."));
             return false;
         }
-        if (!QFile::copy(source, path)) {
-            setError(QStringLiteral("Could not save the database file."));
+        QSqlQuery backup(m_db);
+        const QString escapedPath = path;
+        if (!backup.exec(QStringLiteral("VACUUM INTO '%1'").arg(escapedPath.replace("'", "''")))) {
+            setError(backup.lastError().text());
             return false;
+        }
+        m_db.close();
+    } else {
+        if (m_db.isOpen()) m_db.close();
+        if (!source.isEmpty() && QFile::exists(source) && source != path) {
+            if (QFile::exists(path) && !QFile::remove(path)) {
+                setError(QStringLiteral("Could not replace the existing database file."));
+                return false;
+            }
+            if (!QFile::copy(source, path)) {
+                setError(QStringLiteral("Could not save the database file."));
+                return false;
+            }
         }
     }
     m_db.setDatabaseName(path);
