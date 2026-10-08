@@ -164,10 +164,10 @@ void Word7MenuBar::createFileMenu()
     m_menuBar->addMenu(m_fileMenu);
 
     auto* newAction = addMenuAction(m_fileMenu, "&New", "Create a new document");
-    QObject::connect(newAction, &QAction::triggered, this, &Word7MenuBar::onFileNew);
+    QObject::connect(newAction, &QAction::triggered, [this]() { onFileNew(); });
 
     auto* openAction = addMenuAction(m_fileMenu, "&Open", "Open an existing document");
-    QObject::connect(openAction, &QAction::triggered, this, &Word7MenuBar::onFileOpen);
+    QObject::connect(openAction, &QAction::triggered, [this]() { onFileOpen(); });
 
     auto* recentMenu = m_fileMenu->addMenu("Recent Documents");
     QObject::connect(recentMenu, &QMenu::aboutToShow, [this, recentMenu]() {
@@ -201,10 +201,10 @@ void Word7MenuBar::createFileMenu()
     add("&Close");
 
     auto* saveAction = addMenuAction(m_fileMenu, "&Save", "Save the current document");
-    QObject::connect(saveAction, &QAction::triggered, this, &Word7MenuBar::onFileSave);
+    QObject::connect(saveAction, &QAction::triggered, [this]() { onFileSave(); });
 
     auto* saveAsAction = addMenuAction(m_fileMenu, "Save &As", "Save the document with a new name");
-    QObject::connect(saveAsAction, &QAction::triggered, this, &Word7MenuBar::onFileSaveAs);
+    QObject::connect(saveAsAction, &QAction::triggered, [this]() { onFileSaveAs(); });
 
     add("&Version");
     add("Find File");
