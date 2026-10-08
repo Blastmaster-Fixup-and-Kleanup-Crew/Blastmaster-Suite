@@ -15,10 +15,14 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     app.setApplicationName("Blastmaster Databases");
     app.setApplicationDisplayName("Blastmaster Databases");
+    app.setApplicationVersion("1.0.0");
+    app.setOrganizationName("Blastmaster");
+    app.setOrganizationDomain("blastmaster.local");
 
     QMainWindow window;
     window.resize(1200, 800);
     window.setWindowTitle("Blastmaster Databases - Database1");
+    window.setAccessibleName("Blastmaster Databases");
 
     auto* database = new blastmaster::database::DatabaseDocument();
     database->setTitle("Database1");
@@ -28,6 +32,9 @@ int main(int argc, char* argv[]) {
     layout->setContentsMargins(0, 0, 0, 0);
 
     auto* objects = new QTableWidget(central);
+    objects->setObjectName("databaseObjects");
+    objects->setAccessibleName("Database objects");
+    objects->setAccessibleDescription("List of tables and other database objects in the current database.");
     objects->setColumnCount(1);
     objects->setHorizontalHeaderLabels(QStringList() << "Database Objects");
     objects->setShowGrid(true);
@@ -52,7 +59,6 @@ int main(int argc, char* argv[]) {
             objects->setItem(row, 0, new QTableWidgetItem(tables.at(row)));
     };
 
-    // Keep the same product/edition status pattern as the other suite apps.
     blastmaster::ProductKeyValidator validator(blastmaster::Edition::Standard);
     const std::string sample_key = "BMSSTD-DATABASE";
     const bool valid = validator.validate(sample_key);
@@ -62,5 +68,6 @@ int main(int argc, char* argv[]) {
 
     refreshObjects();
     window.show();
+    objects->setFocus();
     return app.exec();
 }
