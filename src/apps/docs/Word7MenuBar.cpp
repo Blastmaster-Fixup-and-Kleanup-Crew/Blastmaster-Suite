@@ -1,4 +1,5 @@
 #include "Word7MenuBar.h"
+#include "blastmaster/RecentFiles.h"
 #include "Document.h"
 #include "blastmaster/HelpTopicsWindow.h"
 
@@ -165,6 +166,30 @@ void Word7MenuBar::createFileMenu()
 
     auto* openAction = addMenuAction(m_fileMenu, "&Open", "Open an existing document");
     QObject::connect(openAction, &QAction::triggered, this, &Word7MenuBar::onFileOpen);
+
+    auto* recentMenu = m_fileMenu->addMenu("Recent Documents");
+    QObject::connect(recentMenu, &QMenu::aboutToShow, [this, recentMenu]() {
+        recentMenu->clear();
+        const auto recent = blastmaster::RecentFiles::files(QStringLiteral("docs"));
+        if (recent.isEmpty()) {
+            auto* empty = recentMenu->addAction("(No recent documents)");
+            empty->setEnabled(false);
+            return;
+        }
+        for (const QString& path : recent) {
+            auto* action = recentMenu->addAction(path);
+            QObject::connect(action, &QAction::triggered, [this, path]() {
+                m_document->setFilePath(path);
+                if (!m_document->load()) {
+                    QMessageBox::critical(m_parent, "Error", "Failed to open document: " + path);
+                    return;
+                }
+                blastmaster::RecentFiles::add(QStringLiteral("docs"), path);
+                m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
+                m_parent->statusBar()->showMessage("Document opened: " + path);
+            });
+        }
+    });
 
     auto add = [this](const QString& text) {
         QAction* action = addMenuAction(m_fileMenu, text, text + " command");
