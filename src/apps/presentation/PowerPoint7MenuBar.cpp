@@ -101,6 +101,8 @@ QAction* addToolbarAction(QToolBar* toolbar, const QString& text, const QString&
 }
 } // namespace
 
+namespace blastmaster::presentation {
+
 PowerPoint7MenuBar::PowerPoint7MenuBar(QMainWindow* parent, PresentationDocument* document)
     : m_parent(parent)
     , m_document(document)
@@ -601,3 +603,5 @@ void PowerPoint7MenuBar::createStatusWidgets()
     statusBar->addPermanentWidget(zoom);
 }
 
+
+} // namespace blastmaster::presentation
