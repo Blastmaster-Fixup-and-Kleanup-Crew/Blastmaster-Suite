@@ -7,6 +7,10 @@
 #include <QJsonObject>
 #include <QSaveFile>
 #include <QDebug>
+#include <QRegularExpression>
+#include <QSet>
+#include <QtMath>
+#include <functional>
 
 namespace blastmaster::spreadsheet {
 
@@ -56,6 +60,80 @@ void Workbook::ensureSheet(const QString& sheet)
         return;
     if (!m_cells.contains(sheet))
         m_cells.insert(sheet, {});
+}
+
+bool Workbook::addSheet(const QString& sheet)
+{
+    const QString name = sheet.trimmed();
+    if (name.isEmpty() || m_cells.contains(name))
+        return false;
+    m_cells.insert(name, {});
+    m_isDirty = true;
+    return true;
+}
+
+bool Workbook::removeSheet(const QString& sheet)
+{
+    if (!m_cells.contains(sheet) || m_cells.size() <= 1)
+        return false;
+    m_cells.remove(sheet);
+    m_isDirty = true;
+    return true;
+}
+
+QString Workbook::evaluateCell(const QString& sheet, const QString& address) const
+{
+    QSet<QString> visiting;
+    std::function<QString(const QString&, const QString&)> eval =
+        [&](const QString& currentSheet, const QString& currentAddress) -> QString {
+            const QString key = currentSheet + QStringLiteral("!") + currentAddress.toUpper();
+            if (visiting.contains(key))
+                return QStringLiteral("#CIRC!");
+            visiting.insert(key);
+            const QString raw = cell(currentSheet, currentAddress).trimmed();
+            if (!raw.startsWith('='))
+                return raw;
+            QString expr = raw.mid(1).trimmed();
+            const auto refPattern = QRegularExpression(QStringLiteral(R"((?:(\w+)!)?([A-Z]+[0-9]+))"));
+            QRegularExpressionMatchIterator it = refPattern.globalMatch(expr);
+            while (it.hasNext()) {
+                const auto match = it.next();
+                const QString refSheet = match.captured(1).isEmpty() ? currentSheet : match.captured(1);
+                const QString refAddr = match.captured(2);
+                bool ok = false;
+                const double value = eval(refSheet, refAddr).toDouble(&ok);
+                if (!ok) {
+                    visiting.remove(key);
+                    return QStringLiteral("#VALUE!");
+                }
+                expr.replace(match.captured(0), QString::number(value, 'g', 15));
+            }
+            const auto terms = expr.split(QRegularExpression(QStringLiteral(R"((\+|-|\*|/))")), Qt::SkipEmptyParts);
+            if (terms.size() == 1) {
+                bool ok = false;
+                const double n = terms.first().trimmed().toDouble(&ok);
+                visiting.remove(key);
+                return ok ? QString::number(n, 'g', 15) : QStringLiteral("#VALUE!");
+            }
+            double result = terms.first().trimmed().toDouble();
+            const QRegularExpression ops(QStringLiteral(R"((\+|-|\*|/))"));
+            const auto opMatches = ops.globalMatch(expr);
+            int i = 1;
+            while (opMatches.hasNext() && i < terms.size()) {
+                const QString op = opMatches.next().captured(0);
+                const double rhs = terms.at(i++).trimmed().toDouble();
+                if (op == "+") result += rhs;
+                else if (op == "-") result -= rhs;
+                else if (op == "*") result *= rhs;
+                else if (op == "/") {
+                    if (qFuzzyIsNull(rhs)) { visiting.remove(key); return QStringLiteral("#DIV/0!"); }
+                    result /= rhs;
+                }
+            }
+            visiting.remove(key);
+            return QString::number(result, 'g', 15);
+        };
+    return eval(sheet, address);
 }
 
 QJsonObject Workbook::toJson() const
