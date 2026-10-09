@@ -118,8 +118,8 @@ add_custom_command(
         "$<TARGET_FILE:blastmaster_docs>"
         "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_docs$<TARGET_FILE_SUFFIX:blastmaster_docs>"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "$<TARGET_FILE:blastmaster_spreadsheet>"
-        "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_workbooks$<TARGET_FILE_SUFFIX:blastmaster_spreadsheet>"
+        "$<TARGET_FILE:blastmaster_workbook>"
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_workbook$<TARGET_FILE_SUFFIX:blastmaster_workbook>"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:blastmaster_presentation>"
         "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_presentations$<TARGET_FILE_SUFFIX:blastmaster_presentation>"
@@ -152,7 +152,7 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
         COMMAND "${WINDEPLOYQT_EXECUTABLE}"
             --no-translations
             --dir "${BLASTMASTER_SETUP_PAYLOAD}/standard"
-            "$<TARGET_FILE:blastmaster_spreadsheet>"
+            "$<TARGET_FILE:blastmaster_workbook>"
         COMMAND "${WINDEPLOYQT_EXECUTABLE}"
             --no-translations
             --dir "${BLASTMASTER_SETUP_PAYLOAD}/standard"
