@@ -13,8 +13,10 @@ if(WIN32)
     find_program(BLASTMASTER_WINDEPLOYQT_EXECUTABLE
         NAMES windeployqt windeployqt6
         HINTS "${Qt6_DIR}/../../../bin"
-        REQUIRED
     )
+    if(NOT BLASTMASTER_WINDEPLOYQT_EXECUTABLE)
+        message(FATAL_ERROR "windeployqt was not found. Add the Qt bin directory to PATH so Windows app builds can deploy their Qt runtime DLLs.")
+    endif()
     set(BLASTMASTER_APP_TARGETS
         blastmaster_docs
         blastmaster_presentation
