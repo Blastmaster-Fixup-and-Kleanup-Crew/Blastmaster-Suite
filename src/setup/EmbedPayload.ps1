@@ -53,7 +53,8 @@ try {
     $writer.Dispose()
     $output.Dispose()
 
-    [System.IO.File]::Replace($tempExe, $SetupExe, $null)
+    [System.IO.File]::Copy($tempExe, $SetupExe, $true)
+    [System.IO.File]::Delete($tempExe)
 }
 catch {
     if (Test-Path -LiteralPath $tempExe) {
