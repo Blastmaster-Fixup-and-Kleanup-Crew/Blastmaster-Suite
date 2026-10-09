@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
     layout->addLayout(controls);
 
     auto* grid = new QTableWidget(central);
+    grid->setObjectName("databaseGrid");
     grid->setAccessibleName("Database record editor");
     grid->setSelectionBehavior(QAbstractItemView::SelectRows);
     grid->setSelectionMode(QAbstractItemView::SingleSelection);
