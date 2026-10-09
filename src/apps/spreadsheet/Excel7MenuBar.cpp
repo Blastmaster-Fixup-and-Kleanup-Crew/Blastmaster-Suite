@@ -14,6 +14,11 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QFileInfo>
+#include <QTableWidget>
+#include <QTabWidget>
+#include <QColorDialog>
+#include <QFont>
+#include <functional>
 
 namespace blastmaster::spreadsheet {
 
@@ -294,23 +299,71 @@ void Excel7MenuBar::createToolbars()
 
     auto* sizeCombo = new QComboBox(formatting);
     const QList<int> sizes = {8,9,10,11,12,14,16,18,20,22,24,26,28,36};
-    for (int s : sizes) sizeCombo->addItem(QString::number(s));
+    for (int pointSize : sizes) sizeCombo->addItem(QString::number(pointSize));
     sizeCombo->setCurrentText("10");
     formatting->addWidget(sizeCombo);
 
-    formatting->addAction(makeAction("Bold", QKeySequence::Bold, m_parent));
-    formatting->addAction(makeAction("Italic", QKeySequence::Italic, m_parent));
-    formatting->addAction(makeAction("Underline", QKeySequence(), m_parent));
+    auto selectedCells = [this]() {
+        QList<QTableWidgetItem*> items;
+        auto* tabs = m_parent->findChild<QTabWidget*>();
+        auto* table = tabs ? qobject_cast<QTableWidget*>(tabs->currentWidget()) : nullptr;
+        if (!table) return items;
+        items = table->selectedItems();
+        if (items.isEmpty() && table->currentItem()) items.append(table->currentItem());
+        return items;
+    };
+    auto applyFont = [selectedCells](const std::function<void(QFont&)>& update) {
+        const auto items = selectedCells();
+        for (auto* item : items) {
+            QFont font = item->font();
+            update(font);
+            item->setFont(font);
+        }
+    };
+
+    QObject::connect(fontCombo, &QFontComboBox::currentFontChanged, [this, applyFont](const QFont& chosen) {
+        applyFont([&chosen](QFont& font) { font.setFamily(chosen.family()); });
+        if (m_parent->statusBar()) m_parent->statusBar()->showMessage(QString("Font: %1").arg(chosen.family()), 2500);
+    });
+    QObject::connect(sizeCombo, &QComboBox::currentTextChanged, [this, applyFont](const QString& text) {
+        bool ok = false;
+        const int pointSize = text.toInt(&ok);
+        if (ok) applyFont([pointSize](QFont& font) { font.setPointSize(pointSize); });
+        if (m_parent->statusBar()) m_parent->statusBar()->showMessage(QString("Font size: %1").arg(text), 2500);
+    });
+
+    auto addFormatAction = [this, formatting, selectedCells](const QString& text, const QKeySequence& shortcut = QKeySequence()) {
+        auto* action = makeAction(text, shortcut, m_parent);
+        formatting->addAction(action);
+        QObject::connect(action, &QAction::triggered, [this, text, selectedCells]() {
+            const auto items = selectedCells();
+            for (auto* item : items) {
+                QFont font = item->font();
+                if (text == "Bold") font.setBold(!font.bold());
+                else if (text == "Italic") font.setItalic(!font.italic());
+                else if (text == "Underline") font.setUnderline(!font.underline());
+                else if (text == "Align Left") item->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+                else if (text == "Center") item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                else if (text == "Align Right") item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                else if (text == "Font Color") {
+                    const QColor color = QColorDialog::getColor(item->foreground().color(), m_parent, "Cell Font Color");
+                    if (color.isValid()) item->setForeground(color);
+                }
+                if (text == "Bold" || text == "Italic" || text == "Underline") item->setFont(font);
+            }
+            if (items.isEmpty() && m_parent->statusBar())
+                m_parent->statusBar()->showMessage("Select one or more cells first.", 2500);
+        });
+    };
+    addFormatAction("Bold", QKeySequence::Bold);
+    addFormatAction("Italic", QKeySequence::Italic);
+    addFormatAction("Underline");
+    addFormatAction("Align Left");
+    addFormatAction("Center");
+    addFormatAction("Align Right");
+    addFormatAction("Font Color");
 
     m_parent->addToolBar(Qt::TopToolBarArea, formatting);
-
-    // Connect some demo signals to status bar
-    QObject::connect(fontCombo, &QFontComboBox::currentFontChanged, [this](const QFont& f){
-        if (m_parent->statusBar()) m_parent->statusBar()->showMessage(QString("Font: %1").arg(f.family()), 2500);
-    });
-    QObject::connect(sizeCombo, &QComboBox::currentTextChanged, [this](const QString& s){
-        if (m_parent->statusBar()) m_parent->statusBar()->showMessage(QString("Font size: %1").arg(s), 2500);
-    });
 }
 
 } // namespace blastmaster::spreadsheet
