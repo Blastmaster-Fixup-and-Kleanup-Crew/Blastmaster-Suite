@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Generate Qt meta-object code for classes using Q_OBJECT.
+set(CMAKE_AUTOMOC ON)
+
 option(BLASTMASTER_BUILD_PROFESSIONAL "Build the Professional edition apps." ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Sql)
