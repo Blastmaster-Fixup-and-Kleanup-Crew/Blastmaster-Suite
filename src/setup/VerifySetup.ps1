@@ -26,7 +26,7 @@ Assert-True (Test-Path (Join-Path $common "BlastmasterHelp.exe")) "common payloa
 Assert-True (Test-Path (Join-Path $common "blastmaster_suite_setup.svg")) "common payload contains setup branding"
 
 Assert-True (Test-Path (Join-Path $standard "blastmaster_docs.exe")) "Standard contains Docs"
-Assert-True (Test-Path (Join-Path $standard "blastmaster_workbooks.exe")) "Standard contains Workbooks"
+Assert-True (Test-Path (Join-Path $standard "blastmaster_workbook.exe")) "Standard contains Workbooks"
 Assert-True (Test-Path (Join-Path $standard "blastmaster_presentations.exe")) "Standard contains Presentations"
 Assert-True (-not (Test-Path (Join-Path $standard "blastmaster_database.exe"))) "Standard excludes Databases"
 
@@ -58,7 +58,7 @@ if ($InstallRoot) {
 
     $apps = @(
         @{ Name = "Docs"; Extension = ".dccx"; Exe = "blastmaster_docs.exe"; ProgId = "Blastmaster.Docs" },
-        @{ Name = "Workbooks"; Extension = ".wkbx"; Exe = "blastmaster_workbooks.exe"; ProgId = "Blastmaster.Workbooks" },
+        @{ Name = "Workbooks"; Extension = ".wkbx"; Exe = "blastmaster_workbook.exe"; ProgId = "Blastmaster.Workbooks" },
         @{ Name = "Presentations"; Extension = ".prex"; Exe = "blastmaster_presentations.exe"; ProgId = "Blastmaster.Presentations" }
     )
 
