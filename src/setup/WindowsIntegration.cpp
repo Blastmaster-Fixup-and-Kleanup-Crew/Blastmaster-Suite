@@ -300,7 +300,7 @@ bool install(
     bool ok =
         shortcut(QStringLiteral("Docs"), QStringLiteral("blastmaster_docs.exe"),
                  QStringLiteral("Blastmaster Suite Docs")) &&
-        shortcut(QStringLiteral("Workbooks"), QStringLiteral("blastmaster_workbooks.exe"),
+        shortcut(QStringLiteral("Workbooks"), QStringLiteral("blastmaster_workbook.exe"),
                  QStringLiteral("Blastmaster Suite Workbooks")) &&
         shortcut(QStringLiteral("Presentations"), QStringLiteral("blastmaster_presentations.exe"),
                  QStringLiteral("Blastmaster Suite Presentations")) &&
@@ -327,7 +327,7 @@ bool install(
                 QStringLiteral("blastmaster_docs.exe"),
                 QStringLiteral("Blastmaster Suite Document"), destination, error) &&
             writeFileAssociation(QStringLiteral(".wkbx"), QStringLiteral("Workbooks"),
-                QStringLiteral("blastmaster_workbooks.exe"),
+                QStringLiteral("blastmaster_workbook.exe"),
                 QStringLiteral("Blastmaster Suite Workbook"), destination, error) &&
             writeFileAssociation(QStringLiteral(".prex"), QStringLiteral("Presentations"),
                 QStringLiteral("blastmaster_presentations.exe"),
