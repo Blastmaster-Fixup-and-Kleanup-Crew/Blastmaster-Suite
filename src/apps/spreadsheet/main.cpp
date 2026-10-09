@@ -80,8 +80,14 @@ int main(int argc, char* argv[]) {
         return view;
     };
 
-    for (const QString& name : workbook->sheets())
-        tabs->addTab(makeSheet(name), name);
+    auto refreshWorkbookUi = [&]() {
+        while (tabs->count() > 0)
+            delete tabs->widget(0);
+        for (const QString& name : workbook->sheets())
+            tabs->addTab(makeSheet(name), name);
+        window.setWindowTitle(QString("Blastmaster Workbooks - %1").arg(workbook->title()));
+    };
+    refreshWorkbookUi();
 
     QObject::connect(addSheet, &QPushButton::clicked, [&]() {
         const QString name = QString("Sheet%1").arg(workbook->sheets().size() + 1);
@@ -107,6 +113,11 @@ int main(int argc, char* argv[]) {
 
     window.setCentralWidget(central);
     blastmaster::spreadsheet::Excel7MenuBar menuBar(&window, workbook);
+    menuBar.setDocumentLoadedCallback([&]() {
+        refreshWorkbookUi();
+        if (auto* view = qobject_cast<QTableWidget*>(tabs->currentWidget()))
+            view->setFocus();
+    });
     window.setMenuBar(menuBar.menuBar());
     window.statusBar()->showMessage("Ready");
     window.show();
