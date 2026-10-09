@@ -34,10 +34,10 @@ int main(int argc, char* argv[]) {
     editor->setAccessibleDescription("Main editing area for the current Blastmaster Docs document.");
     editor->setTabChangesFocus(false);
     editor->setPlaceholderText("Start typing your document...");
-    editor->setStyleSheet("QPlainTextEdit { font-family: 'Arial'; font-size: 11px; padding: 8px; }");
+    editor->setStyleSheet("QTextEdit { font-family: 'Arial'; font-size: 11px; padding: 8px; }");
     layout->addWidget(editor);
 
-    QObject::connect(editor, &QPlainTextEdit::textChanged, [document, editor]() {
+    QObject::connect(editor, &QTextEdit::textChanged, [document, editor]() {
         document->setContent(editor->toHtml());
     });
 
