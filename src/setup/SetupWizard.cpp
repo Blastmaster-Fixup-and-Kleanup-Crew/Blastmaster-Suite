@@ -187,7 +187,7 @@ QWizardPage* SetupWizard::createDestinationPage()
     layout->addWidget(new QLabel(tr("Destination folder:")));
 
     auto* row = new QHBoxLayout;
-    QString programFiles = qEnvironmentVariable(QStringLiteral("ProgramFiles"));
+    QString programFiles = qEnvironmentVariable("ProgramFiles");
     if (programFiles.isEmpty())
         programFiles = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     destinationEdit_ = new QLineEdit(
