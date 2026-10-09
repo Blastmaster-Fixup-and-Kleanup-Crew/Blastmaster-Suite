@@ -2,6 +2,7 @@ add_executable(blastmaster_database
     main.cpp
     Access95MenuBar.cpp
     DatabaseDocument.cpp
+    DatabaseDocument.h
 )
 
 if(WIN32)
