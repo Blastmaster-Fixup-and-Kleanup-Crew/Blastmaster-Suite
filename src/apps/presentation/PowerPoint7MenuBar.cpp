@@ -6,6 +6,11 @@
 #include <QAction>
 #include <QApplication>
 #include <QFileDialog>
+#include <QTextEdit>
+#include <QTextCharFormat>
+#include <QFontDialog>
+#include <QInputDialog>
+#include <QTextListFormat>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QLabel>
@@ -568,7 +573,39 @@ void PowerPoint7MenuBar::createToolbars()
     for (const auto& label : {QStringLiteral("Font"), QStringLiteral("Size"), QStringLiteral("Bold"), QStringLiteral("Italic"),
                              QStringLiteral("Underline"), QStringLiteral("Left"), QStringLiteral("Center"), QStringLiteral("Right"),
                              QStringLiteral("Bullets"), QStringLiteral("Promote"), QStringLiteral("Demote"), QStringLiteral("Font Color")}) {
-        addToolbarAction(formatting, label, label + " command");
+        auto* action = addToolbarAction(formatting, label, label + " command");
+        QObject::connect(action, &QAction::triggered, [this, label]() {
+            auto* editor = m_parent->findChild<QTextEdit*>(QStringLiteral("slideBody"));
+            if (!editor) return;
+            if (label == QStringLiteral("Bold") || label == QStringLiteral("Italic") ||
+                label == QStringLiteral("Underline")) {
+                QTextCharFormat format;
+                if (label == QStringLiteral("Bold"))
+                    format.setFontWeight(editor->fontWeight() == QFont::Bold ? QFont::Normal : QFont::Bold);
+                if (label == QStringLiteral("Italic")) format.setFontItalic(!editor->fontItalic());
+                if (label == QStringLiteral("Underline")) format.setFontUnderline(!editor->fontUnderline());
+                editor->mergeCurrentCharFormat(format);
+            } else if (label == QStringLiteral("Font")) {
+                bool accepted = false;
+                const QFont chosen = QFontDialog::getFont(&accepted, editor->currentFont(), m_parent);
+                if (accepted) editor->setCurrentFont(chosen);
+            } else if (label == QStringLiteral("Size")) {
+                bool accepted = false;
+                const int current = editor->fontPointSize() > 0 ? qRound(editor->fontPointSize()) : 18;
+                const int size = QInputDialog::getInt(m_parent, QStringLiteral("Font Size"),
+                    QStringLiteral("Point size:"), current, 1, 200, 1, &accepted);
+                if (accepted) editor->setFontPointSize(size);
+            } else if (label == QStringLiteral("Left")) editor->setAlignment(Qt::AlignLeft);
+            else if (label == QStringLiteral("Center")) editor->setAlignment(Qt::AlignHCenter);
+            else if (label == QStringLiteral("Right")) editor->setAlignment(Qt::AlignRight);
+            else if (label == QStringLiteral("Bullets")) {
+                QTextCursor cursor = editor->textCursor();
+                cursor.createList(QTextListFormat::ListDisc);
+                editor->setTextCursor(cursor);
+            } else if (m_parent->statusBar()) {
+                m_parent->statusBar()->showMessage(label + QStringLiteral(" is not implemented yet."), 2500);
+            }
+        });
     }
     m_parent->addToolBar(formatting);
 
