@@ -229,6 +229,7 @@ void PowerPoint7MenuBar::createFileMenu()
                 }
                 blastmaster::RecentFiles::add(QStringLiteral("presentations"), path);
                 m_parent->setWindowTitle(QString("Blastmaster Presentations - %1").arg(m_document->title()));
+                if (m_documentLoadedCallback) m_documentLoadedCallback();
             });
         }
         recentMenu->addSeparator();
@@ -310,6 +311,7 @@ void PowerPoint7MenuBar::onFileOpen()
         m_parent->statusBar()->showMessage("Presentation opened: " + filePath);
     }
     blastmaster::RecentFiles::add(QStringLiteral("presentations"), filePath);
+    if (m_documentLoadedCallback) m_documentLoadedCallback();
 }
 
 void PowerPoint7MenuBar::onFileSave()
