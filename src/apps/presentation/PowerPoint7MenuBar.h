@@ -13,6 +13,7 @@
 #include <QStatusBar>
 #include <QToolBar>
 #include <functional>
+#include <utility>
 
 namespace blastmaster::presentation {
 
