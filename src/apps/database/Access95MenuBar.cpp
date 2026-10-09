@@ -14,6 +14,9 @@
 #include <QStatusBar>
 #include <QToolBar>
 #include <QFileInfo>
+#include <QTableWidget>
+#include <QColorDialog>
+#include <QFont>
 
 namespace blastmaster::database {
 
@@ -324,21 +327,69 @@ void Access95MenuBar::createToolbars()
     formatting->setMovable(true);
     formatting->setFloatable(true);
 
+    auto selectedCells = [this]() {
+        QList<QTableWidgetItem*> items;
+        auto* grid = m_parent->findChild<QTableWidget*>(QStringLiteral("databaseGrid"));
+        if (!grid) return items;
+        items = grid->selectedItems();
+        if (items.isEmpty() && grid->currentItem()) items.append(grid->currentItem());
+        return items;
+    };
+
     auto* font = new QFontComboBox(formatting);
     font->setCurrentFont(QFont(QStringLiteral("MS Sans Serif"), 8));
     formatting->addWidget(font);
+    QObject::connect(font, &QFontComboBox::currentFontChanged, [this, selectedCells](const QFont& chosen) {
+        for (auto* item : selectedCells()) {
+            QFont cellFont = item->font();
+            cellFont.setFamily(chosen.family());
+            item->setFont(cellFont);
+        }
+        if (m_parent->statusBar())
+            m_parent->statusBar()->showMessage(QStringLiteral("Font: %1").arg(chosen.family()), 2000);
+    });
 
     auto* size = new QComboBox(formatting);
     for (int pointSize : {8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36})
         size->addItem(QString::number(pointSize));
     size->setCurrentText(QStringLiteral("8"));
     formatting->addWidget(size);
+    QObject::connect(size, &QComboBox::currentTextChanged, [this, selectedCells](const QString& value) {
+        bool ok = false;
+        const int pointSize = value.toInt(&ok);
+        if (ok) for (auto* item : selectedCells()) {
+            QFont cellFont = item->font();
+            cellFont.setPointSize(pointSize);
+            item->setFont(cellFont);
+        }
+    });
 
     for (const QString& text : {QStringLiteral("Bold"), QStringLiteral("Italic"),
                                 QStringLiteral("Underline"), QStringLiteral("Align Left"),
                                 QStringLiteral("Center"), QStringLiteral("Align Right"),
-                                QStringLiteral("Font Color"), QStringLiteral("Special Effect")}) {
-        addToolbarAction(formatting, text);
+                                QStringLiteral("Font Color")}) {
+        auto* formatAction = addToolbarAction(formatting, text);
+        QObject::connect(formatAction, &QAction::triggered, [this, text, selectedCells] {
+            const auto items = selectedCells();
+            for (auto* item : items) {
+                QFont cellFont = item->font();
+                if (text == QStringLiteral("Bold")) cellFont.setBold(!cellFont.bold());
+                else if (text == QStringLiteral("Italic")) cellFont.setItalic(!cellFont.italic());
+                else if (text == QStringLiteral("Underline")) cellFont.setUnderline(!cellFont.underline());
+                else if (text == QStringLiteral("Align Left")) item->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+                else if (text == QStringLiteral("Center")) item->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                else if (text == QStringLiteral("Align Right")) item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                else if (text == QStringLiteral("Font Color")) {
+                    const QColor color = QColorDialog::getColor(item->foreground().color(), m_parent,
+                                                                  QStringLiteral("Cell Font Color"));
+                    if (color.isValid()) item->setForeground(color);
+                }
+                if (text == QStringLiteral("Bold") || text == QStringLiteral("Italic") ||
+                    text == QStringLiteral("Underline")) item->setFont(cellFont);
+            }
+            if (items.isEmpty() && m_parent->statusBar())
+                m_parent->statusBar()->showMessage(QStringLiteral("Select one or more cells first."), 2500);
+        });
     }
 
     m_parent->addToolBar(Qt::TopToolBarArea, formatting);
