@@ -12,6 +12,7 @@
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QToolBar>
+#include <functional>
 
 namespace blastmaster::presentation {
 
@@ -22,11 +23,13 @@ public:
     explicit PowerPoint7MenuBar(QMainWindow* parent, PresentationDocument* document);
 
     QMenuBar* menuBar() const { return m_menuBar; }
+    void setDocumentLoadedCallback(std::function<void()> callback) { m_documentLoadedCallback = std::move(callback); }
 
 private:
     QMainWindow* m_parent;
     PresentationDocument* m_document;
     QMenuBar* m_menuBar;
+    std::function<void()> m_documentLoadedCallback;
 
     QMenu* m_fileMenu;
     QMenu* m_editMenu;
