@@ -185,7 +185,9 @@ bool DatabaseDocument::insertRecord(const QString& table, const QVariantMap& val
     QStringList fields, placeholders;
     QVariantList bindValues;
     for (auto it = values.cbegin(); it != values.cend(); ++it) {
-        fields << QStringLiteral("\"%1\"").arg(it.key().replace('"', QStringLiteral("\"\"")));
+        QString fieldName = it.key();
+        fieldName.replace('"', QStringLiteral("\"\""));
+        fields << QStringLiteral("\"%1\"").arg(fieldName);
         placeholders << QStringLiteral("?");
         bindValues << it.value();
     }
@@ -206,7 +208,9 @@ bool DatabaseDocument::updateRecord(const QString& table, int rowId, const QVari
     QStringList assignments;
     QVariantList bindValues;
     for (auto it = values.cbegin(); it != values.cend(); ++it) {
-        assignments << QStringLiteral("\"%1\" = ?").arg(it.key().replace('"', QStringLiteral("\"\"")));
+        QString fieldName = it.key();
+        fieldName.replace('"', QStringLiteral("\"\""));
+        assignments << QStringLiteral("\"%1\" = ?").arg(fieldName);
         bindValues << it.value();
     }
     QSqlQuery query(m_db);
