@@ -187,6 +187,10 @@ void Word7MenuBar::createFileMenu()
                     return;
                 }
                 blastmaster::RecentFiles::add(QStringLiteral("docs"), path);
+                if (auto* editor = m_parent->findChild<QPlainTextEdit*>("documentEditor")) {
+                    QSignalBlocker blocker(editor);
+                    editor->setPlainText(m_document->content());
+                }
                 m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
                 m_parent->statusBar()->showMessage("Document opened: " + path);
             });
