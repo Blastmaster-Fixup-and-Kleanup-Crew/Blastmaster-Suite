@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
         if (row >= 0 && row < slides->count())
             slides->item(row)->setText(QString("%1. %2").arg(row + 1).arg(text));
     });
-    QObject::connect(bodyEdit, &QPlainTextEdit::textChanged, [&]() {
+    QObject::connect(bodyEdit, &QTextEdit::textChanged, [&]() {
         const int row = slides->currentRow();
         if (row >= 0 && row < document->slideCount())
             document->setSlide(row, titleEdit->text(), bodyEdit->toHtml());
