@@ -14,7 +14,11 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QIcon>
-#include <QPlainTextEdit>
+#include <QTextEdit>
+#include <QTextCharFormat>
+#include <QFontDialog>
+#include <QInputDialog>
+#include <QTextListFormat>
 #include <QSignalBlocker>
 
 namespace blastmaster::docs {
@@ -187,9 +191,9 @@ void Word7MenuBar::createFileMenu()
                     return;
                 }
                 blastmaster::RecentFiles::add(QStringLiteral("docs"), path);
-                if (auto* editor = m_parent->findChild<QPlainTextEdit*>("documentEditor")) {
+                if (auto* editor = m_parent->findChild<QTextEdit*>("documentEditor")) {
                     QSignalBlocker blocker(editor);
-                    editor->setPlainText(m_document->content());
+                    editor->setHtml(m_document->content());
                 }
                 m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
                 m_parent->statusBar()->showMessage("Document opened: " + path);
@@ -408,7 +412,23 @@ void Word7MenuBar::createFormatMenu()
 
     auto add = [this](const QString& text) {
         QAction* action = addMenuAction(m_formatMenu, text, text + " command");
-        wireAction(action, text);
+        QObject::connect(action, &QAction::triggered, [this, text]() {
+            auto* editor = m_parent->findChild<QTextEdit*>("documentEditor");
+            if (!editor) return;
+            if (text == "Font") {
+                bool accepted = false;
+                const QFont chosen = QFontDialog::getFont(&accepted, editor->currentFont(), m_parent);
+                if (accepted) editor->setCurrentFont(chosen);
+            } else if (text == "Paragraph") {
+                editor->setAlignment(Qt::AlignLeft);
+            } else if (text == "Bullets and Numbering") {
+                QTextCursor cursor = editor->textCursor();
+                cursor.createList(QTextListFormat::ListDisc);
+                editor->setTextCursor(cursor);
+            } else if (m_parent->statusBar()) {
+                m_parent->statusBar()->showMessage(text + " is not implemented yet.", 2500);
+            }
+        });
     };
 
     add("Font");
@@ -542,10 +562,32 @@ void Word7MenuBar::createToolbars()
     formatting->setFloatable(true);
     formatting->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
 
-    auto addFormatting = [formatting](const QString& text) {
+    auto addFormatting = [this, formatting](const QString& text) {
         auto* action = addToolbarAction(formatting, text, text + " command");
-        QObject::connect(action, &QAction::triggered, [text]() {
-            qDebug("Formatting action: %s", qPrintable(text));
+        QObject::connect(action, &QAction::triggered, [this, text]() {
+            auto* editor = m_parent->findChild<QTextEdit*>("documentEditor");
+            if (!editor) return;
+            if (text == "Bold" || text == "Italic" || text == "Underline") {
+                QTextCharFormat format;
+                if (text == "Bold") format.setFontWeight(editor->fontWeight() == QFont::Bold ? QFont::Normal : QFont::Bold);
+                if (text == "Italic") format.setFontItalic(!editor->fontItalic());
+                if (text == "Underline") format.setFontUnderline(!editor->fontUnderline());
+                editor->mergeCurrentCharFormat(format);
+            } else if (text == "Font") {
+                bool accepted = false;
+                const QFont chosen = QFontDialog::getFont(&accepted, editor->currentFont(), m_parent);
+                if (accepted) editor->setCurrentFont(chosen);
+            } else if (text == "Size") {
+                bool accepted = false;
+                const int size = QInputDialog::getInt(m_parent, "Font Size", "Point size:",
+                    qMax(1, editor->fontPointSize() > 0 ? qRound(editor->fontPointSize()) : 11), 1, 200, 1, &accepted);
+                if (accepted) editor->setFontPointSize(size);
+            } else if (text == "Left") editor->setAlignment(Qt::AlignLeft);
+            else if (text == "Center") editor->setAlignment(Qt::AlignHCenter);
+            else if (text == "Right") editor->setAlignment(Qt::AlignRight);
+            else if (text == "Justify") editor->setAlignment(Qt::AlignJustify);
+            else if (text == "Indent") editor->textCursor().insertText(QStringLiteral("    "));
+            else if (m_parent->statusBar()) m_parent->statusBar()->showMessage(text + " is not implemented yet.", 2500);
         });
     };
 
