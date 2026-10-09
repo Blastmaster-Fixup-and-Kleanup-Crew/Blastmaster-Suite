@@ -4,7 +4,7 @@
 #include <QStatusBar>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QPlainTextEdit>
+#include <QTextEdit>
 
 #include "Word7MenuBar.h"
 #include "Document.h"
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     auto* layout = new QVBoxLayout(central);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    auto* editor = new QPlainTextEdit(central);
+    auto* editor = new QTextEdit(central);
     editor->setObjectName("documentEditor");
     editor->setAccessibleName("Document editor");
     editor->setAccessibleDescription("Main editing area for the current Blastmaster Docs document.");
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     layout->addWidget(editor);
 
     QObject::connect(editor, &QPlainTextEdit::textChanged, [document, editor]() {
-        document->setContent(editor->toPlainText());
+        document->setContent(editor->toHtml());
     });
 
     window.setCentralWidget(central);
