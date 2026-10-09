@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QMainWindow>
 #include <QTextEdit>
+#include <QSignalBlocker>
 #include <QStatusBar>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -68,6 +69,10 @@ int main(int argc, char* argv[]) {
         const int row = slides->currentRow();
         if (row < 0 || row >= document->slideCount()) return;
         const auto& slide = document->slide(row);
+        // Loading a slide is a view update, not an edit. Block editor signals so
+        // setting the title cannot overwrite the new slide with the previous body's text.
+        const QSignalBlocker titleBlocker(titleEdit);
+        const QSignalBlocker bodyBlocker(bodyEdit);
         titleEdit->setText(slide.title);
         bodyEdit->setHtml(slide.body);
         window.statusBar()->showMessage(QString("Slide %1 of %2").arg(row + 1).arg(document->slideCount()));
