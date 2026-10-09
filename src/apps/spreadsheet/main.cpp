@@ -50,7 +50,10 @@ int main(int argc, char* argv[]) {
     auto makeSheet = [&](const QString& name) {
         auto* view = new QTableWidget(100, 26, tabs);
         view->setAccessibleName(name + " worksheet");
-        view->setEditTriggers(QAbstractItemView::DoubleClicked |
+        // Start editing as soon as the user types while a cell is selected.
+        // Double-click and F2/EditKeyPressed remain available as alternatives.
+        view->setEditTriggers(QAbstractItemView::AnyKeyPressed |
+                              QAbstractItemView::DoubleClicked |
                               QAbstractItemView::EditKeyPressed |
                               QAbstractItemView::SelectedClicked);
         view->setSelectionMode(QAbstractItemView::ExtendedSelection);
