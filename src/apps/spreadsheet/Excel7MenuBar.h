@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include <memory>
 #include <functional>
+#include <utility>
 
 namespace blastmaster::spreadsheet {
 
