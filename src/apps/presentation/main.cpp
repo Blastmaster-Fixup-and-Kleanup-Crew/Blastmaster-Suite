@@ -4,7 +4,7 @@
 #include <QListWidget>
 #include <QLineEdit>
 #include <QMainWindow>
-#include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QStatusBar>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     titleEdit->setObjectName("slideTitle");
     titleEdit->setAccessibleName("Slide title");
     titleEdit->setPlaceholderText("Slide title");
-    auto* bodyEdit = new QPlainTextEdit(editorPane);
+    auto* bodyEdit = new QTextEdit(editorPane);
     bodyEdit->setObjectName("slideBody");
     bodyEdit->setAccessibleName("Slide body");
     bodyEdit->setAccessibleDescription("Main text content for the selected slide.");
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
         if (row < 0 || row >= document->slideCount()) return;
         const auto& slide = document->slide(row);
         titleEdit->setText(slide.title);
-        bodyEdit->setPlainText(slide.body);
+        bodyEdit->setHtml(slide.body);
         window.statusBar()->showMessage(QString("Slide %1 of %2").arg(row + 1).arg(document->slideCount()));
     };
 
@@ -77,14 +77,14 @@ int main(int argc, char* argv[]) {
     QObject::connect(titleEdit, &QLineEdit::textChanged, [&](const QString& text) {
         const int row = slides->currentRow();
         if (row >= 0 && row < document->slideCount())
-            document->setSlide(row, text, bodyEdit->toPlainText());
+            document->setSlide(row, text, bodyEdit->toHtml());
         if (row >= 0 && row < slides->count())
             slides->item(row)->setText(QString("%1. %2").arg(row + 1).arg(text));
     });
     QObject::connect(bodyEdit, &QPlainTextEdit::textChanged, [&]() {
         const int row = slides->currentRow();
         if (row >= 0 && row < document->slideCount())
-            document->setSlide(row, titleEdit->text(), bodyEdit->toPlainText());
+            document->setSlide(row, titleEdit->text(), bodyEdit->toHtml());
     });
 
     refresh();
