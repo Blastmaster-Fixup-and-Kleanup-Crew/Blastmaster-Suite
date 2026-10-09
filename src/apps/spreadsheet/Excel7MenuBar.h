@@ -4,6 +4,7 @@
 #include <QMenu>
 #include <QMainWindow>
 #include <memory>
+#include <functional>
 
 namespace blastmaster::spreadsheet {
 
@@ -19,11 +20,13 @@ class Excel7MenuBar {
 public:
     explicit Excel7MenuBar(QMainWindow* parent, Workbook* workbook);
     QMenuBar* menuBar() const { return m_menuBar; }
+    void setDocumentLoadedCallback(std::function<void()> callback) { m_documentLoadedCallback = std::move(callback); }
 
 private:
     QMainWindow* m_parent;
     Workbook* m_workbook;
     QMenuBar* m_menuBar;
+    std::function<void()> m_documentLoadedCallback;
 
     // menus
     QMenu* m_fileMenu;
