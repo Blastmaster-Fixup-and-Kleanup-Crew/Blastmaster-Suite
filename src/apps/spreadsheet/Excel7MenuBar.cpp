@@ -81,7 +81,9 @@ void Excel7MenuBar::createFileMenu()
                     return;
                 }
                 blastmaster::RecentFiles::add(QStringLiteral("workbooks"), path);
+                m_parent->setWindowTitle(QString("Blastmaster Workbooks - %1").arg(m_workbook->title()));
                 if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook opened: " + path, 3000);
+                if (m_documentLoadedCallback) m_documentLoadedCallback();
             });
         }
         recentMenu->addSeparator();
@@ -107,6 +109,23 @@ void Excel7MenuBar::createFileMenu()
     m_fileMenu->addAction(aExit);
 
     // basic wiring
+    QObject::connect(aOpen, &QAction::triggered, [this]() {
+        if (!m_workbook) return;
+        QFileDialog dialog(m_parent, "Open Workbook", QString(), Workbook::fileFilter());
+        dialog.setAcceptMode(QFileDialog::AcceptOpen);
+        dialog.setDefaultSuffix(Workbook::fileExtension().mid(1));
+        if (dialog.exec() != QDialog::Accepted || dialog.selectedFiles().isEmpty()) return;
+        const QString path = dialog.selectedFiles().first();
+        m_workbook->setFilePath(path);
+        if (!m_workbook->load()) {
+            QMessageBox::critical(m_parent, "Open Workbook", "Failed to open workbook:\n" + path);
+            return;
+        }
+        blastmaster::RecentFiles::add(QStringLiteral("workbooks"), m_workbook->filePath());
+        m_parent->setWindowTitle(QString("Blastmaster Workbooks - %1").arg(m_workbook->title()));
+        if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook opened: " + path, 3000);
+        if (m_documentLoadedCallback) m_documentLoadedCallback();
+    });
     QObject::connect(aExit, &QAction::triggered, qApp, &QApplication::quit);
 
     // Save: if workbook has no file path, prompt Save As, otherwise save
