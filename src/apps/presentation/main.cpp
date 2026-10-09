@@ -91,6 +91,13 @@ int main(int argc, char* argv[]) {
     loadSlide();
 
     blastmaster::presentation::PowerPoint7MenuBar menuBar(&window, document);
+    menuBar.setDocumentLoadedCallback([&]() {
+        refresh();
+        if (slides->count() > 0) {
+            slides->setCurrentRow(0);
+            loadSlide();
+        }
+    });
     window.setMenuBar(menuBar.menuBar());
 
     window.statusBar()->showMessage("Ready");
