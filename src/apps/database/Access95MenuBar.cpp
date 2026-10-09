@@ -59,6 +59,36 @@ void Access95MenuBar::createFileMenu()
 
     m_fileMenu->addAction(aNew);
     m_fileMenu->addAction(aOpen);
+    auto* recentMenu = m_fileMenu->addMenu(QStringLiteral("Recent Databases"));
+    QObject::connect(recentMenu, &QMenu::aboutToShow, [this, recentMenu] {
+        recentMenu->clear();
+        const auto recent = blastmaster::RecentFiles::files(QStringLiteral("databases"));
+        if (recent.isEmpty()) {
+            auto* empty = recentMenu->addAction(QStringLiteral("(No recent databases)"));
+            empty->setEnabled(false);
+        } else {
+            for (const QString& path : recent) {
+                auto* item = recentMenu->addAction(QFileInfo(path).fileName());
+                item->setToolTip(path);
+                QObject::connect(item, &QAction::triggered, [this, path] {
+                    if (!m_document->openDatabase(path)) {
+                        QMessageBox::critical(m_parent, QStringLiteral("Open Database"),
+                                              QStringLiteral("Failed to open database:\\n%1").arg(path));
+                        return;
+                    }
+                    blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
+                    if (m_parent->statusBar())
+                        m_parent->statusBar()->showMessage(QStringLiteral("Database opened: %1").arg(path), 3000);
+                });
+            }
+            recentMenu->addSeparator();
+            auto* clear = recentMenu->addAction(QStringLiteral("Clear Recent Databases"));
+            QObject::connect(clear, &QAction::triggered, [recentMenu] {
+                blastmaster::RecentFiles::clear(QStringLiteral("databases"));
+                recentMenu->hide();
+            });
+        }
+    });
     m_fileMenu->addAction(aClose);
     m_fileMenu->addSeparator();
     m_fileMenu->addAction(aSave);
@@ -82,9 +112,15 @@ void Access95MenuBar::createFileMenu()
         const QString path = QFileDialog::getOpenFileName(
             m_parent, QStringLiteral("Open Database"), QString(),
             QStringLiteral("SQLite databases (*.db *.sqlite *.sqlite3);;All files (*.*)"));
-        if (!path.isEmpty() && m_document->openDatabase(path)) {
-            blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
-            m_parent->statusBar()->showMessage(QStringLiteral("Database opened."), 2500);
+        if (!path.isEmpty()) {
+            if (m_document->openDatabase(path)) {
+                blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
+                if (m_parent->statusBar())
+                    m_parent->statusBar()->showMessage(QStringLiteral("Database opened: %1").arg(path), 2500);
+            } else {
+                QMessageBox::critical(m_parent, QStringLiteral("Open Database"),
+                                      QStringLiteral("Failed to open database:\\n%1").arg(path));
+            }
         }
     });
     QObject::connect(aSave, &QAction::triggered, [this, aSaveAs] {
