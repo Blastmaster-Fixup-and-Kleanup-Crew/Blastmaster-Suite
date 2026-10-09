@@ -50,7 +50,9 @@ int main(int argc, char* argv[]) {
     grid->setAccessibleName("Database record editor");
     grid->setSelectionBehavior(QAbstractItemView::SelectRows);
     grid->setSelectionMode(QAbstractItemView::SingleSelection);
-    grid->setEditTriggers(QAbstractItemView::DoubleClicked |
+    // Typing with a cell selected should enter edit mode immediately.
+    grid->setEditTriggers(QAbstractItemView::AnyKeyPressed |
+                          QAbstractItemView::DoubleClicked |
                           QAbstractItemView::EditKeyPressed |
                           QAbstractItemView::SelectedClicked);
     grid->horizontalHeader()->setStretchLastSection(true);
