@@ -45,6 +45,10 @@ target_link_libraries(blastmaster_setup
         blastmaster_common
 )
 
+if(WIN32)
+    target_link_libraries(blastmaster_setup PRIVATE shell32 advapi32)
+endif()
+
 add_executable(blastmaster_uninstaller
     Uninstaller.cpp
     WindowsIntegration.cpp
