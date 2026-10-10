@@ -188,6 +188,20 @@ endif()
 
 
 if(WIN32)
+    # Deploy the setup executable's own Qt/compiler runtime beside the EXE,
+    # including required MinGW/MSYS2 runtime DLLs, before embedding app payloads.
+    add_custom_command(
+        TARGET blastmaster_setup
+        POST_BUILD
+        COMMAND "${POWERSHELL_EXECUTABLE}"
+            -NoProfile
+            -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/DeploySetupRuntime.ps1"
+            -SetupExe "$<TARGET_FILE:blastmaster_setup>"
+            -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
+        VERBATIM
+    )
+
     add_custom_command(
         TARGET blastmaster_setup
         POST_BUILD
