@@ -12,6 +12,8 @@
 #include <QVBoxLayout>
 #include <QShortcut>
 #include <QKeySequence>
+#include <QFrame>
+#include <QFont>
 
 // Ensure resources in this shared library are registered even when the
 // linker would otherwise discard the generated qrc object from a static link.
@@ -92,11 +94,61 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
     , m_statusLabel(new QLabel(this))
 {
     initializeBlastmasterHelpResources();
-    setWindowTitle(displayName(applicationId) + " - Help Topics");
+    setWindowTitle(displayName(applicationId) + " Help");
+    setMinimumSize(720, 480);
     resize(900, 620);
 
+    // Classic Windows-era help styling, with Blastmaster branding.
+    setStyleSheet(QStringLiteral(R"(
+        QDialog { background: #d4d0c8; color: #000000; }
+        QLabel { color: #000000; }
+        QLineEdit, QListWidget, QTextBrowser {
+            background: #ffffff; color: #000000;
+            border: 1px solid #808080;
+            selection-background-color: #000080;
+            selection-color: #ffffff;
+        }
+        QPushButton {
+            background: #d4d0c8; color: #000000;
+            border: 1px solid #808080;
+            border-top-color: #ffffff; border-left-color: #ffffff;
+            padding: 4px 14px; min-width: 64px;
+        }
+        QPushButton:pressed {
+            border-top-color: #808080; border-left-color: #808080;
+            border-bottom-color: #ffffff; border-right-color: #ffffff;
+        }
+        QListWidget::item { padding: 4px 5px; }
+        QListWidget::item:selected { background: #000080; color: #ffffff; }
+    )"));
+
     auto* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(10, 10, 10, 8);
+    layout->setSpacing(8);
+
+    auto* brandHeader = new QFrame(this);
+    brandHeader->setFrameShape(QFrame::StyledPanel);
+    brandHeader->setStyleSheet(QStringLiteral(
+        "QFrame { background: #000080; border: 1px solid #000040; }"));
+    auto* brandLayout = new QVBoxLayout(brandHeader);
+    brandLayout->setContentsMargins(10, 7, 10, 7);
+    brandLayout->setSpacing(2);
+    auto* brandTitle = new QLabel(displayName(applicationId) + tr(" Help"), brandHeader);
+    QFont brandFont = brandTitle->font();
+    brandFont.setBold(true);
+    brandFont.setPointSize(12);
+    brandTitle->setFont(brandFont);
+    brandTitle->setStyleSheet(QStringLiteral("color: #ffffff;"));
+    auto* brandSubtitle = new QLabel(
+        tr("Help Topics  |  Blastmaster Suite  |  Version 1.0 Milestone 1 Build 67"),
+        brandHeader);
+    brandSubtitle->setStyleSheet(QStringLiteral("color: #e8e8ff;"));
+    brandLayout->addWidget(brandTitle);
+    brandLayout->addWidget(brandSubtitle);
+    layout->addWidget(brandHeader);
+
     auto* content = new QHBoxLayout();
+    content->setSpacing(8);
 
     auto* searchRow = new QHBoxLayout();
     auto* searchLabel = new QLabel(tr("&Search topics:"), this);
@@ -108,12 +160,21 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
     layout->addLayout(searchRow);
 
     m_topicList->setMinimumWidth(240);
+    m_topicList->setMaximumWidth(320);
     m_topicList->setAccessibleName(tr("Help topics"));
     m_topicList->setFocusPolicy(Qt::StrongFocus);
 
     m_topicView->setOpenExternalLinks(false);
+    m_topicView->setOpenLinks(true);
     m_topicView->setReadOnly(true);
     m_topicView->setAccessibleName(tr("Help topic content"));
+    m_topicView->document()->setDefaultStyleSheet(
+        QStringLiteral("body { font-family: Arial, sans-serif; font-size: 10pt; color: #202020; }"
+                       "h1 { color: #000080; border-bottom: 1px solid #808080; padding-bottom: 4px; }"
+                       "h2 { color: #000080; margin-top: 16px; }"
+                       "a { color: #000080; }"
+                       "table { border-collapse: collapse; }"
+                       "th, td { border: 1px solid #808080; padding: 4px 7px; }"));
 
     content->addWidget(m_topicList);
     content->addWidget(m_topicView, 1);
