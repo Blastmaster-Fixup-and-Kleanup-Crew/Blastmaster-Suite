@@ -23,7 +23,7 @@ The following partial implementations have been committed. These are **not marke
 ## Shared desktop behavior
 
 - [ ] Classic gray, square-corner controls, Windows-style menu bar, compact icons, and beveled buttons.
-- [x] View > Toolbars submenu has individual checkable visibility entries wired to each discovered toolbar in all four apps (compile passed in both editions; GUI behavior still requires runtime verification).
+- [x] View > Toolbars submenu now populates on opening (after toolbars are created) and has individual checkable visibility entries in all four apps; default toolbars are explicitly shown. Rebuild and GUI verification still required.
 - [ ] Verify Standard and Formatting toolbars dock/float correctly and persist their visibility/placement as expected.
 - [ ] Standard File/Edit/Window/Help conventions and accelerator keys.
 - [ ] Recent files, correct window title, modified-state indicator, and save-before-discard prompts.
