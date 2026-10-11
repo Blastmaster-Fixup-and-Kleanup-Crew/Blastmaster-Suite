@@ -392,14 +392,22 @@ void Excel7MenuBar::createWindowMenu()
 void Excel7MenuBar::createHelpMenu()
 {
     m_helpMenu = m_menuBar->addMenu("&Help");
-    auto* helpTopics = makeAction("Microsoft Excel Help Topics", QKeySequence::HelpContents, m_parent);
+    auto* helpTopics = makeAction("Blastmaster Workbooks Help Topics", QKeySequence::HelpContents, m_parent);
     m_helpMenu->addAction(helpTopics);
     QObject::connect(helpTopics, &QAction::triggered, [this]() {
         blastmaster::HelpTopicsWindow::showFor(m_parent, "workbooks");
     });
-    m_helpMenu->addAction(makeAction("What's This?", QKeySequence::WhatsThis, m_parent));
-    m_helpMenu->addAction(makeAction("Tip of the Day", QKeySequence(), m_parent));
-    auto* about = makeAction("About Microsoft Excel", QKeySequence(), m_parent);
+    auto* assistance = makeAction("Getting Assistance", QKeySequence(), m_parent);
+    m_helpMenu->addAction(assistance);
+    QObject::connect(assistance, &QAction::triggered, [this]() {
+        blastmaster::HelpTopicsWindow::showFor(m_parent, "workbooks");
+    });
+    auto* support = makeAction("Blastmaster Support", QKeySequence(), m_parent);
+    m_helpMenu->addAction(support);
+    QObject::connect(support, &QAction::triggered, [this]() {
+        blastmaster::HelpTopicsWindow::showFor(m_parent, "workbooks");
+    });
+    auto* about = makeAction("About Blastmaster Workbooks", QKeySequence(), m_parent);
     m_helpMenu->addAction(about);
     QObject::connect(about, &QAction::triggered, [this]() {
         QMessageBox::about(m_parent, "About Blastmaster Workbooks", "Blastmaster Workbooks\nVersion 1.0.0\nClassic office-style spreadsheet application.");
