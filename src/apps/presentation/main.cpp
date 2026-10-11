@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "../Office95Style.h"
 #include "PowerPoint7MenuBar.h"
 #include "PresentationDocument.h"
 
@@ -20,9 +21,10 @@ int main(int argc, char* argv[]) {
     app.setApplicationVersion("1.0.0");
     app.setOrganizationName("Blastmaster");
     app.setOrganizationDomain("blastmaster.local");
+    blastmaster::ui::applyOffice95Style(app);
 
     QMainWindow window;
-    window.resize(1100, 700);
+    window.resize(1000, 680);
     window.setWindowTitle("Blastmaster Presentations - Untitled");
     window.setAccessibleName("Blastmaster Presentations");
 
@@ -37,7 +39,7 @@ int main(int argc, char* argv[]) {
     slides->setAccessibleName("Slide list");
     slides->setAccessibleDescription("List of slides in the current presentation. Use Up and Down to change slides.");
     slides->setFixedWidth(180);
-    slides->setAlternatingRowColors(true);
+    slides->setAlternatingRowColors(false);
 
     auto* editorPane = new QWidget(central);
     auto* editorLayout = new QVBoxLayout(editorPane);
@@ -69,8 +71,6 @@ int main(int argc, char* argv[]) {
         const int row = slides->currentRow();
         if (row < 0 || row >= document->slideCount()) return;
         const auto& slide = document->slide(row);
-        // Loading a slide is a view update, not an edit. Block editor signals so
-        // setting the title cannot overwrite the new slide with the previous body's text.
         const QSignalBlocker titleBlocker(titleEdit);
         const QSignalBlocker bodyBlocker(bodyEdit);
         titleEdit->setText(slide.title);
