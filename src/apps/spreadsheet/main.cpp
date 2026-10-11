@@ -44,6 +44,7 @@ int main(int argc, char* argv[]) {
     auto* addSheet = new QPushButton("New Sheet", central);
     auto* deleteSheet = new QPushButton("Delete Sheet", central);
     auto* formulaBar = new QLineEdit(central);
+    formulaBar->setObjectName("formulaBar");
     formulaBar->setPlaceholderText("Formula / value");
     formulaBar->setAccessibleName("Formula bar");
     controls->addWidget(addSheet);
