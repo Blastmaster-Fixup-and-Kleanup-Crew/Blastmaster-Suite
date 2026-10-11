@@ -25,6 +25,10 @@ int main(int argc, char* argv[]) {
     window.setAccessibleName("Blastmaster Docs");
 
     auto* document = new blastmaster::docs::Document();
+    if (argc > 1) {
+        document->setFilePath(QString::fromLocal8Bit(argv[1]));
+        document->load();
+    }
 
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
@@ -36,6 +40,7 @@ int main(int argc, char* argv[]) {
     editor->setAccessibleDescription("Main editing area for the current Blastmaster Docs document.");
     editor->setTabChangesFocus(false);
     editor->setPlaceholderText("Start typing your document...");
+    editor->setHtml(document->content());
     editor->setStyleSheet("QTextEdit { font-family: 'Times New Roman'; font-size: 12pt; padding: 16px; }");
     layout->addWidget(editor);
 
