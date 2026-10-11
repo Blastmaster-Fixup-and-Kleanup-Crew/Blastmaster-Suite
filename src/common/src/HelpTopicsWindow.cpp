@@ -13,6 +13,13 @@
 #include <QShortcut>
 #include <QKeySequence>
 
+// Ensure resources in this shared library are registered even when the
+// linker would otherwise discard the generated qrc object from a static link.
+static void initializeBlastmasterHelpResources()
+{
+    Q_INIT_RESOURCE(help);
+}
+
 namespace blastmaster {
 
 namespace {
@@ -78,6 +85,7 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
     , m_searchEdit(new QLineEdit(this))
     , m_statusLabel(new QLabel(this))
 {
+    initializeBlastmasterHelpResources();
     setWindowTitle(displayName(applicationId) + " - Help Topics");
     resize(900, 620);
 
