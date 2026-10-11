@@ -61,9 +61,15 @@ static QString loadMarkdown(const QString& resource)
 {
     QFile file(resource);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return QStringLiteral("# Help Topic Unavailable\n\nUnable to load this help topic.");
+        return QStringLiteral("# Help Topic Unavailable\n\nCould not open bundled resource: %1. Rebuild/reinstall Blastmaster Suite so help resources are included.")
+            .arg(resource.toHtmlEscaped());
     }
-    return QString::fromUtf8(file.readAll());
+    const QString markdown = QString::fromUtf8(file.readAll()).trimmed();
+    if (markdown.isEmpty()) {
+        return QStringLiteral("# Help Topic Empty\n\nThe bundled help topic %1 contains no content.")
+            .arg(resource.toHtmlEscaped());
+    }
+    return markdown;
 }
 
 } // namespace
@@ -208,8 +214,11 @@ void HelpTopicsWindow::showCurrentTopic()
         return;
     }
 
-    m_topicView->document()->setMarkdown(
-        loadMarkdown(current->data(Qt::UserRole).toString()));
+    const QString resource = current->data(Qt::UserRole).toString();
+    m_topicView->document()->setMarkdown(loadMarkdown(resource));
+    m_topicView->document()->setBaseUrl(QUrl(QStringLiteral("qrc:/help/")));
+    m_topicView->setAccessibleDescription(current->text());
+    m_statusLabel->setText(tr("Viewing: %1").arg(current->text()));
 }
 
 void HelpTopicsWindow::activateTopicLink(const QUrl& url)
