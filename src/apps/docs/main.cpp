@@ -6,6 +6,7 @@
 #include <QWidget>
 #include <QTextEdit>
 
+#include "../Office95Style.h"
 #include "Word7MenuBar.h"
 #include "Document.h"
 
@@ -16,9 +17,10 @@ int main(int argc, char* argv[]) {
     app.setApplicationVersion("1.0.0");
     app.setOrganizationName("Blastmaster");
     app.setOrganizationDomain("blastmaster.local");
+    blastmaster::ui::applyOffice95Style(app);
 
     QMainWindow window;
-    window.resize(1200, 800);
+    window.resize(900, 650);
     window.setWindowTitle("Blastmaster Docs - Untitled");
     window.setAccessibleName("Blastmaster Docs");
 
@@ -34,7 +36,7 @@ int main(int argc, char* argv[]) {
     editor->setAccessibleDescription("Main editing area for the current Blastmaster Docs document.");
     editor->setTabChangesFocus(false);
     editor->setPlaceholderText("Start typing your document...");
-    editor->setStyleSheet("QTextEdit { font-family: 'Arial'; font-size: 11px; padding: 8px; }");
+    editor->setStyleSheet("QTextEdit { font-family: 'Times New Roman'; font-size: 12pt; padding: 16px; }");
     layout->addWidget(editor);
 
     QObject::connect(editor, &QTextEdit::textChanged, [document, editor]() {
