@@ -448,14 +448,14 @@ void Word7MenuBar::createViewMenu()
     add("Page Layout");
     add("Outline");
     add("Master Document");
-    auto* toolbarsAction = addMenuAction(m_viewMenu, QStringLiteral("Toolbars"),
-        QStringLiteral("Show or hide the Standard and Formatting toolbars"));
-    QObject::connect(toolbarsAction, &QAction::triggered, [this]() {
-        const auto toolbars = m_parent->findChildren<QToolBar*>();
-        bool anyVisible = false;
-        for (QToolBar* toolbar : toolbars) anyVisible = anyVisible || toolbar->isVisible();
-        for (QToolBar* toolbar : toolbars) toolbar->setVisible(!anyVisible);
-    });
+    auto* toolbarsMenu = m_viewMenu->addMenu(QStringLiteral("Toolbars"));
+    for (QToolBar* toolbar : m_parent->findChildren<QToolBar*>()) {
+        auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
+        toggle->setCheckable(true);
+        toggle->setChecked(toolbar->isVisible());
+        QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
+        QObject::connect(toolbar, &QWidget::visibilityChanged, toggle, &QAction::setChecked);
+    }
     add("Ruler");
     add("Header and Footer");
     add("Footnotes");
