@@ -16,10 +16,12 @@ target_link_libraries(blastmaster_presentation
 
 if(WIN32)
     add_custom_command(TARGET blastmaster_presentation POST_BUILD
-        COMMAND "${BLASTMASTER_WINDEPLOYQT_EXECUTABLE}"
-                --no-translations
-                "$<TARGET_FILE:blastmaster_presentation>"
-        COMMENT "Deploying Qt runtime for blastmaster_presentation"
+        COMMAND "${POWERSHELL_EXECUTABLE}"
+            -NoProfile -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/../DeployAppRuntime.ps1"
+            -AppExe "$<TARGET_FILE:blastmaster_presentation>"
+            -WinDeployQt "${BLASTMASTER_WINDEPLOYQT_EXECUTABLE}"
+        COMMENT "Deploying Qt and compiler runtime for blastmaster_presentation"
         VERBATIM
     )
 endif()
