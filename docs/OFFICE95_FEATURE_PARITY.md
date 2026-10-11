@@ -16,13 +16,15 @@ The following partial implementations have been committed. These are **not marke
 - Presentations has a basic full-screen slide show with Previous/Next/End Show and refreshes the slide list after menu-based slide add/duplicate/delete operations.
 - Databases has HTML export for the selected table, a .dbbx save filter, and initial Page Setup/Print Preview/Print flows using Qt PrintSupport.
 - Installer staging uses per-application folders and runs runtime deployment for each staged executable. Windows shortcut and file-association paths were updated to match the folders.
+- Individual View > Toolbars submenu entries are wired in Docs, Workbooks, Presentations, and Databases; both Standard and Professional builds have passed compilation after the signal fix, but interactive UI testing remains outstanding.
 
 **Not yet verified:** clean compilation, actual Windows UI behavior, data-preserving sorting and filtering, printer behavior, all other menu/toolbar actions, DLL closure on a clean machine, and both edition installers. Do not infer feature completion from this progress list.
 
 ## Shared desktop behavior
 
 - [ ] Classic gray, square-corner controls, Windows-style menu bar, compact icons, and beveled buttons.
-- [ ] Dockable Standard and Formatting toolbars; View > Toolbars toggles each toolbar.
+- [x] View > Toolbars submenu has individual checkable visibility entries wired to each discovered toolbar in all four apps (compile passed in both editions; GUI behavior still requires runtime verification).
+- [ ] Verify Standard and Formatting toolbars dock/float correctly and persist their visibility/placement as expected.
 - [ ] Standard File/Edit/Window/Help conventions and accelerator keys.
 - [ ] Recent files, correct window title, modified-state indicator, and save-before-discard prompts.
 - [ ] Native open/save dialogs with the suite's supported extensions and clear error reporting.
