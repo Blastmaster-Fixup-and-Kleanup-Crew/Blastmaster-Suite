@@ -11,6 +11,7 @@
 #include <QHBoxLayout>
 #include <QWidget>
 
+#include "../Office95Style.h"
 #include "Access95MenuBar.h"
 #include "DatabaseDocument.h"
 
@@ -21,9 +22,10 @@ int main(int argc, char* argv[]) {
     app.setApplicationVersion("1.0.0");
     app.setOrganizationName("Blastmaster");
     app.setOrganizationDomain("blastmaster.local");
+    blastmaster::ui::applyOffice95Style(app);
 
     QMainWindow window;
-    window.resize(1200, 800);
+    window.resize(1000, 680);
     window.setWindowTitle("Blastmaster Databases - Database1");
     window.setAccessibleName("Blastmaster Databases");
 
@@ -32,6 +34,7 @@ int main(int argc, char* argv[]) {
 
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
+    layout->setContentsMargins(4, 4, 4, 4);
     auto* controls = new QHBoxLayout();
     auto* tableSelector = new QComboBox(central);
     tableSelector->setAccessibleName("Table selector");
@@ -51,7 +54,6 @@ int main(int argc, char* argv[]) {
     grid->setAccessibleName("Database record editor");
     grid->setSelectionBehavior(QAbstractItemView::SelectRows);
     grid->setSelectionMode(QAbstractItemView::SingleSelection);
-    // Typing with a cell selected should enter edit mode immediately.
     grid->setEditTriggers(QAbstractItemView::AnyKeyPressed |
                           QAbstractItemView::DoubleClicked |
                           QAbstractItemView::EditKeyPressed |
