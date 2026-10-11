@@ -17,6 +17,8 @@
 #include <QTableWidget>
 #include <QColorDialog>
 #include <QFont>
+#include <QFile>
+#include <QTextStream>
 
 namespace blastmaster::database {
 
@@ -114,7 +116,7 @@ void Access95MenuBar::createFileMenu()
     QObject::connect(aOpen, &QAction::triggered, [this] {
         const QString path = QFileDialog::getOpenFileName(
             m_parent, QStringLiteral("Open Database"), QString(),
-            QStringLiteral("SQLite databases (*.db *.sqlite *.sqlite3);;All files (*.*)"));
+            QStringLiteral("Blastmaster Databases (*.dbbx);;SQLite databases (*.db *.sqlite *.sqlite3);;All files (*.*)"));
         if (!path.isEmpty()) {
             if (m_document->openDatabase(path)) {
                 blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
@@ -136,8 +138,8 @@ void Access95MenuBar::createFileMenu()
     });
     QObject::connect(aSaveAs, &QAction::triggered, [this] {
         const QString path = QFileDialog::getSaveFileName(
-            m_parent, QStringLiteral("Save Database As"), QStringLiteral("Database.db"),
-            QStringLiteral("SQLite databases (*.db *.sqlite *.sqlite3);;All files (*.*)"));
+            m_parent, QStringLiteral("Save Database As"), QStringLiteral("Database.dbbx"),
+            QStringLiteral("Blastmaster Databases (*.dbbx);;SQLite databases (*.db *.sqlite *.sqlite3);;All files (*.*)"));
         if (!path.isEmpty() && m_document->saveDatabaseAs(path)) {
             blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
             m_parent->statusBar()->showMessage(QStringLiteral("Database saved."), 2500);
@@ -150,7 +152,37 @@ void Access95MenuBar::createFileMenu()
                                  QStringLiteral("Blastmaster Database\nSQLite database engine"));
     });
     QObject::connect(aHtml, &QAction::triggered, [this] {
-        m_parent->statusBar()->showMessage(QStringLiteral("HTML export is not implemented yet."), 3000);
+        auto* selector = m_parent->findChild<QComboBox*>();
+        const QString table = selector ? selector->currentText() : QString();
+        if (table.isEmpty()) {
+            QMessageBox::information(m_parent, QStringLiteral("Export HTML"),
+                QStringLiteral("Select a table before exporting."));
+            return;
+        }
+        const QString path = QFileDialog::getSaveFileName(m_parent,
+            QStringLiteral("Export Table as HTML"), table + QStringLiteral(".html"),
+            QStringLiteral("HTML files (*.html *.htm)"));
+        if (path.isEmpty()) return;
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QMessageBox::critical(m_parent, QStringLiteral("Export HTML"), file.errorString());
+            return;
+        }
+        QTextStream out(&file);
+        out << "<!doctype html>\\n<html><head><meta charset=\\"utf-8\\"><title>"
+            << table.toHtmlEscaped() << "</title></head><body><h1>" << table.toHtmlEscaped()
+            << "</h1><table border=\\"1\\" cellspacing=\\"0\\" cellpadding=\\"4\\"><thead><tr>";
+        const QStringList columns = m_document->columns(table);
+        for (const QString& column : columns) out << "<th>" << column.toHtmlEscaped() << "</th>";
+        out << "</tr></thead><tbody>";
+        for (const QVariantList& row : m_document->records(table)) {
+            out << "<tr>";
+            for (const QVariant& value : row) out << "<td>" << value.toString().toHtmlEscaped() << "</td>";
+            out << "</tr>";
+        }
+        out << "</tbody></table></body></html>";
+        file.close();
+        m_parent->statusBar()->showMessage(QStringLiteral("Exported %1 to HTML.").arg(table), 3000);
     });
     QObject::connect(aPage, &QAction::triggered, [this] {
         m_parent->statusBar()->showMessage(QStringLiteral("Page Setup is not implemented yet."), 3000);
