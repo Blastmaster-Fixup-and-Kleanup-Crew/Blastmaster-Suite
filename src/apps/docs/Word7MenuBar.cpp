@@ -271,7 +271,7 @@ void Word7MenuBar::onFileOpen()
         return;
     }
 
-    if (auto* editor = m_parent->findChild<QTextEdit*>("documentEditor")) { QSignalBlocker blocker(editor); editor->setPlainText(m_document->content()); }
+    if (auto* editor = m_parent->findChild<QTextEdit*>("documentEditor")) { QSignalBlocker blocker(editor); editor->setHtml(m_document->content()); }
     m_parent->setWindowTitle(QString("Blastmaster Docs - %1").arg(m_document->title()));
     blastmaster::RecentFiles::add(QStringLiteral("docs"), filePath);
     if (m_parent->statusBar()) {
