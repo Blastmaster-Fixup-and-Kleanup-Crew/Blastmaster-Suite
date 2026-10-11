@@ -6,6 +6,19 @@ Bring Blastmaster Docs, Presentations, Workbooks, and Databases to a consistent 
 
 A feature is **complete** only when its menu/toolbar action works, has sensible keyboard accessibility, handles cancellation and errors, preserves data, and is covered by a repeatable test. A status-bar message saying a feature is not implemented does not count as completion.
 
+## Implementation progress (not yet validation-passed)
+
+The following partial implementations have been committed. These are **not marked complete** in the checklists until they compile and pass GUI/round-trip tests.
+
+- Shared close-time Save/Discard/Cancel guard is installed in Docs, Workbooks, and Presentations.
+- Docs has initial Find/Replace actions, table insertion, table-content selection, and a guard against discarding a new-document edit when Save is cancelled.
+- Workbooks has initial Find/Replace actions, Formula Bar and Status Bar visibility toggles, and Sort/Filter actions. Cell identity metadata is retained while the grid is visually sorted.
+- Presentations has a basic full-screen slide show with Previous/Next/End Show and refreshes the slide list after menu-based slide add/duplicate/delete operations.
+- Databases has HTML export for the selected table, a .dbbx save filter, and initial Page Setup/Print Preview/Print flows using Qt PrintSupport.
+- Installer staging uses per-application folders and runs runtime deployment for each staged executable. Windows shortcut and file-association paths were updated to match the folders.
+
+**Not yet verified:** clean compilation, actual Windows UI behavior, data-preserving sorting and filtering, printer behavior, all other menu/toolbar actions, DLL closure on a clean machine, and both edition installers. Do not infer feature completion from this progress list.
+
 ## Shared desktop behavior
 
 - [ ] Classic gray, square-corner controls, Windows-style menu bar, compact icons, and beveled buttons.
