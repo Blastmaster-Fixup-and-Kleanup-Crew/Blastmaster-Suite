@@ -545,10 +545,14 @@ void Word7MenuBar::createTableMenu()
     QObject::connect(selectAllTable, &QAction::triggered, [this]() {
         auto* editor = m_parent->findChild<QTextEdit*>("documentEditor");
         if (!editor) return;
-        if (QTextTable* table = editor->textCursor().currentTable())
-            table->select();
-        else
+        if (QTextTable* table = editor->textCursor().currentTable()) {
+            QTextCursor selection(editor->document());
+            selection.setPosition(table->firstPosition());
+            selection.setPosition(table->lastPosition(), QTextCursor::KeepAnchor);
+            editor->setTextCursor(selection);
+        } else {
             m_parent->statusBar()->showMessage(QStringLiteral("Place the cursor inside a table first."), 2500);
+        }
     });
     add("Select Cell");
     add("Select Row");
