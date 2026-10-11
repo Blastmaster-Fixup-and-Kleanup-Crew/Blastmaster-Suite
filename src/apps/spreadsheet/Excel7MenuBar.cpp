@@ -142,12 +142,19 @@ void Excel7MenuBar::createFileMenu()
             QString path = QFileDialog::getSaveFileName(m_parent, "Save Workbook As", QString(), Workbook::fileFilter());
             if (path.isEmpty()) return;
             if (!path.endsWith(Workbook::fileExtension())) path += Workbook::fileExtension();
-            m_workbook->setFilePath(path);
-            if (m_workbook->save()) blastmaster::RecentFiles::add(QStringLiteral("workbooks"), m_workbook->filePath());
+            if (m_workbook->saveAs(path)) {
+                blastmaster::RecentFiles::add(QStringLiteral("workbooks"), m_workbook->filePath());
+                if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
+            } else {
+                QMessageBox::critical(m_parent, QStringLiteral("Save Workbook"),
+                    QStringLiteral("Could not save the workbook to:\\n%1").arg(path));
+            }
+        } else if (m_workbook->save()) {
+            blastmaster::RecentFiles::add(QStringLiteral("workbooks"), m_workbook->filePath());
             if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
         } else {
-            m_workbook->save();
-            if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
+            QMessageBox::critical(m_parent, QStringLiteral("Save Workbook"),
+                QStringLiteral("Could not save the workbook to:\\n%1").arg(m_workbook->filePath()));
         }
     });
 
@@ -157,9 +164,13 @@ void Excel7MenuBar::createFileMenu()
         QString path = QFileDialog::getSaveFileName(m_parent, "Save Workbook As", QString(), Workbook::fileFilter());
         if (path.isEmpty()) return;
         if (!path.endsWith(Workbook::fileExtension())) path += Workbook::fileExtension();
-        m_workbook->setFilePath(path);
-        if (m_workbook->save()) blastmaster::RecentFiles::add(QStringLiteral("workbooks"), m_workbook->filePath());
-        if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
+        if (m_workbook->saveAs(path)) {
+            blastmaster::RecentFiles::add(QStringLiteral("workbooks"), m_workbook->filePath());
+            if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Workbook saved", 3000);
+        } else {
+            QMessageBox::critical(m_parent, QStringLiteral("Save Workbook"),
+                QStringLiteral("Could not save the workbook to:\\n%1").arg(path));
+        }
     });
 }
 
