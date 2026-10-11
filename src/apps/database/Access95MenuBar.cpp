@@ -373,12 +373,22 @@ void Access95MenuBar::createWindowMenu()
 void Access95MenuBar::createHelpMenu()
 {
     m_helpMenu = m_menuBar->addMenu(QStringLiteral("&Help"));
-    auto* helpTopics = action(m_parent, QStringLiteral("Microsoft Access Help &Topics"), QKeySequence::HelpContents);
+    auto* helpTopics = action(m_parent, QStringLiteral("Blastmaster Databases Help &Topics"), QKeySequence::HelpContents);
     m_helpMenu->addAction(helpTopics);
     QObject::connect(helpTopics, &QAction::triggered, [this] {
         blastmaster::HelpTopicsWindow::showFor(m_parent, QStringLiteral("databases"));
     });
-    m_helpMenu->addAction(action(m_parent, QStringLiteral("&About Microsoft Access")));
+    auto* assistance = action(m_parent, QStringLiteral("Getting Assistance"));
+    m_helpMenu->addAction(assistance);
+    QObject::connect(assistance, &QAction::triggered, [this] {
+        blastmaster::HelpTopicsWindow::showFor(m_parent, QStringLiteral("databases"));
+    });
+    auto* support = action(m_parent, QStringLiteral("Blastmaster Support"));
+    m_helpMenu->addAction(support);
+    QObject::connect(support, &QAction::triggered, [this] {
+        blastmaster::HelpTopicsWindow::showFor(m_parent, QStringLiteral("databases"));
+    });
+    m_helpMenu->addAction(action(m_parent, QStringLiteral("&About Blastmaster Databases")));
     QObject::connect(m_helpMenu->actions().last(), &QAction::triggered, [this] {
         QMessageBox::about(m_parent, QStringLiteral("About Blastmaster Database"),
                            QStringLiteral("Blastmaster Database\nClassic Access 95-style database application."));
