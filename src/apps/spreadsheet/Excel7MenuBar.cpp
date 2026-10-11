@@ -18,6 +18,8 @@
 #include <QTabWidget>
 #include <QColorDialog>
 #include <QFont>
+#include <QInputDialog>
+#include <QLineEdit>
 #include <functional>
 
 namespace blastmaster::spreadsheet {
@@ -172,8 +174,58 @@ void Excel7MenuBar::createEditMenu()
     m_editMenu->addAction(makeAction("Paste", QKeySequence::Paste, m_parent));
     m_editMenu->addAction(makeAction("Paste Special...", QKeySequence(), m_parent));
     m_editMenu->addSeparator();
-    m_editMenu->addAction(makeAction("Find...", QKeySequence::Find, m_parent));
-    m_editMenu->addAction(makeAction("Replace...", QKeySequence::Replace, m_parent));
+    auto* find = makeAction("Find...", QKeySequence::Find, m_parent);
+    m_editMenu->addAction(find);
+    QObject::connect(find, &QAction::triggered, [this]() {
+        auto* tabs = m_parent->findChild<QTabWidget*>();
+        auto* table = tabs ? qobject_cast<QTableWidget*>(tabs->currentWidget()) : nullptr;
+        if (!table) return;
+        bool ok = false;
+        const QString needle = QInputDialog::getText(m_parent, QStringLiteral("Find"),
+            QStringLiteral("Find what:"), QLineEdit::Normal, QString(), &ok);
+        if (!ok || needle.isEmpty()) return;
+        const int start = table->currentRow() * table->columnCount() + table->currentColumn() + 1;
+        const int total = table->rowCount() * table->columnCount();
+        for (int offset = 0; offset < total; ++offset) {
+            const int flat = (start + offset) % total;
+            const int row = flat / table->columnCount();
+            const int col = flat % table->columnCount();
+            auto* item = table->item(row, col);
+            if (item && item->text().contains(needle, Qt::CaseInsensitive)) {
+                table->setCurrentCell(row, col);
+                table->scrollToItem(item);
+                m_parent->statusBar()->showMessage(QStringLiteral("Found %1 at %2%3")
+                    .arg(needle, QString(QChar('A' + col)), QString::number(row + 1)), 2500);
+                return;
+            }
+        }
+        QMessageBox::information(m_parent, QStringLiteral("Find"), QStringLiteral("No matching cells found."));
+    });
+    auto* replace = makeAction("Replace...", QKeySequence::Replace, m_parent);
+    m_editMenu->addAction(replace);
+    QObject::connect(replace, &QAction::triggered, [this]() {
+        auto* tabs = m_parent->findChild<QTabWidget*>();
+        auto* table = tabs ? qobject_cast<QTableWidget*>(tabs->currentWidget()) : nullptr;
+        if (!table) return;
+        bool ok = false;
+        const QString needle = QInputDialog::getText(m_parent, QStringLiteral("Replace"),
+            QStringLiteral("Find what:"), QLineEdit::Normal, QString(), &ok);
+        if (!ok || needle.isEmpty()) return;
+        const QString replacement = QInputDialog::getText(m_parent, QStringLiteral("Replace"),
+            QStringLiteral("Replace with:"), QLineEdit::Normal, QString(), &ok);
+        if (!ok) return;
+        int count = 0;
+        for (int row = 0; row < table->rowCount(); ++row) {
+            for (int col = 0; col < table->columnCount(); ++col) {
+                auto* item = table->item(row, col);
+                if (item && item->text().contains(needle, Qt::CaseSensitive)) {
+                    item->setText(QString(item->text()).replace(needle, replacement));
+                    ++count;
+                }
+            }
+        }
+        m_parent->statusBar()->showMessage(QStringLiteral("Replaced %1 cell value(s).").arg(count), 3000);
+    });
     m_editMenu->addAction(makeAction("Go To...", QKeySequence("Ctrl+G"), m_parent));
 }
 
@@ -183,9 +235,27 @@ void Excel7MenuBar::createViewMenu()
     m_viewMenu->addAction(makeAction("Normal", QKeySequence(), m_parent));
     m_viewMenu->addAction(makeAction("Page Break Preview", QKeySequence(), m_parent));
     m_viewMenu->addSeparator();
-    m_viewMenu->addAction(makeAction("Toolbars...", QKeySequence(), m_parent));
-    m_viewMenu->addAction(makeAction("Formula Bar", QKeySequence(), m_parent));
-    m_viewMenu->addAction(makeAction("Status Bar", QKeySequence(), m_parent));
+    auto* toolbars = makeAction("Toolbars...", QKeySequence(), m_parent);
+    m_viewMenu->addAction(toolbars);
+    QObject::connect(toolbars, &QAction::triggered, [this]() {
+        for (QToolBar* toolbar : m_parent->findChildren<QToolBar*>())
+            toolbar->setVisible(!toolbar->isVisible());
+    });
+    auto* formulaBar = makeAction("Formula Bar", QKeySequence(), m_parent);
+    formulaBar->setCheckable(true);
+    formulaBar->setChecked(true);
+    m_viewMenu->addAction(formulaBar);
+    QObject::connect(formulaBar, &QAction::toggled, [this](bool visible) {
+        if (auto* editor = m_parent->findChild<QLineEdit*>(QStringLiteral("formulaBar")))
+            editor->setVisible(visible);
+    });
+    auto* status = makeAction("Status Bar", QKeySequence(), m_parent);
+    status->setCheckable(true);
+    status->setChecked(true);
+    m_viewMenu->addAction(status);
+    QObject::connect(status, &QAction::toggled, [this](bool visible) {
+        if (m_parent->statusBar()) m_parent->statusBar()->setVisible(visible);
+    });
     m_viewMenu->addSeparator();
     m_viewMenu->addAction(makeAction("Header and Footer...", QKeySequence(), m_parent));
     m_viewMenu->addAction(makeAction("Zoom...", QKeySequence(), m_parent));
