@@ -247,13 +247,24 @@ void Excel7MenuBar::createViewMenu()
     m_viewMenu->addAction(makeAction("Page Break Preview", QKeySequence(), m_parent));
     m_viewMenu->addSeparator();
     auto* toolbarsMenu = m_viewMenu->addMenu(QStringLiteral("Toolbars"));
-    for (QToolBar* toolbar : m_parent->findChildren<QToolBar*>()) {
-        auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
-        toggle->setCheckable(true);
-        toggle->setChecked(toolbar->isVisible());
-        QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
-        QObject::connect(toolbar, &QToolBar::visibilityChanged, toggle, &QAction::setChecked);
-    }
+    // Toolbars are created after the menu bar constructor calls createViewMenu(),
+    // so populate this submenu when it opens rather than during initialization.
+    QObject::connect(toolbarsMenu, &QMenu::aboutToShow, [this, toolbarsMenu]() {
+        toolbarsMenu->clear();
+        const auto toolbars = m_parent->findChildren<QToolBar*>();
+        if (toolbars.isEmpty()) {
+            auto* empty = toolbarsMenu->addAction(QStringLiteral("(No toolbars available)"));
+            empty->setEnabled(false);
+            return;
+        }
+        for (QToolBar* toolbar : toolbars) {
+            auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
+            toggle->setCheckable(true);
+            toggle->setChecked(!toolbar->isHidden());
+            QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
+            QObject::connect(toolbar, &QToolBar::visibilityChanged, toggle, &QAction::setChecked);
+        }
+    });
     auto* formulaBar = makeAction("Formula Bar", QKeySequence(), m_parent);
     formulaBar->setCheckable(true);
     formulaBar->setChecked(true);
