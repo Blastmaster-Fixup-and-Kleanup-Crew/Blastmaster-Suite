@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QLineEdit>
 
+#include "../Office95Style.h"
 #include "Excel7MenuBar.h"
 #include "Workbook.h"
 
@@ -21,9 +22,10 @@ int main(int argc, char* argv[]) {
     app.setApplicationVersion("1.0.0");
     app.setOrganizationName("Blastmaster");
     app.setOrganizationDomain("blastmaster.local");
+    blastmaster::ui::applyOffice95Style(app);
 
     QMainWindow window;
-    window.resize(1200, 800);
+    window.resize(1000, 680);
     window.setWindowTitle("Blastmaster Workbooks - Book1");
     window.setAccessibleName("Blastmaster Workbooks");
 
@@ -50,16 +52,14 @@ int main(int argc, char* argv[]) {
     auto makeSheet = [&](const QString& name) {
         auto* view = new QTableWidget(100, 26, tabs);
         view->setAccessibleName(name + " worksheet");
-        // Start editing as soon as the user types while a cell is selected.
-        // Double-click and F2/EditKeyPressed remain available as alternatives.
         view->setEditTriggers(QAbstractItemView::AnyKeyPressed |
                               QAbstractItemView::DoubleClicked |
                               QAbstractItemView::EditKeyPressed |
                               QAbstractItemView::SelectedClicked);
         view->setSelectionMode(QAbstractItemView::ExtendedSelection);
         view->setSelectionBehavior(QAbstractItemView::SelectItems);
-        view->horizontalHeader()->setDefaultSectionSize(90);
-        view->verticalHeader()->setDefaultSectionSize(22);
+        view->horizontalHeader()->setDefaultSectionSize(72);
+        view->verticalHeader()->setDefaultSectionSize(20);
         QStringList columns;
         for (int i = 0; i < 26; ++i) columns << QString(QChar('A' + i));
         view->setHorizontalHeaderLabels(columns);
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
             if (auto* item = view->item(row, col))
                 workbook->setCell(name, QString(QChar('A' + col)) + QString::number(row + 1), item->text());
         });
-        QObject::connect(view, &QTableWidget::itemSelectionChanged, [&window, workbook, tabs, formulaBar, view, name]() {
+        QObject::connect(view, &QTableWidget::itemSelectionChanged, [&window, workbook, formulaBar, view, name]() {
             const auto ranges = view->selectedRanges();
             if (ranges.isEmpty()) return;
             const auto range = ranges.first();
