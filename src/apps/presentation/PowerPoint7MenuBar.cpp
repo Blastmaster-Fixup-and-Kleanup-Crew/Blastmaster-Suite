@@ -602,9 +602,15 @@ void PowerPoint7MenuBar::createHelpMenu()
     QObject::connect(helpTopics, &QAction::triggered, [this]() {
         blastmaster::HelpTopicsWindow::showFor(m_parent, "presentations");
     });
-    add("Getting Assistance");
-    add("Microsoft on the Web");
-    auto* about = addMenuAction(m_helpMenu, "About Microsoft PowerPoint", "About Blastmaster Presentations");
+    auto* assistance = addMenuAction(m_helpMenu, "Getting Assistance", "Open help and troubleshooting topics");
+    QObject::connect(assistance, &QAction::triggered, [this]() {
+        blastmaster::HelpTopicsWindow::showFor(m_parent, "presentations");
+    });
+    auto* support = addMenuAction(m_helpMenu, "Blastmaster Support", "Open Blastmaster help and support topics");
+    QObject::connect(support, &QAction::triggered, [this]() {
+        blastmaster::HelpTopicsWindow::showFor(m_parent, "presentations");
+    });
+    auto* about = addMenuAction(m_helpMenu, "About Blastmaster Presentations", "About Blastmaster Presentations");
     QObject::connect(about, &QAction::triggered, [this]() {
         QMessageBox::about(m_parent, "About Blastmaster Presentations", "Blastmaster Presentations\nVersion 1.0.0\nClassic office-style presentation editor.");
     });
