@@ -14,6 +14,8 @@
 #include <QKeySequence>
 #include <QFrame>
 #include <QFont>
+#include <QToolButton>
+#include <QSignalBlocker>
 
 // Ensure resources in this shared library are registered even when the
 // linker would otherwise discard the generated qrc object from a static link.
@@ -147,13 +149,27 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
     brandLayout->addWidget(brandSubtitle);
     layout->addWidget(brandHeader);
 
-    auto* content = new QHBoxLayout();
-    content->setSpacing(8);
+    auto* navigationRow = new QHBoxLayout();
+    navigationRow->setSpacing(4);
+    auto* contentsButton = new QPushButton(tr("&Contents"), this);
+    contentsButton->setToolTip(tr("Show all help topics"));
+    auto* indexButton = new QPushButton(tr("&Index"), this);
+    indexButton->setToolTip(tr("Find topics by keyword"));
+    auto* backButton = new QPushButton(tr("< &Back"), this);
+    backButton->setToolTip(tr("Return to the previously selected topic"));
+    auto* forwardButton = new QPushButton(tr("&Forward >"), this);
+    forwardButton->setToolTip(tr("Move to the next topic in the list"));
+    navigationRow->addWidget(contentsButton);
+    navigationRow->addWidget(indexButton);
+    navigationRow->addStretch(1);
+    navigationRow->addWidget(backButton);
+    navigationRow->addWidget(forwardButton);
+    layout->addLayout(navigationRow);
 
     auto* searchRow = new QHBoxLayout();
-    auto* searchLabel = new QLabel(tr("&Search topics:"), this);
-    m_searchEdit->setPlaceholderText(tr("Type a topic name..."));
-    m_searchEdit->setAccessibleName(tr("Search help topics"));
+    auto* searchLabel = new QLabel(tr("&Search help:"), this);
+    m_searchEdit->setPlaceholderText(tr("Search topic titles and article text..."));
+    m_searchEdit->setAccessibleName(tr("Search help topics and article text"));
     searchLabel->setBuddy(m_searchEdit);
     searchRow->addWidget(searchLabel);
     searchRow->addWidget(m_searchEdit, 1);
@@ -202,6 +218,35 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
         m_searchEdit->selectAll();
     });
 
+    QObject::connect(contentsButton, &QPushButton::clicked, this, [this]() {
+        m_searchEdit->clear();
+        m_topicList->setFocus();
+        if (m_topicList->count() > 0) m_topicList->setCurrentRow(0);
+    });
+    QObject::connect(indexButton, &QPushButton::clicked, this, [this]() {
+        m_searchEdit->setFocus();
+        m_searchEdit->selectAll();
+    });
+    QObject::connect(backButton, &QPushButton::clicked, this, [this]() {
+        const int row = m_topicList->currentRow();
+        if (row > 0) {
+            for (int i = row - 1; i >= 0; --i) {
+                if (!m_topicList->item(i)->isHidden()) {
+                    m_topicList->setCurrentRow(i);
+                    break;
+                }
+            }
+        }
+    });
+    QObject::connect(forwardButton, &QPushButton::clicked, this, [this]() {
+        const int row = m_topicList->currentRow();
+        for (int i = row + 1; i < m_topicList->count(); ++i) {
+            if (!m_topicList->item(i)->isHidden()) {
+                m_topicList->setCurrentRow(i);
+                break;
+            }
+        }
+    });
     QObject::connect(m_searchEdit, &QLineEdit::textChanged,
                      this, &HelpTopicsWindow::filterTopics);
     QObject::connect(m_topicList, &QListWidget::currentItemChanged,
@@ -245,8 +290,10 @@ void HelpTopicsWindow::filterTopics(const QString& text)
 
     for (int i = 0; i < m_topicList->count(); ++i) {
         auto* item = m_topicList->item(i);
+        const QString resource = item->data(Qt::UserRole).toString();
         const bool matches = query.isEmpty() ||
-            item->text().contains(query, Qt::CaseInsensitive);
+            item->text().contains(query, Qt::CaseInsensitive) ||
+            loadMarkdown(resource).contains(query, Qt::CaseInsensitive);
         item->setHidden(!matches);
         if (matches) {
             ++visibleCount;
