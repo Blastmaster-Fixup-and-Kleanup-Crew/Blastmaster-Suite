@@ -30,6 +30,10 @@ int main(int argc, char* argv[]) {
     window.setAccessibleName("Blastmaster Workbooks");
 
     auto* workbook = new blastmaster::spreadsheet::Workbook();
+    if (argc > 1) {
+        workbook->setFilePath(QString::fromLocal8Bit(argv[1]));
+        workbook->load();
+    }
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
     layout->setContentsMargins(0, 0, 0, 0);
