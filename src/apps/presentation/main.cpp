@@ -11,6 +11,8 @@
 #include <QWidget>
 
 #include "../Office95Style.h"
+#include "../Office95UnsavedChangesGuard.h"
+#include <QFileDialog>
 #include "PowerPoint7MenuBar.h"
 #include "PresentationDocument.h"
 
@@ -108,6 +110,16 @@ int main(int argc, char* argv[]) {
         }
     });
     window.setMenuBar(menuBar.menuBar());
+    new blastmaster::ui::UnsavedChangesGuard(&window,
+        [document]() { return document->isDirty(); },
+        [&window, document]() {
+            QString path = document->filePath();
+            if (path.isEmpty())
+                path = QFileDialog::getSaveFileName(&window, QStringLiteral("Save Presentation"),
+                    QStringLiteral("Presentation.prex"), blastmaster::presentation::PresentationDocument::fileFilter());
+            if (path.isEmpty()) return false;
+            return document->saveAs(path);
+        });
 
     window.statusBar()->showMessage("Ready");
     window.show();
