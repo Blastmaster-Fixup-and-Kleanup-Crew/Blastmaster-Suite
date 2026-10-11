@@ -73,17 +73,27 @@ int main(int argc, char* argv[]) {
         for (int row = 0; row < view->rowCount(); ++row)
             for (int col = 0; col < view->columnCount(); ++col) {
                 const QString address = QString(QChar('A' + col)) + QString::number(row + 1);
-                view->setItem(row, col, new QTableWidgetItem(workbook->cell(name, address)));
+                auto* item = new QTableWidgetItem(workbook->cell(name, address));
+                item->setData(Qt::UserRole, address);
+                view->setItem(row, col, item);
             }
         QObject::connect(view, &QTableWidget::cellChanged, [workbook, name, view](int row, int col) {
-            if (auto* item = view->item(row, col))
-                workbook->setCell(name, QString(QChar('A' + col)) + QString::number(row + 1), item->text());
+            if (auto* item = view->item(row, col)) {
+                QString address = item->data(Qt::UserRole).toString();
+                if (address.isEmpty())
+                    address = QString(QChar('A' + col)) + QString::number(row + 1);
+                item->setData(Qt::UserRole, address);
+                workbook->setCell(name, address, item->text());
+            }
         });
         QObject::connect(view, &QTableWidget::itemSelectionChanged, [&window, workbook, formulaBar, view, name]() {
             const auto ranges = view->selectedRanges();
             if (ranges.isEmpty()) return;
             const auto range = ranges.first();
-            const QString address = QString(QChar('A' + range.leftColumn())) + QString::number(range.topRow() + 1);
+            const auto* item = view->item(range.topRow(), range.leftColumn());
+            const QString address = item && !item->data(Qt::UserRole).toString().isEmpty()
+                ? item->data(Qt::UserRole).toString()
+                : QString(QChar('A' + range.leftColumn())) + QString::number(range.topRow() + 1);
             formulaBar->setText(workbook->cell(name, address));
             window.statusBar()->showMessage(QString("Cell %1 | Result: %2").arg(address, workbook->evaluateCell(name, address)));
         });
