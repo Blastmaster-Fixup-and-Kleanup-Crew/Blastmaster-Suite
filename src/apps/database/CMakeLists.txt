@@ -12,7 +12,7 @@ if(WIN32)
 endif()
 
 target_link_libraries(blastmaster_database
-    PRIVATE Qt6::Widgets Qt6::Sql blastmaster_common)
+    PRIVATE Qt6::Widgets Qt6::Sql Qt6::PrintSupport blastmaster_common)
 
 if(WIN32)
     add_custom_command(TARGET blastmaster_database POST_BUILD
