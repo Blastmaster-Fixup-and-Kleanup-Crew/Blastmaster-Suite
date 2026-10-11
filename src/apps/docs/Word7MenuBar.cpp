@@ -20,6 +20,9 @@
 #include <QInputDialog>
 #include <QTextListFormat>
 #include <QSignalBlocker>
+#include <QTextTable>
+#include <QTextTableFormat>
+#include <QLineEdit>
 
 namespace blastmaster::docs {
 
@@ -350,8 +353,46 @@ void Word7MenuBar::createEditMenu()
     QObject::connect(clear, &QAction::triggered, [this] { if (auto* e = m_parent->findChild<QTextEdit*>("documentEditor")) e->clear(); });
     auto* selectAll = add("Select All");
     QObject::connect(selectAll, &QAction::triggered, [this] { if (auto* e = m_parent->findChild<QTextEdit*>("documentEditor")) e->selectAll(); });
-    add("Find");
-    add("Replace");
+    auto* find = add("&Find");
+    QObject::connect(find, &QAction::triggered, [this]() {
+        auto* editor = m_parent->findChild<QTextEdit*>("documentEditor");
+        if (!editor) return;
+        bool accepted = false;
+        const QString needle = QInputDialog::getText(m_parent, QStringLiteral("Find"),
+            QStringLiteral("Find what:"), QLineEdit::Normal, QString(), &accepted);
+        if (!accepted || needle.isEmpty()) return;
+        if (!editor->find(needle)) {
+            QTextCursor cursor = editor->textCursor();
+            cursor.movePosition(QTextCursor::Start);
+            editor->setTextCursor(cursor);
+            if (!editor->find(needle))
+                QMessageBox::information(m_parent, QStringLiteral("Find"),
+                    QStringLiteral("No further matches were found."));
+        }
+    });
+    auto* replace = add("&Replace");
+    QObject::connect(replace, &QAction::triggered, [this]() {
+        auto* editor = m_parent->findChild<QTextEdit*>("documentEditor");
+        if (!editor) return;
+        bool accepted = false;
+        const QString needle = QInputDialog::getText(m_parent, QStringLiteral("Replace"),
+            QStringLiteral("Find what:"), QLineEdit::Normal, QString(), &accepted);
+        if (!accepted || needle.isEmpty()) return;
+        const QString replacement = QInputDialog::getText(m_parent, QStringLiteral("Replace"),
+            QStringLiteral("Replace with:"), QLineEdit::Normal, QString(), &accepted);
+        if (!accepted) return;
+        int count = 0;
+        QTextCursor cursor(editor->document());
+        cursor.beginEditBlock();
+        while (editor->find(needle)) {
+            QTextCursor match = editor->textCursor();
+            match.insertText(replacement);
+            ++count;
+        }
+        cursor.endEditBlock();
+        m_parent->statusBar()->showMessage(
+            QStringLiteral("Replaced %1 occurrence(s).").arg(count), 3000);
+    });
     add("Go To");
     add("AutoText");
 }
@@ -481,11 +522,37 @@ void Word7MenuBar::createTableMenu()
         wireAction(action, text);
     };
 
-    add("Insert Table");
+    auto* insertTable = addMenuAction(m_tableMenu, QStringLiteral("Insert Table"),
+        QStringLiteral("Insert a table at the current cursor position"));
+    QObject::connect(insertTable, &QAction::triggered, [this]() {
+        auto* editor = m_parent->findChild<QTextEdit*>("documentEditor");
+        if (!editor) return;
+        bool accepted = false;
+        const int rows = QInputDialog::getInt(m_parent, QStringLiteral("Insert Table"),
+            QStringLiteral("Number of rows:"), 2, 1, 100, 1, &accepted);
+        if (!accepted) return;
+        const int columns = QInputDialog::getInt(m_parent, QStringLiteral("Insert Table"),
+            QStringLiteral("Number of columns:"), 2, 1, 20, 1, &accepted);
+        if (!accepted) return;
+        QTextTableFormat format;
+        format.setBorder(1.0);
+        format.setCellPadding(3.0);
+        format.setCellSpacing(0.0);
+        editor->textCursor().insertTable(rows, columns, format);
+    });
+    auto* selectAllTable = addMenuAction(m_tableMenu, QStringLiteral("Select Table"),
+        QStringLiteral("Select the table containing the cursor"));
+    QObject::connect(selectAllTable, &QAction::triggered, [this]() {
+        auto* editor = m_parent->findChild<QTextEdit*>("documentEditor");
+        if (!editor) return;
+        if (QTextTable* table = editor->textCursor().currentTable())
+            table->select();
+        else
+            m_parent->statusBar()->showMessage(QStringLiteral("Place the cursor inside a table first."), 2500);
+    });
     add("Select Cell");
     add("Select Row");
     add("Select Column");
-    add("Select Table");
     add("Split Cells");
     add("Split Table");
     add("Table Properties");
