@@ -289,13 +289,24 @@ void Access95MenuBar::createViewMenu()
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Sorting...")));
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Filtering...")));
     auto* toolbarsMenu = m_viewMenu->addMenu(QStringLiteral("Toolbars"));
-    for (QToolBar* toolbar : m_parent->findChildren<QToolBar*>()) {
-        auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
-        toggle->setCheckable(true);
-        toggle->setChecked(toolbar->isVisible());
-        QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
-        QObject::connect(toolbar, &QToolBar::visibilityChanged, toggle, &QAction::setChecked);
-    }
+    // Toolbars are created after the menu bar constructor calls createViewMenu(),
+    // so populate this submenu when it opens rather than during initialization.
+    QObject::connect(toolbarsMenu, &QMenu::aboutToShow, [this, toolbarsMenu]() {
+        toolbarsMenu->clear();
+        const auto toolbars = m_parent->findChildren<QToolBar*>();
+        if (toolbars.isEmpty()) {
+            auto* empty = toolbarsMenu->addAction(QStringLiteral("(No toolbars available)"));
+            empty->setEnabled(false);
+            return;
+        }
+        for (QToolBar* toolbar : toolbars) {
+            auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
+            toggle->setCheckable(true);
+            toggle->setChecked(!toolbar->isHidden());
+            QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
+            QObject::connect(toolbar, &QToolBar::visibilityChanged, toggle, &QAction::setChecked);
+        }
+    });
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Ruler")));
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Grid")));
 }
@@ -412,6 +423,7 @@ void Access95MenuBar::createToolbars()
     addToolbarAction(standard, QStringLiteral("Form Wizard"));
     addToolbarAction(standard, QStringLiteral("Report Wizard"));
     m_parent->addToolBar(Qt::TopToolBarArea, standard);
+    standard->show();
 
     auto* formatting = new QToolBar(QStringLiteral("Formatting"), m_parent);
     formatting->setObjectName(QStringLiteral("toolbar_formatting"));
@@ -484,6 +496,7 @@ void Access95MenuBar::createToolbars()
     }
 
     m_parent->addToolBar(Qt::TopToolBarArea, formatting);
+    formatting->show();
 }
 
 } // namespace blastmaster::database
