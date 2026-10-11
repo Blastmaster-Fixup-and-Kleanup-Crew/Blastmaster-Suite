@@ -288,7 +288,14 @@ void Access95MenuBar::createViewMenu()
     m_viewMenu->addSeparator();
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Sorting...")));
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Filtering...")));
-    m_viewMenu->addAction(action(m_parent, QStringLiteral("&Toolbars...")));
+    auto* toolbarsAction = action(m_parent, QStringLiteral("&Toolbars..."));
+    QObject::connect(toolbarsAction, &QAction::triggered, [this]() {
+        const auto toolbars = m_parent->findChildren<QToolBar*>();
+        bool anyVisible = false;
+        for (QToolBar* toolbar : toolbars) anyVisible = anyVisible || toolbar->isVisible();
+        for (QToolBar* toolbar : toolbars) toolbar->setVisible(!anyVisible);
+    });
+    m_viewMenu->addAction(toolbarsAction);
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Ruler")));
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Grid")));
 }
