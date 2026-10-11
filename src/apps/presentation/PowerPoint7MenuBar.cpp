@@ -19,6 +19,10 @@
 #include <QStatusBar>
 #include <QToolBar>
 #include <QFileInfo>
+#include <QDialog>
+#include <QTextBrowser>
+#include <QPushButton>
+#include <QVBoxLayout>
 
 namespace {
 QString normalizedActionName(const QString& text)
