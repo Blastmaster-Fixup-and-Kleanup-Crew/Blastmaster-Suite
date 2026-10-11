@@ -38,7 +38,7 @@ static QAction* action(QObject* parent, const QString& text,
 
 static QString tableAsHtml(DatabaseDocument* document, const QString& table)
 {
-    QString html = QStringLiteral("<!doctype html><html><head><meta charset=\\"utf-8\\"></head><body><h1>%1</h1><table border=\\"1\\" cellspacing=\\"0\\" cellpadding=\\"4\\"><thead><tr>")
+    QString html = QStringLiteral("<!doctype html><html><head><meta charset=\"utf-8\"></head><body><h1>%1</h1><table border=\"1\" cellspacing=\"0\" cellpadding=\"4\"><thead><tr>")
         .arg(table.toHtmlEscaped());
     for (const QString& column : document->columns(table))
         html += QStringLiteral("<th>%1</th>").arg(column.toHtmlEscaped());
@@ -101,7 +101,7 @@ void Access95MenuBar::createFileMenu()
                 QObject::connect(item, &QAction::triggered, [this, path] {
                     if (!m_document->openDatabase(path)) {
                         QMessageBox::critical(m_parent, QStringLiteral("Open Database"),
-                                              QStringLiteral("Failed to open database:\\n%1").arg(path));
+                                              QStringLiteral("Failed to open database:\n%1").arg(path));
                         return;
                     }
                     blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
@@ -147,7 +147,7 @@ void Access95MenuBar::createFileMenu()
                     m_parent->statusBar()->showMessage(QStringLiteral("Database opened: %1").arg(path), 2500);
             } else {
                 QMessageBox::critical(m_parent, QStringLiteral("Open Database"),
-                                      QStringLiteral("Failed to open database:\\n%1").arg(path));
+                                      QStringLiteral("Failed to open database:\n%1").arg(path));
             }
         }
     });
@@ -192,9 +192,9 @@ void Access95MenuBar::createFileMenu()
             return;
         }
         QTextStream out(&file);
-        out << "<!doctype html>\\n<html><head><meta charset=\\"utf-8\\"><title>"
+        out << "<!doctype html>\n<html><head><meta charset=\"utf-8\"><title>"
             << table.toHtmlEscaped() << "</title></head><body><h1>" << table.toHtmlEscaped()
-            << "</h1><table border=\\"1\\" cellspacing=\\"0\\" cellpadding=\\"4\\"><thead><tr>";
+            << "</h1><table border=\"1\" cellspacing=\"0\" cellpadding=\"4\"><thead><tr>";
         const QStringList columns = m_document->columns(table);
         for (const QString& column : columns) out << "<th>" << column.toHtmlEscaped() << "</th>";
         out << "</tr></thead><tbody>";
