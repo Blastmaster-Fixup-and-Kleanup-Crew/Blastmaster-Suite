@@ -29,6 +29,10 @@ int main(int argc, char* argv[]) {
     window.setAccessibleName("Blastmaster Presentations");
 
     auto* document = new blastmaster::presentation::PresentationDocument();
+    if (argc > 1) {
+        document->setFilePath(QString::fromLocal8Bit(argv[1]));
+        document->load();
+    }
 
     auto* central = new QWidget(&window);
     auto* layout = new QHBoxLayout(central);
