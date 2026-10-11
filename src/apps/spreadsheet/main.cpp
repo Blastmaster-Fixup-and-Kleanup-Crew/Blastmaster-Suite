@@ -12,6 +12,8 @@
 #include <QLineEdit>
 
 #include "../Office95Style.h"
+#include "../Office95UnsavedChangesGuard.h"
+#include <QFileDialog>
 #include "Excel7MenuBar.h"
 #include "Workbook.h"
 
@@ -126,6 +128,16 @@ int main(int argc, char* argv[]) {
             view->setFocus();
     });
     window.setMenuBar(menuBar.menuBar());
+    new blastmaster::ui::UnsavedChangesGuard(&window,
+        [workbook]() { return workbook->isDirty(); },
+        [&window, workbook]() {
+            QString path = workbook->filePath();
+            if (path.isEmpty())
+                path = QFileDialog::getSaveFileName(&window, QStringLiteral("Save Workbook"),
+                    QStringLiteral("Book1.wkbx"), blastmaster::spreadsheet::Workbook::fileFilter());
+            if (path.isEmpty()) return false;
+            return workbook->saveAs(path);
+        });
     window.statusBar()->showMessage("Ready");
     window.show();
     if (auto* view = qobject_cast<QTableWidget*>(tabs->currentWidget()))
