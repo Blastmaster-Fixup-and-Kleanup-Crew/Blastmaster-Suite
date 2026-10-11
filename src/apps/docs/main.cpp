@@ -7,6 +7,8 @@
 #include <QTextEdit>
 
 #include "../Office95Style.h"
+#include "../Office95UnsavedChangesGuard.h"
+#include <QFileDialog>
 #include "Word7MenuBar.h"
 #include "Document.h"
 
@@ -52,6 +54,16 @@ int main(int argc, char* argv[]) {
 
     blastmaster::docs::Word7MenuBar word7MenuBar(&window, document);
     window.setMenuBar(word7MenuBar.menuBar());
+    new blastmaster::ui::UnsavedChangesGuard(&window,
+        [document]() { return document->isDirty(); },
+        [&window, document]() {
+            QString path = document->filePath();
+            if (path.isEmpty())
+                path = QFileDialog::getSaveFileName(&window, QStringLiteral("Save Document"),
+                    QStringLiteral("Document.dccx"), blastmaster::docs::Document::fileFilter());
+            if (path.isEmpty()) return false;
+            return document->saveAs(path);
+        });
 
     window.statusBar()->showMessage("Ready");
     window.show();
