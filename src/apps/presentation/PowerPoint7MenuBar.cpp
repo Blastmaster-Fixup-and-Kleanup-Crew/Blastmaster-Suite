@@ -419,13 +419,24 @@ void PowerPoint7MenuBar::createViewMenu()
     add("Slide Show");
     add("Black and White");
     auto* toolbarsMenu = m_viewMenu->addMenu(QStringLiteral("Toolbars"));
-    for (QToolBar* toolbar : m_parent->findChildren<QToolBar*>()) {
-        auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
-        toggle->setCheckable(true);
-        toggle->setChecked(toolbar->isVisible());
-        QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
-        QObject::connect(toolbar, &QToolBar::visibilityChanged, toggle, &QAction::setChecked);
-    }
+    // Toolbars are created after the menu bar constructor calls createViewMenu(),
+    // so populate this submenu when it opens rather than during initialization.
+    QObject::connect(toolbarsMenu, &QMenu::aboutToShow, [this, toolbarsMenu]() {
+        toolbarsMenu->clear();
+        const auto toolbars = m_parent->findChildren<QToolBar*>();
+        if (toolbars.isEmpty()) {
+            auto* empty = toolbarsMenu->addAction(QStringLiteral("(No toolbars available)"));
+            empty->setEnabled(false);
+            return;
+        }
+        for (QToolBar* toolbar : toolbars) {
+            auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
+            toggle->setCheckable(true);
+            toggle->setChecked(!toolbar->isHidden());
+            QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
+            QObject::connect(toolbar, &QToolBar::visibilityChanged, toggle, &QAction::setChecked);
+        }
+    });
     add("Ruler");
     add("Guides");
     add("Zoom");
@@ -613,7 +624,8 @@ void PowerPoint7MenuBar::createToolbars()
                              QStringLiteral("Insert Chart"), QStringLiteral("Insert Clip Art"), QStringLiteral("Zoom")}) {
         addToolbarAction(standard, label, label + " command");
     }
-    m_parent->addToolBar(standard);
+    m_parent->addToolBar(Qt::TopToolBarArea, standard);
+    standard->show();
 
     m_parent->addToolBarBreak();
 
@@ -660,7 +672,8 @@ void PowerPoint7MenuBar::createToolbars()
             }
         });
     }
-    m_parent->addToolBar(formatting);
+    m_parent->addToolBar(Qt::TopToolBarArea, formatting);
+    formatting->show();
 
     auto* drawing = new QToolBar("Drawing", m_parent);
     drawing->setObjectName("ppt7_drawing_toolbar");
