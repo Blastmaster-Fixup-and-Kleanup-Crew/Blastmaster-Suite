@@ -108,6 +108,21 @@ while ($queue.Count -gt 0) {
             continue
         }
 
+        # Treat any DLL actually present in the Windows system directories as
+        # an OS dependency, even when it is not in the curated common-DLL list
+        # (for example D3Dcompiler_47.dll).
+        $systemDllFound = $false
+        foreach ($systemDir in @(
+            (Join-Path $env:WINDIR 'System32'),
+            (Join-Path $env:WINDIR 'SysWOW64')
+        )) {
+            if (Test-Path -LiteralPath (Join-Path $systemDir $dllName) -PathType Leaf) {
+                $systemDllFound = $true
+                break
+            }
+        }
+        if ($systemDllFound) { continue }
+
         $destination = Join-Path $appDir $dllName
         if (Test-Path -LiteralPath $destination -PathType Leaf) {
             $queue.Enqueue((Get-Item -LiteralPath $destination).FullName)
