@@ -25,7 +25,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Extra MSYS2/UCRT64 runtime dependencies that may not be discovered by windeployqt.
-foreach ($dllName in @("libwinpthread-1.dll", "libb2-1.dll")) {
+foreach ($dllName in @("libwinpthread-1.dll", "libstdc++-6.dll", "libgcc_s_seh-1.dll", "libb2-1.dll")) {
     $source = Join-Path $qtBinDir $dllName
     $destination = Join-Path $appDir $dllName
 
