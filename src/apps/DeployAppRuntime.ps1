@@ -18,47 +18,107 @@ if (-not (Test-Path -LiteralPath $WinDeployQt -PathType Leaf)) {
     throw "windeployqt was not found: $WinDeployQt"
 }
 
-# Deploy Qt modules and the matching MinGW compiler runtime beside the app.
+# Deploy Qt modules/plugins and the compiler runtime first.
 & $WinDeployQt --release --no-translations --compiler-runtime --dir $appDir $appExePath
 if ($LASTEXITCODE -ne 0) {
     throw "windeployqt failed for '$appExePath' with exit code $LASTEXITCODE"
 }
 
-# Extra MSYS2/UCRT64 runtime dependencies that may not be discovered by windeployqt.
-foreach ($dllName in @(
-    "libwinpthread-1.dll",
-    "libstdc++-6.dll",
-    "libgcc_s_seh-1.dll",
-    "libb2-1.dll",
-    "libdouble-conversion.dll",
-    "libicuin78.dll",
-    "libicuuc78.dll",
-    "libpcre2-16-0.dll",
-    "zlib1.dll",
-    "libzstd.dll",
-    "libfreetype-6.dll",
-    "libharfbuzz-0.dll",
-    "libmd4c.dll",
-    "libpng16-16.dll",
-    "libicudt78.dll",
-    "libbrotlidec.dll",
-    "libbz2-1.dll",
-    "libglib-2.0-0.dll",
-    "libgraphite2.dll",
-    "libbrotlicommon.dll",
-    "libbz2-1.dll",
-    "libglib-2.0-0.dll",
-    "libgraphite2.dll"
-)) {
-    $source = Join-Path $qtBinDir $dllName
-    $destination = Join-Path $appDir $dllName
-
-    if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
-        throw "Required runtime DLL '$dllName' was not found beside windeployqt ('$qtBinDir'). Install the matching MSYS2 UCRT64 package or update the runtime path."
-    }
-
-    if ([System.IO.Path]::GetFullPath($source) -ne [System.IO.Path]::GetFullPath($destination)) {
-        Copy-Item -LiteralPath $source -Destination $destination -Force
-    }
-    Write-Host "Packaged app runtime DLL: $destination"
+# Resolve the matching MinGW objdump. Static DLL lists are brittle: Qt/MSYS2
+# updates rename dependencies, and different apps import different DLL sets.
+$objdumpCommand = Get-Command objdump.exe -ErrorAction SilentlyContinue
+if (-not $objdumpCommand) {
+    $objdumpCommand = Get-Command objdump -ErrorAction SilentlyContinue
 }
+if (-not $objdumpCommand) {
+    throw "objdump was not found on PATH. Run this from the MSYS2 UCRT64 environment with mingw-w64-ucrt-x86_64-binutils installed."
+}
+$objdump = $objdumpCommand.Source
+
+# Windows-provided DLLs do not belong in the application folder. API-set
+# imports are virtual names resolved by Windows, not files to package.
+$windowsDlls = @(
+    "advapi32.dll","bcrypt.dll","bcryptprimitives.dll","cfgmgr32.dll",
+    "combase.dll","comctl32.dll","comdlg32.dll","crypt32.dll","cryptbase.dll",
+    "dwmapi.dll","gdi32.dll","imm32.dll","iphlpapi.dll","kernel32.dll",
+    "kernelbase.dll","msvcrt.dll","ntdll.dll","ole32.dll","oleaut32.dll",
+    "powrprof.dll","profapi.dll","rpcrt4.dll","sechost.dll","setupapi.dll",
+    "shell32.dll","shlwapi.dll","user32.dll","uxtheme.dll","version.dll",
+    "win32u.dll","winmm.dll","ws2_32.dll","wtsapi32.dll"
+)
+
+function Get-ImportedDlls([string]$BinaryPath) {
+    $output = & $objdump -p $BinaryPath 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "objdump could not inspect '$BinaryPath': $($output -join [Environment]::NewLine)"
+    }
+    foreach ($line in $output) {
+        if ("$line" -match '^\s*DLL Name:\s*(\S+)\s*$') {
+            $Matches[1].ToLowerInvariant()
+        }
+    }
+}
+
+function Find-Dll([string]$DllName) {
+    $candidates = @(
+        (Join-Path $appDir $DllName),
+        (Join-Path $qtBinDir $DllName)
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            return (Get-Item -LiteralPath $candidate).FullName
+        }
+    }
+
+    # Search the toolchain's PATH entries, but never silently accept a
+    # dependency from an arbitrary working directory.
+    foreach ($pathEntry in ($env:PATH -split ';')) {
+        if ([string]::IsNullOrWhiteSpace($pathEntry)) { continue }
+        $candidate = Join-Path $pathEntry.Trim('"') $DllName
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            return (Get-Item -LiteralPath $candidate).FullName
+        }
+    }
+    return $null
+}
+
+$queue = [System.Collections.Generic.Queue[string]]::new()
+$scanned = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+$queue.Enqueue($appExePath)
+
+# Inspect all app binaries, including Qt plugins deployed in subdirectories.
+Get-ChildItem -LiteralPath $appDir -Recurse -File |
+    Where-Object { $_.Extension -in @('.dll', '.exe') } |
+    ForEach-Object { $queue.Enqueue($_.FullName) }
+
+while ($queue.Count -gt 0) {
+    $binary = $queue.Dequeue()
+    if (-not $scanned.Add([System.IO.Path]::GetFullPath($binary))) { continue }
+
+    foreach ($dllName in (Get-ImportedDlls $binary | Sort-Object -Unique)) {
+        if ($dllName -like 'api-ms-win-*.dll' -or
+            $dllName -like 'ext-ms-win-*.dll' -or
+            $windowsDlls -contains $dllName) {
+            continue
+        }
+
+        $destination = Join-Path $appDir $dllName
+        if (Test-Path -LiteralPath $destination -PathType Leaf) {
+            $queue.Enqueue((Get-Item -LiteralPath $destination).FullName)
+            continue
+        }
+
+        $source = Find-Dll $dllName
+        if (-not $source) {
+            throw "Unresolved non-Windows dependency '$dllName' imported by '$binary'. Install the matching MSYS2 UCRT64 package or add its bin directory to PATH, then rerun deployment."
+        }
+
+        if ([System.IO.Path]::GetFullPath($source) -ne [System.IO.Path]::GetFullPath($destination)) {
+            Copy-Item -LiteralPath $source -Destination $destination -Force
+        }
+        Write-Host "Packaged dependency: $dllName (required by $([System.IO.Path]::GetFileName($binary)))"
+        $queue.Enqueue($destination)
+    }
+}
+
+Write-Host "Runtime dependency audit passed for $appExePath"
