@@ -418,7 +418,14 @@ void PowerPoint7MenuBar::createViewMenu()
     add("Notes Page");
     add("Slide Show");
     add("Black and White");
-    add("Toolbars");
+    auto* toolbarsAction = addMenuAction(m_viewMenu, QStringLiteral("Toolbars"),
+        QStringLiteral("Show or hide the Standard and Formatting toolbars"));
+    QObject::connect(toolbarsAction, &QAction::triggered, [this]() {
+        const auto toolbars = m_parent->findChildren<QToolBar*>();
+        bool anyVisible = false;
+        for (QToolBar* toolbar : toolbars) anyVisible = anyVisible || toolbar->isVisible();
+        for (QToolBar* toolbar : toolbars) toolbar->setVisible(!anyVisible);
+    });
     add("Ruler");
     add("Guides");
     add("Zoom");
