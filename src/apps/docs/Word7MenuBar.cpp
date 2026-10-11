@@ -244,6 +244,8 @@ void Word7MenuBar::onFileNew()
         }
         if (reply == QMessageBox::Yes) {
             onFileSave();
+            if (m_document->isDirty())
+                return;
         }
     }
 
@@ -251,7 +253,7 @@ void Word7MenuBar::onFileNew()
     m_document->setContent("");
     m_document->setFilePath("");
     m_document->setClean();
-    if (auto* editor = m_parent->findChild<QTextEdit*>("documentEditor")) { QSignalBlocker blocker(editor); editor->setPlainText(QString()); }
+    if (auto* editor = m_parent->findChild<QTextEdit*>("documentEditor")) { QSignalBlocker blocker(editor); editor->setHtml(QString()); }
     m_parent->setWindowTitle("Blastmaster Docs - Untitled");
     if (m_parent->statusBar()) {
         m_parent->statusBar()->showMessage("New document created");
