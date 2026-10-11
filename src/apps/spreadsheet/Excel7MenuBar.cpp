@@ -249,8 +249,10 @@ void Excel7MenuBar::createViewMenu()
     auto* toolbars = makeAction("Toolbars...", QKeySequence(), m_parent);
     m_viewMenu->addAction(toolbars);
     QObject::connect(toolbars, &QAction::triggered, [this]() {
-        for (QToolBar* toolbar : m_parent->findChildren<QToolBar*>())
-            toolbar->setVisible(!toolbar->isVisible());
+        const auto bars = m_parent->findChildren<QToolBar*>();
+        bool anyVisible = false;
+        for (QToolBar* toolbar : bars) anyVisible = anyVisible || toolbar->isVisible();
+        for (QToolBar* toolbar : bars) toolbar->setVisible(!anyVisible);
     });
     auto* formulaBar = makeAction("Formula Bar", QKeySequence(), m_parent);
     formulaBar->setCheckable(true);
