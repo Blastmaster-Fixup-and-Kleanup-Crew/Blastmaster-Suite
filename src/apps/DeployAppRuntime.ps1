@@ -24,6 +24,32 @@ if ($LASTEXITCODE -ne 0) {
     throw "windeployqt failed for '$appExePath' with exit code $LASTEXITCODE"
 }
 
+# windeployqt can deploy every Qt SQL driver plugin, even though Blastmaster
+# Databases uses SQLite only. Other drivers (notably qsqlibase.dll) pull in
+# unrelated clients such as fbclient.dll. Keep only qsqlite for Databases;
+# remove SQL drivers entirely from apps that do not use Qt SQL.
+$sqlDriverDir = Join-Path $appDir "sqldrivers"
+$isDatabaseApp = [System.IO.Path]::GetFileName($appExePath).Equals(
+    "blastmaster_database.exe",
+    [System.StringComparison]::OrdinalIgnoreCase
+)
+if (Test-Path -LiteralPath $sqlDriverDir -PathType Container) {
+    Get-ChildItem -LiteralPath $sqlDriverDir -File -Filter "*.dll" |
+        Where-Object {
+            -not ($isDatabaseApp -and $_.Name.Equals("qsqlite.dll", [System.StringComparison]::OrdinalIgnoreCase))
+        } |
+        ForEach-Object {
+            Write-Host "Removing unused Qt SQL driver plugin: $($_.Name)"
+            Remove-Item -LiteralPath $_.FullName -Force
+        }
+    if (-not $isDatabaseApp -and -not (Get-ChildItem -LiteralPath $sqlDriverDir -Force | Select-Object -First 1)) {
+        Remove-Item -LiteralPath $sqlDriverDir -Force
+    }
+}
+if ($isDatabaseApp -and -not (Test-Path -LiteralPath (Join-Path $sqlDriverDir "qsqlite.dll") -PathType Leaf)) {
+    throw "The SQLite SQL driver qsqlite.dll was not deployed for the Databases app."
+}
+
 # Resolve the matching MinGW objdump. Static DLL lists are brittle: Qt/MSYS2
 # updates rename dependencies, and different apps import different DLL sets.
 $objdumpCommand = Get-Command objdump.exe -ErrorAction SilentlyContinue
