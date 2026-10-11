@@ -19,6 +19,7 @@
 #include <QFont>
 #include <QFile>
 #include <QTextStream>
+#include <QDialog>
 #include <QPrinter>
 #include <QPrintDialog>
 #include <QPrintPreviewDialog>
