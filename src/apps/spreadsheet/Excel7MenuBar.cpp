@@ -300,8 +300,49 @@ void Excel7MenuBar::createToolsMenu()
 void Excel7MenuBar::createDataMenu()
 {
     m_dataMenu = m_menuBar->addMenu("&Data");
-    m_dataMenu->addAction(makeAction("Sort...", QKeySequence(), m_parent));
-    m_dataMenu->addAction(makeAction("Filter...", QKeySequence(), m_parent));
+    auto* sort = makeAction("Sort...", QKeySequence(), m_parent);
+    m_dataMenu->addAction(sort);
+    QObject::connect(sort, &QAction::triggered, [this]() {
+        auto* tabs = m_parent->findChild<QTabWidget*>();
+        auto* table = tabs ? qobject_cast<QTableWidget*>(tabs->currentWidget()) : nullptr;
+        if (!table || table->columnCount() == 0) return;
+        QStringList columns;
+        for (int col = 0; col < table->columnCount(); ++col)
+            columns << QString(QChar('A' + col));
+        bool ok = false;
+        const QString column = QInputDialog::getItem(m_parent, QStringLiteral("Sort"),
+            QStringLiteral("Sort by column:"), columns, qMax(0, table->currentColumn()), false, &ok);
+        if (!ok) return;
+        const auto order = QMessageBox::question(m_parent, QStringLiteral("Sort Order"),
+            QStringLiteral("Sort ascending? Choose No for descending."),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes
+            ? Qt::AscendingOrder : Qt::DescendingOrder;
+        table->setSortingEnabled(true);
+        table->sortItems(columns.indexOf(column), order);
+        table->setSortingEnabled(false);
+        m_parent->statusBar()->showMessage(QStringLiteral("Sorted by column %1").arg(column), 2500);
+    });
+    auto* filter = makeAction("Filter...", QKeySequence(), m_parent);
+    m_dataMenu->addAction(filter);
+    QObject::connect(filter, &QAction::triggered, [this]() {
+        auto* tabs = m_parent->findChild<QTabWidget*>();
+        auto* table = tabs ? qobject_cast<QTableWidget*>(tabs->currentWidget()) : nullptr;
+        if (!table || table->columnCount() == 0) return;
+        bool ok = false;
+        const QString value = QInputDialog::getText(m_parent, QStringLiteral("Filter"),
+            QStringLiteral("Show rows where the selected column contains (leave blank to clear):"),
+            QLineEdit::Normal, QString(), &ok);
+        if (!ok) return;
+        const int column = qMax(0, table->currentColumn());
+        for (int row = 0; row < table->rowCount(); ++row) {
+            auto* item = table->item(row, column);
+            const bool visible = value.isEmpty() || (item && item->text().contains(value, Qt::CaseInsensitive));
+            table->setRowHidden(row, !visible);
+        }
+        m_parent->statusBar()->showMessage(value.isEmpty()
+            ? QStringLiteral("Filter cleared.")
+            : QStringLiteral("Filter applied to column %1.").arg(QChar('A' + column)), 2500);
+    });
     m_dataMenu->addAction(makeAction("Form...", QKeySequence(), m_parent));
     m_dataMenu->addAction(makeAction("Subtotals...", QKeySequence(), m_parent));
     m_dataMenu->addAction(makeAction("Text to Columns...", QKeySequence(), m_parent));
