@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QWidget>
 #include <functional>
+#include <utility>
 
 namespace blastmaster::ui {
 
