@@ -30,7 +30,12 @@ int main(int argc, char* argv[]) {
     window.setAccessibleName("Blastmaster Databases");
 
     auto* database = new blastmaster::database::DatabaseDocument(&window);
-    database->newDatabase();
+    if (argc > 1) {
+        if (!database->openDatabase(QString::fromLocal8Bit(argv[1])))
+            database->newDatabase();
+    } else {
+        database->newDatabase();
+    }
 
     auto* central = new QWidget(&window);
     auto* layout = new QVBoxLayout(central);
