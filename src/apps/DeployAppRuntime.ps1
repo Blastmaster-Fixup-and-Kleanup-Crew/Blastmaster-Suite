@@ -76,7 +76,13 @@ function Find-Dll([string]$DllName) {
         if ([string]::IsNullOrWhiteSpace($pathEntry)) { continue }
         $candidate = Join-Path $pathEntry.Trim('"') $DllName
         if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-            return (Get-Item -LiteralPath $candidate).FullName
+            $resolved = (Get-Item -LiteralPath $candidate).FullName
+            # Never copy Windows-owned binaries from System32/SysWOW64 into the app.
+            $windowsRoot = [System.IO.Path]::GetFullPath($env:WINDIR).TrimEnd('\\') + '\\'
+            if ($resolved.StartsWith($windowsRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+                continue
+            }
+            return $resolved
         }
     }
     return $null
