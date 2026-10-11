@@ -298,11 +298,11 @@ bool install(
     };
 
     bool ok =
-        shortcut(QStringLiteral("Docs"), QStringLiteral("blastmaster_docs.exe"),
+        shortcut(QStringLiteral("Docs"), QStringLiteral("Docs/blastmaster_docs.exe"),
                  QStringLiteral("Blastmaster Suite Docs")) &&
-        shortcut(QStringLiteral("Workbooks"), QStringLiteral("blastmaster_workbook.exe"),
+        shortcut(QStringLiteral("Workbooks"), QStringLiteral("Workbooks/blastmaster_workbook.exe"),
                  QStringLiteral("Blastmaster Suite Workbooks")) &&
-        shortcut(QStringLiteral("Presentations"), QStringLiteral("blastmaster_presentations.exe"),
+        shortcut(QStringLiteral("Presentations"), QStringLiteral("Presentations/blastmaster_presentations.exe"),
                  QStringLiteral("Blastmaster Suite Presentations")) &&
         shortcut(QStringLiteral("Blastmaster Suite Help"), QStringLiteral("BlastmasterHelp.exe"),
                  QStringLiteral("Blastmaster Suite Help Topics"));
@@ -310,7 +310,7 @@ bool install(
     if (edition == blastmaster::Edition::Professional)
     {
         ok = ok &&
-            shortcut(QStringLiteral("Databases"), QStringLiteral("blastmaster_database.exe"),
+            shortcut(QStringLiteral("Databases"), QStringLiteral("Databases/blastmaster_database.exe"),
                      QStringLiteral("Blastmaster Suite Databases"));
     }
 
@@ -324,20 +324,20 @@ bool install(
     {
         ok =
             writeFileAssociation(QStringLiteral(".dccx"), QStringLiteral("Docs"),
-                QStringLiteral("blastmaster_docs.exe"),
+                QStringLiteral("Docs/blastmaster_docs.exe"),
                 QStringLiteral("Blastmaster Suite Document"), destination, error) &&
             writeFileAssociation(QStringLiteral(".wkbx"), QStringLiteral("Workbooks"),
-                QStringLiteral("blastmaster_workbook.exe"),
+                QStringLiteral("Workbooks/blastmaster_workbook.exe"),
                 QStringLiteral("Blastmaster Suite Workbook"), destination, error) &&
             writeFileAssociation(QStringLiteral(".prex"), QStringLiteral("Presentations"),
-                QStringLiteral("blastmaster_presentations.exe"),
+                QStringLiteral("Presentations/blastmaster_presentations.exe"),
                 QStringLiteral("Blastmaster Suite Presentation"), destination, error);
     }
 
     if (ok && edition == blastmaster::Edition::Professional)
     {
         ok = writeFileAssociation(QStringLiteral(".dbbx"), QStringLiteral("Databases"),
-            QStringLiteral("blastmaster_database.exe"),
+            QStringLiteral("Databases/blastmaster_database.exe"),
             QStringLiteral("Blastmaster Suite Database"), destination, error);
     }
 
