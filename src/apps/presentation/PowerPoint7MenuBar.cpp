@@ -500,7 +500,46 @@ void PowerPoint7MenuBar::createSlideShowMenu()
         wireAction(action, text);
     };
 
-    add("View Show");
+    auto* viewShow = addMenuAction(m_slideShowMenu, QStringLiteral("View Show"),
+        QStringLiteral("Start a simple full-screen slide show"));
+    QObject::connect(viewShow, &QAction::triggered, [this]() {
+        if (!m_document || m_document->slideCount() == 0) {
+            QMessageBox::information(m_parent, QStringLiteral("Slide Show"),
+                QStringLiteral("Add at least one slide before starting the show."));
+            return;
+        }
+        QDialog dialog(m_parent);
+        dialog.setWindowTitle(QStringLiteral("Blastmaster Presentations - Slide Show"));
+        dialog.setWindowState(Qt::WindowFullScreen);
+        auto* layout = new QVBoxLayout(&dialog);
+        auto* page = new QTextBrowser(&dialog);
+        page->setOpenExternalLinks(false);
+        page->setStyleSheet(QStringLiteral("QTextBrowser { background: white; color: black; border: 0; padding: 36px; font-size: 20pt; }"));
+        auto* controls = new QHBoxLayout();
+        auto* previous = new QPushButton(QStringLiteral("Previous"), &dialog);
+        auto* next = new QPushButton(QStringLiteral("Next"), &dialog);
+        auto* close = new QPushButton(QStringLiteral("End Show"), &dialog);
+        controls->addWidget(previous);
+        controls->addWidget(next);
+        controls->addStretch();
+        controls->addWidget(close);
+        layout->addWidget(page, 1);
+        layout->addLayout(controls);
+        int index = qBound(0, m_document->currentSlide(), m_document->slideCount() - 1);
+        auto render = [&]() {
+            const auto& slide = m_document->slide(index);
+            page->setHtml(QStringLiteral("<h1 style='font-size:32pt'>%1</h1>%2")
+                .arg(slide.title.toHtmlEscaped(), slide.body));
+            dialog.setWindowTitle(QStringLiteral("Slide %1 of %2").arg(index + 1).arg(m_document->slideCount()));
+            previous->setEnabled(index > 0);
+            next->setEnabled(index + 1 < m_document->slideCount());
+        };
+        QObject::connect(previous, &QPushButton::clicked, [&]() { if (index > 0) { --index; render(); } });
+        QObject::connect(next, &QPushButton::clicked, [&]() { if (index + 1 < m_document->slideCount()) { ++index; render(); } });
+        QObject::connect(close, &QPushButton::clicked, &dialog, &QDialog::accept);
+        render();
+        dialog.exec();
+    });
     add("Rehearse Timings");
     add("Slide Transition");
     add("Hide Slide");
