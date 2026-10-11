@@ -134,14 +134,16 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
     add_custom_command(
         TARGET blastmaster_setup
         POST_BUILD
-        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
-            --no-translations
-            --dir "${BLASTMASTER_SETUP_PAYLOAD}/common"
-            "$<TARGET_FILE:blastmaster_uninstaller>"
-        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
-            --no-translations
-            --dir "${BLASTMASTER_SETUP_PAYLOAD}/common"
-            "$<TARGET_FILE:blastmaster_help_launcher>"
+        COMMAND "${POWERSHELL_EXECUTABLE}"
+            -NoProfile -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/common/Uninstall$<TARGET_FILE_SUFFIX:blastmaster_uninstaller>"
+            -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
+        COMMAND "${POWERSHELL_EXECUTABLE}"
+            -NoProfile -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/common/BlastmasterHelp$<TARGET_FILE_SUFFIX:blastmaster_help_launcher>"
+            -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
         VERBATIM
     )
 endif()
@@ -149,18 +151,21 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
     add_custom_command(
         TARGET blastmaster_setup
         POST_BUILD
-        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
-            --no-translations
-            --dir "${BLASTMASTER_SETUP_PAYLOAD}/standard"
-            "$<TARGET_FILE:blastmaster_docs>"
-        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
-            --no-translations
-            --dir "${BLASTMASTER_SETUP_PAYLOAD}/standard"
-            "$<TARGET_FILE:blastmaster_workbook>"
-        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
-            --no-translations
-            --dir "${BLASTMASTER_SETUP_PAYLOAD}/standard"
-            "$<TARGET_FILE:blastmaster_presentation>"
+        COMMAND "${POWERSHELL_EXECUTABLE}"
+            -NoProfile -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_docs$<TARGET_FILE_SUFFIX:blastmaster_docs>"
+            -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
+        COMMAND "${POWERSHELL_EXECUTABLE}"
+            -NoProfile -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_workbook$<TARGET_FILE_SUFFIX:blastmaster_workbook>"
+            -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
+        COMMAND "${POWERSHELL_EXECUTABLE}"
+            -NoProfile -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_presentations$<TARGET_FILE_SUFFIX:blastmaster_presentation>"
+            -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
         VERBATIM
     )
 endif()
@@ -182,10 +187,11 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE AND BLASTMASTER_BUILD_PROFESSIONAL)
     add_custom_command(
         TARGET blastmaster_setup
         POST_BUILD
-        COMMAND "${WINDEPLOYQT_EXECUTABLE}"
-            --no-translations
-            --dir "${BLASTMASTER_SETUP_PAYLOAD}/professional"
-            "$<TARGET_FILE:blastmaster_database>"
+        COMMAND "${POWERSHELL_EXECUTABLE}"
+            -NoProfile -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/professional/blastmaster_database$<TARGET_FILE_SUFFIX:blastmaster_database>"
+            -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
         VERBATIM
     )
 endif()
