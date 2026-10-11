@@ -108,7 +108,11 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E make_directory
         "${BLASTMASTER_SETUP_PAYLOAD}/common"
     COMMAND ${CMAKE_COMMAND} -E make_directory
-        "${BLASTMASTER_SETUP_PAYLOAD}/standard"
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/Docs"
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/Workbooks"
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/Presentations"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:blastmaster_uninstaller>"
         "${BLASTMASTER_SETUP_PAYLOAD}/common/Uninstall$<TARGET_FILE_SUFFIX:blastmaster_uninstaller>"
@@ -120,13 +124,13 @@ add_custom_command(
         "${BLASTMASTER_SETUP_PAYLOAD}/common/blastmaster_suite_setup.svg"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:blastmaster_docs>"
-        "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_docs$<TARGET_FILE_SUFFIX:blastmaster_docs>"
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/Docs/blastmaster_docs$<TARGET_FILE_SUFFIX:blastmaster_docs>"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:blastmaster_workbook>"
-        "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_workbook$<TARGET_FILE_SUFFIX:blastmaster_workbook>"
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/Workbooks/blastmaster_workbook$<TARGET_FILE_SUFFIX:blastmaster_workbook>"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:blastmaster_presentation>"
-        "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_presentations$<TARGET_FILE_SUFFIX:blastmaster_presentation>"
+        "${BLASTMASTER_SETUP_PAYLOAD}/standard/Presentations/blastmaster_presentations$<TARGET_FILE_SUFFIX:blastmaster_presentation>"
     VERBATIM
 )
 
@@ -154,17 +158,17 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
         COMMAND "${POWERSHELL_EXECUTABLE}"
             -NoProfile -ExecutionPolicy Bypass
             -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
-            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_docs$<TARGET_FILE_SUFFIX:blastmaster_docs>"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/standard/Docs/blastmaster_docs$<TARGET_FILE_SUFFIX:blastmaster_docs>"
             -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
         COMMAND "${POWERSHELL_EXECUTABLE}"
             -NoProfile -ExecutionPolicy Bypass
             -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
-            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_workbook$<TARGET_FILE_SUFFIX:blastmaster_workbook>"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/standard/Workbooks/blastmaster_workbook$<TARGET_FILE_SUFFIX:blastmaster_workbook>"
             -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
         COMMAND "${POWERSHELL_EXECUTABLE}"
             -NoProfile -ExecutionPolicy Bypass
             -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
-            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/standard/blastmaster_presentations$<TARGET_FILE_SUFFIX:blastmaster_presentation>"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/standard/Presentations/blastmaster_presentations$<TARGET_FILE_SUFFIX:blastmaster_presentation>"
             -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
         VERBATIM
     )
@@ -175,10 +179,10 @@ if(BLASTMASTER_BUILD_PROFESSIONAL)
         TARGET blastmaster_setup
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory
-            "${BLASTMASTER_SETUP_PAYLOAD}/professional"
+            "${BLASTMASTER_SETUP_PAYLOAD}/professional/Databases"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "$<TARGET_FILE:blastmaster_database>"
-            "${BLASTMASTER_SETUP_PAYLOAD}/professional/blastmaster_database$<TARGET_FILE_SUFFIX:blastmaster_database>"
+            "${BLASTMASTER_SETUP_PAYLOAD}/professional/Databases/blastmaster_database$<TARGET_FILE_SUFFIX:blastmaster_database>"
         VERBATIM
     )
 endif()
@@ -190,7 +194,7 @@ if(WIN32 AND WINDEPLOYQT_EXECUTABLE AND BLASTMASTER_BUILD_PROFESSIONAL)
         COMMAND "${POWERSHELL_EXECUTABLE}"
             -NoProfile -ExecutionPolicy Bypass
             -File "${CMAKE_CURRENT_SOURCE_DIR}/../apps/DeployAppRuntime.ps1"
-            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/professional/blastmaster_database$<TARGET_FILE_SUFFIX:blastmaster_database>"
+            -AppExe "${BLASTMASTER_SETUP_PAYLOAD}/professional/Databases/blastmaster_database$<TARGET_FILE_SUFFIX:blastmaster_database>"
             -WinDeployQt "${WINDEPLOYQT_EXECUTABLE}"
         VERBATIM
     )
