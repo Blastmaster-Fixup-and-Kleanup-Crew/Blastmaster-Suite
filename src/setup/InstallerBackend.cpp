@@ -9,6 +9,7 @@
 #include <QSaveFile>
 #include <QSettings>
 #include <QTextStream>
+#include <functional>
 #include <utility>
 
 namespace
@@ -38,7 +39,8 @@ InstallerBackend::InstallerBackend(QString payloadRoot)
 InstallerBackend::Result InstallerBackend::install(
     blastmaster::Edition edition,
     const QString& destination,
-    const QString& productKey) const
+    const QString& productKey,
+    const std::function<void(int, const QString&)>& progress) const
 {
     Result result;
 
@@ -215,18 +217,18 @@ InstallerBackend::Result InstallerBackend::install(
     // For an upgrade/reinstall, restore the old tree first. This preserves
     // user-created files while the new application payload overlays it.
     if (isUpgrade && backedUpExisting &&
-        !copyTree(backupDestination, cleanDestination, createdFiles, error))
+        !copyTree(backupDestination, cleanDestination, createdFiles, error, progress))
         return fail(QStringLiteral("Could not prepare the existing installation for upgrade:\n%1").arg(error));
 
     if (QDir(commonPayload).exists() &&
-        !copyTree(commonPayload, cleanDestination, createdFiles, error))
+        !copyTree(commonPayload, cleanDestination, createdFiles, error, progress))
         return fail(error);
 
-    if (!copyTree(standardPayload, cleanDestination, createdFiles, error))
+    if (!copyTree(standardPayload, cleanDestination, createdFiles, error, progress))
         return fail(error);
 
     if (edition == blastmaster::Edition::Professional &&
-        !copyTree(professionalPayload, cleanDestination, createdFiles, error))
+        !copyTree(professionalPayload, cleanDestination, createdFiles, error, progress))
         return fail(error);
 
     if (!writeActivation(cleanDestination, edition, productKey, createdFiles, error))
@@ -252,7 +254,8 @@ bool InstallerBackend::copyTree(
     const QString& source,
     const QString& destination,
     QStringList& createdFiles,
-    QString& error) const
+    QString& error,
+    const std::function<void(int, const QString&)>& progress) const
 {
     QDir sourceDir(source);
     if (!sourceDir.exists())
@@ -260,6 +263,18 @@ bool InstallerBackend::copyTree(
         error = QStringLiteral("Installer payload folder does not exist:\n%1").arg(source);
         return false;
     }
+
+    // Count files first so the UI can report real copy progress instead of
+    // jumping from a fixed percentage straight to completion.
+    int totalFiles = 0;
+    QDirIterator countIterator(source, QDir::Files, QDirIterator::Subdirectories);
+    while (countIterator.hasNext()) {
+        countIterator.next();
+        ++totalFiles;
+    }
+    int copiedFiles = 0;
+    if (progress)
+        progress(0, QStringLiteral("Preparing files from %1").arg(sourceDir.dirName()));
 
     QDirIterator iterator(
         source, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot,
@@ -303,6 +318,11 @@ bool InstallerBackend::copyTree(
         }
 
         createdFiles.append(destinationPath);
+        ++copiedFiles;
+        if (progress) {
+            const int percent = totalFiles > 0 ? (copiedFiles * 100 / totalFiles) : 100;
+            progress(percent, QStringLiteral("Copying %1").arg(relativePath));
+        }
     }
 
     return true;
