@@ -57,3 +57,25 @@ If a formula does not calculate as expected, check cell references and the formu
 If data appears incorrectly, check the cell formatting and column width.
 
 Save before making large changes so that the previous saved version remains available.
+
+## Classic Workbooks workflow
+
+### Workbook and worksheet basics
+Create or open a `.wkbx` workbook, select a cell, and enter text, numbers, dates, or a formula. Save before bulk edits, sorting, or filtering. Use Save As when you need a separate working copy.
+
+### Entering formulas
+A formula uses cell references and an expression to calculate a result. After changing an input cell, check that dependent results update. If a formula is shown as text or returns an unexpected result, check the formula prefix, cell references, and the cell's number format. Do not assume every Excel-era function is implemented.
+
+### Sorting and filtering data
+Before sorting, select the intended data range and ensure each column has a clear heading. Confirm that whole rows stay together after sorting. Apply a filter only after checking the header row and verify that hidden rows are not mistaken for deleted data. Save a copy before reorganizing important data.
+
+### Formatting and print layout
+Use number formats for dates and numeric values, and adjust column width if values appear truncated. In Print Preview, check scaling, orientation, and page boundaries before printing.
+
+### Troubleshooting
+- **A result does not update:** re-enter or inspect the formula and confirm referenced cells contain the expected values.
+- **Numbers look wrong:** inspect the number format before changing the underlying value.
+- **Rows appear missing:** clear filters and inspect the complete range.
+- **The workbook will not reopen:** keep a backup and report the exact error message.
+
+Menu labels document the intended workflow; feature availability depends on the current build and should be verified before relying on it.
