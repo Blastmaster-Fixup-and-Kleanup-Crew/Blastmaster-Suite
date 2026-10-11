@@ -340,7 +340,7 @@ QWizardPage* SetupWizard::createInstallPage()
     connect(page, &QWizardPage::initializePage, this, [this, label]()
     {
         installSucceeded_ = false;
-        progressBar_->setValue(5);
+        progressBar_->setValue(0);
         label->setText(tr("Preparing to install Blastmaster Suite..."));
         QApplication::processEvents();
 
@@ -353,11 +353,8 @@ QWizardPage* SetupWizard::createInstallPage()
             detectedEdition_, destinationEdit_->text(), productKeyEdit_->text(),
             [this, label](int percent, const QString& status)
             {
-                // Keep the visible indicator moving while files are copied.
-                // Each payload group reports its own percentage; never move
-                // the overall bar backwards when the next group starts.
-                const int overall = 10 + (percent * 80 / 100);
-                progressBar_->setValue(qMax(progressBar_->value(), overall));
+                // Each payload group reports its own real file-copy percentage.
+                progressBar_->setValue(percent);
                 label->setText(status);
                 QApplication::processEvents();
             });
