@@ -4,6 +4,7 @@
 
 #include <QString>
 #include <QStringList>
+#include <functional>
 
 class InstallerBackend
 {
@@ -20,14 +21,16 @@ public:
     Result install(
         blastmaster::Edition edition,
         const QString& destination,
-        const QString& productKey) const;
+        const QString& productKey,
+        const std::function<void(int, const QString&)>& progress = {}) const;
 
 private:
     bool copyTree(
         const QString& source,
         const QString& destination,
         QStringList& createdFiles,
-        QString& error) const;
+        QString& error,
+        const std::function<void(int, const QString&)>& progress) const;
 
     bool restoreUnmanagedFiles(
         const QString& backupRoot,
