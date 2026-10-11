@@ -20,6 +20,14 @@ The following partial implementations have been committed. These are **not marke
 
 **Not yet verified:** clean compilation, actual Windows UI behavior, data-preserving sorting and filtering, printer behavior, all other menu/toolbar actions, DLL closure on a clean machine, and both edition installers. Do not infer feature completion from this progress list.
 
+## Help system
+
+- [x] Presentation help Markdown is included by `src/common/help.qrc` as `:/help/presentations.md`; verify the rebuilt executable displays it at runtime.
+- [x] Help Topics window has a classic gray-and-navy Blastmaster-branded layout, topic search, keyboard focus order, and a status line.
+- [x] Presentations Help menu uses Blastmaster branding rather than Microsoft product/support labels.
+- [ ] Rebuild and verify all four applications load their bundled help, search filters correctly, and links navigate as expected.
+- [ ] Verify the help window on a standard DPI and high-DPI Windows display, including keyboard-only operation.
+
 ## Shared desktop behavior
 
 - [ ] Classic gray, square-corner controls, Windows-style menu bar, compact icons, and beveled buttons.
