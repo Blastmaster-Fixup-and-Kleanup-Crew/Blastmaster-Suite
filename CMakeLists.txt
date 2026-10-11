@@ -14,7 +14,7 @@ set(CMAKE_AUTOMOC ON)
 
 option(BLASTMASTER_BUILD_PROFESSIONAL "Build the Professional edition apps." ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Sql)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Sql PrintSupport)
 find_package(SQLite3 REQUIRED)
 
 add_subdirectory(src)
