@@ -454,7 +454,7 @@ void Word7MenuBar::createViewMenu()
         toggle->setCheckable(true);
         toggle->setChecked(toolbar->isVisible());
         QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
-        QObject::connect(toolbar, &QWidget::visibilityChanged, toggle, &QAction::setChecked);
+        QObject::connect(toolbar, &QToolBar::visibilityChanged, toggle, &QAction::setChecked);
     }
     add("Ruler");
     add("Header and Footer");
