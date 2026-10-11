@@ -19,6 +19,11 @@
 #include <QFont>
 #include <QFile>
 #include <QTextStream>
+#include <QPrinter>
+#include <QPrintDialog>
+#include <QPrintPreviewDialog>
+#include <QPageSetupDialog>
+#include <QTextDocument>
 
 namespace blastmaster::database {
 
@@ -28,6 +33,23 @@ static QAction* action(QObject* parent, const QString& text,
     auto* a = new QAction(text, parent);
     if (!shortcut.isEmpty()) a->setShortcut(shortcut);
     return a;
+}
+
+static QString tableAsHtml(DatabaseDocument* document, const QString& table)
+{
+    QString html = QStringLiteral("<!doctype html><html><head><meta charset=\\"utf-8\\"></head><body><h1>%1</h1><table border=\\"1\\" cellspacing=\\"0\\" cellpadding=\\"4\\"><thead><tr>")
+        .arg(table.toHtmlEscaped());
+    for (const QString& column : document->columns(table))
+        html += QStringLiteral("<th>%1</th>").arg(column.toHtmlEscaped());
+    html += QStringLiteral("</tr></thead><tbody>");
+    for (const QVariantList& row : document->records(table)) {
+        html += QStringLiteral("<tr>");
+        for (const QVariant& value : row)
+            html += QStringLiteral("<td>%1</td>").arg(value.toString().toHtmlEscaped());
+        html += QStringLiteral("</tr>");
+    }
+    html += QStringLiteral("</tbody></table></body></html>");
+    return html;
 }
 
 Access95MenuBar::Access95MenuBar(QMainWindow* parent, DatabaseDocument* document)
@@ -185,16 +207,45 @@ void Access95MenuBar::createFileMenu()
         m_parent->statusBar()->showMessage(QStringLiteral("Exported %1 to HTML.").arg(table), 3000);
     });
     QObject::connect(aPage, &QAction::triggered, [this] {
-        m_parent->statusBar()->showMessage(QStringLiteral("Page Setup is not implemented yet."), 3000);
+        QPrinter printer(QPrinter::HighResolution);
+        QPageSetupDialog dialog(&printer, m_parent);
+        dialog.exec();
     });
     QObject::connect(aPreview, &QAction::triggered, [this] {
-        m_parent->statusBar()->showMessage(QStringLiteral("Print Preview is not implemented yet."), 3000);
+        auto* selector = m_parent->findChild<QComboBox*>();
+        const QString table = selector ? selector->currentText() : QString();
+        if (table.isEmpty()) {
+            QMessageBox::information(m_parent, QStringLiteral("Print Preview"),
+                QStringLiteral("Select a table before previewing."));
+            return;
+        }
+        QPrinter printer(QPrinter::HighResolution);
+        QPrintPreviewDialog preview(&printer, m_parent);
+        QObject::connect(&preview, &QPrintPreviewDialog::paintRequested, [&printer, this, table](QPrinter* requestedPrinter) {
+            QTextDocument document;
+            document.setHtml(tableAsHtml(m_document, table));
+            document.print(requestedPrinter ? requestedPrinter : &printer);
+        });
+        preview.exec();
     });
     QObject::connect(aPrint, &QAction::triggered, [this] {
-        m_parent->statusBar()->showMessage(QStringLiteral("Printing is not implemented yet."), 3000);
+        auto* selector = m_parent->findChild<QComboBox*>();
+        const QString table = selector ? selector->currentText() : QString();
+        if (table.isEmpty()) {
+            QMessageBox::information(m_parent, QStringLiteral("Print"),
+                QStringLiteral("Select a table before printing."));
+            return;
+        }
+        QPrinter printer(QPrinter::HighResolution);
+        QPrintDialog dialog(&printer, m_parent);
+        if (dialog.exec() != QDialog::Accepted) return;
+        QTextDocument document;
+        document.setHtml(tableAsHtml(m_document, table));
+        document.print(&printer);
     });
     QObject::connect(aSend, &QAction::triggered, [this] {
-        m_parent->statusBar()->showMessage(QStringLiteral("Send is not implemented yet."), 3000);
+        QMessageBox::information(m_parent, QStringLiteral("Send"),
+            QStringLiteral("Export the selected table to HTML or print it to share a copy."));
     });
 }
 
