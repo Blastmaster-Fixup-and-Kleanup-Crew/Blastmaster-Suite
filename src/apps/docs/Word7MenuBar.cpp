@@ -23,6 +23,10 @@
 #include <QTextTable>
 #include <QTextTableFormat>
 #include <QLineEdit>
+#include <QPrinter>
+#include <QPrintDialog>
+#include <QPrintPreviewDialog>
+#include <QPageSetupDialog>
 
 namespace blastmaster::docs {
 
@@ -219,10 +223,41 @@ void Word7MenuBar::createFileMenu()
 
     add("&Version");
     add("Find File");
-    add("Page Setup");
-    add("Print Preview");
-    add("Print");
-    add("Send");
+    auto* pageSetup = addMenuAction(m_fileMenu, QStringLiteral("Page Setup"),
+        QStringLiteral("Configure page size and margins"));
+    QObject::connect(pageSetup, &QAction::triggered, [this]() {
+        QPrinter printer(QPrinter::HighResolution);
+        QPageSetupDialog dialog(&printer, m_parent);
+        dialog.exec();
+    });
+    auto* preview = addMenuAction(m_fileMenu, QStringLiteral("Print Preview"),
+        QStringLiteral("Preview the current document before printing"));
+    QObject::connect(preview, &QAction::triggered, [this]() {
+        auto* editor = m_parent->findChild<QTextEdit*>(QStringLiteral("documentEditor"));
+        if (!editor) return;
+        QPrinter printer(QPrinter::HighResolution);
+        QPrintPreviewDialog dialog(&printer, m_parent);
+        QObject::connect(&dialog, &QPrintPreviewDialog::paintRequested,
+            [editor](QPrinter* requestedPrinter) { editor->print(requestedPrinter); });
+        dialog.exec();
+    });
+    auto* print = addMenuAction(m_fileMenu, QStringLiteral("Print"),
+        QStringLiteral("Print the current document"));
+    QObject::connect(print, &QAction::triggered, [this]() {
+        auto* editor = m_parent->findChild<QTextEdit*>(QStringLiteral("documentEditor"));
+        if (!editor) return;
+        QPrinter printer(QPrinter::HighResolution);
+        QPrintDialog dialog(&printer, m_parent);
+        if (dialog.exec() == QDialog::Accepted) editor->print(&printer);
+    });
+    auto* send = addMenuAction(m_fileMenu, QStringLiteral("Send"),
+        QStringLiteral("Share a copy of the current document"));
+    QObject::connect(send, &QAction::triggered, [this]() {
+        onFileSave();
+        if (!m_document->filePath().isEmpty())
+            m_parent->statusBar()->showMessage(
+                QStringLiteral("Saved a copy-ready document: %1").arg(m_document->filePath()), 3500);
+    });
     add("Properties");
 
     m_fileMenu->addSeparator();
