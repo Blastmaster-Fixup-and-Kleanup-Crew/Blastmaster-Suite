@@ -288,14 +288,14 @@ void Access95MenuBar::createViewMenu()
     m_viewMenu->addSeparator();
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Sorting...")));
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Filtering...")));
-    auto* toolbarsAction = action(m_parent, QStringLiteral("&Toolbars..."));
-    QObject::connect(toolbarsAction, &QAction::triggered, [this]() {
-        const auto toolbars = m_parent->findChildren<QToolBar*>();
-        bool anyVisible = false;
-        for (QToolBar* toolbar : toolbars) anyVisible = anyVisible || toolbar->isVisible();
-        for (QToolBar* toolbar : toolbars) toolbar->setVisible(!anyVisible);
-    });
-    m_viewMenu->addAction(toolbarsAction);
+    auto* toolbarsMenu = m_viewMenu->addMenu(QStringLiteral("Toolbars"));
+    for (QToolBar* toolbar : m_parent->findChildren<QToolBar*>()) {
+        auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
+        toggle->setCheckable(true);
+        toggle->setChecked(toolbar->isVisible());
+        QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
+        QObject::connect(toolbar, &QWidget::visibilityChanged, toggle, &QAction::setChecked);
+    }
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Ruler")));
     m_viewMenu->addAction(action(m_parent, QStringLiteral("&Grid")));
 }
