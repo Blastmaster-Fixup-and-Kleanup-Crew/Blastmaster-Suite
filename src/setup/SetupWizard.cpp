@@ -340,8 +340,8 @@ QWizardPage* SetupWizard::createInstallPage()
     connect(page, &QWizardPage::initializePage, this, [this, label]()
     {
         installSucceeded_ = false;
-        progressBar_->setValue(10);
-        label->setText(tr("Installing Blastmaster Suite..."));
+        progressBar_->setValue(5);
+        label->setText(tr("Preparing to install Blastmaster Suite..."));
         QApplication::processEvents();
 
         QString payloadRoot = qEnvironmentVariable("BLASTMASTER_SETUP_PAYLOAD");
@@ -350,7 +350,17 @@ QWizardPage* SetupWizard::createInstallPage()
 
         InstallerBackend installer(payloadRoot);
         const auto result = installer.install(
-            detectedEdition_, destinationEdit_->text(), productKeyEdit_->text());
+            detectedEdition_, destinationEdit_->text(), productKeyEdit_->text(),
+            [this, label](int percent, const QString& status)
+            {
+                // Keep the visible indicator moving while files are copied.
+                // Each payload group reports its own percentage; never move
+                // the overall bar backwards when the next group starts.
+                const int overall = 10 + (percent * 80 / 100);
+                progressBar_->setValue(qMax(progressBar_->value(), overall));
+                label->setText(status);
+                QApplication::processEvents();
+            });
 
         if (!result.success)
         {
