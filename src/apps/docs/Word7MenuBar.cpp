@@ -449,13 +449,24 @@ void Word7MenuBar::createViewMenu()
     add("Outline");
     add("Master Document");
     auto* toolbarsMenu = m_viewMenu->addMenu(QStringLiteral("Toolbars"));
-    for (QToolBar* toolbar : m_parent->findChildren<QToolBar*>()) {
-        auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
-        toggle->setCheckable(true);
-        toggle->setChecked(toolbar->isVisible());
-        QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
-        QObject::connect(toolbar, &QToolBar::visibilityChanged, toggle, &QAction::setChecked);
-    }
+    // Toolbars are created after the menu bar constructor calls createViewMenu(),
+    // so populate this submenu when it opens rather than during initialization.
+    QObject::connect(toolbarsMenu, &QMenu::aboutToShow, [this, toolbarsMenu]() {
+        toolbarsMenu->clear();
+        const auto toolbars = m_parent->findChildren<QToolBar*>();
+        if (toolbars.isEmpty()) {
+            auto* empty = toolbarsMenu->addAction(QStringLiteral("(No toolbars available)"));
+            empty->setEnabled(false);
+            return;
+        }
+        for (QToolBar* toolbar : toolbars) {
+            auto* toggle = toolbarsMenu->addAction(toolbar->windowTitle());
+            toggle->setCheckable(true);
+            toggle->setChecked(!toolbar->isHidden());
+            QObject::connect(toggle, &QAction::toggled, toolbar, &QWidget::setVisible);
+            QObject::connect(toolbar, &QToolBar::visibilityChanged, toggle, &QAction::setChecked);
+        }
+    });
     add("Ruler");
     add("Header and Footer");
     add("Footnotes");
@@ -667,7 +678,8 @@ void Word7MenuBar::createToolbars()
     addStandard("Redo");
     addStandard("Spelling");
     addStandard("Format Painter");
-    m_parent->addToolBar(standard);
+    m_parent->addToolBar(Qt::TopToolBarArea, standard);
+    standard->show();
 
     m_parent->addToolBarBreak();
 
@@ -717,7 +729,8 @@ void Word7MenuBar::createToolbars()
     addFormatting("Justify");
     addFormatting("Bullets");
     addFormatting("Indent");
-    m_parent->addToolBar(formatting);
+    m_parent->addToolBar(Qt::TopToolBarArea, formatting);
+    formatting->show();
 
     auto* drawing = new QToolBar("Drawing", m_parent);
     drawing->setObjectName("word95_drawing_toolbar");
