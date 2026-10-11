@@ -394,6 +394,7 @@ void PowerPoint7MenuBar::createEditMenu()
     QObject::connect(deleteSlide, &QAction::triggered, [this]() {
         m_document->removeSlide(m_document->currentSlide());
         m_parent->statusBar()->showMessage("Slide deleted", 2000);
+        if (m_documentLoadedCallback) m_documentLoadedCallback();
     });
     add("Find");
     add("Replace");
@@ -437,6 +438,7 @@ void PowerPoint7MenuBar::createInsertMenu()
     QObject::connect(newSlide, &QAction::triggered, [this]() {
         m_document->addSlide();
         m_parent->statusBar()->showMessage("New slide inserted", 2000);
+        if (m_documentLoadedCallback) m_documentLoadedCallback();
     });
     auto* duplicate = addMenuAction(m_insertMenu, "Duplicate Slide", "Duplicate the current slide");
     QObject::connect(duplicate, &QAction::triggered, [this]() {
@@ -444,6 +446,7 @@ void PowerPoint7MenuBar::createInsertMenu()
             const auto& source = m_document->slide(m_document->currentSlide());
             m_document->addSlide(source.title + " Copy", source.body);
             m_parent->statusBar()->showMessage("Slide duplicated", 2000);
+            if (m_documentLoadedCallback) m_documentLoadedCallback();
         }
     });
     add("Slide Numbers");
