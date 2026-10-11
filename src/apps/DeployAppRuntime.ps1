@@ -45,7 +45,10 @@ foreach ($dllName in @(
     "libbz2-1.dll",
     "libglib-2.0-0.dll",
     "libgraphite2.dll",
-    "libbritlicommon.dll"
+    "libbrotlicommon.dll",
+    "libbz2-1.dll",
+    "libglib-2.0-0.dll",
+    "libgraphite2.dll"
 )) {
     $source = Join-Path $qtBinDir $dllName
     $destination = Join-Path $appDir $dllName
