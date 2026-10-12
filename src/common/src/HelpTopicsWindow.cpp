@@ -192,6 +192,8 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
                        "table { border-collapse: collapse; }"
                        "th, td { border: 1px solid #808080; padding: 4px 7px; }"));
 
+    auto* content = new QHBoxLayout();
+    content->setSpacing(8);
     content->addWidget(m_topicList);
     content->addWidget(m_topicView, 1);
     layout->addLayout(content, 1);
