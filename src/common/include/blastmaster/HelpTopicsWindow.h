@@ -3,6 +3,7 @@
 #include <QDialog>
 #include <QString>
 #include <QUrl>
+#include <QVector>
 
 class QListWidget;
 class QTextBrowser;
@@ -23,12 +24,16 @@ private:
     void filterTopics(const QString& text);
     void showCurrentTopic();
     void activateTopicLink(const QUrl& url);
+    void navigateHistory(int offset);
 
     QString m_applicationId;
     QListWidget* m_topicList;
     QTextBrowser* m_topicView;
     QLineEdit* m_searchEdit;
     QLabel* m_statusLabel;
+    QVector<int> m_topicHistory;
+    int m_historyPosition = -1;
+    bool m_navigatingHistory = false;
 };
 
 } // namespace blastmaster
