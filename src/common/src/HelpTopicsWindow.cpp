@@ -230,24 +230,10 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
         m_searchEdit->selectAll();
     });
     QObject::connect(backButton, &QPushButton::clicked, this, [this]() {
-        const int row = m_topicList->currentRow();
-        if (row > 0) {
-            for (int i = row - 1; i >= 0; --i) {
-                if (!m_topicList->item(i)->isHidden()) {
-                    m_topicList->setCurrentRow(i);
-                    break;
-                }
-            }
-        }
+        navigateHistory(-1);
     });
     QObject::connect(forwardButton, &QPushButton::clicked, this, [this]() {
-        const int row = m_topicList->currentRow();
-        for (int i = row + 1; i < m_topicList->count(); ++i) {
-            if (!m_topicList->item(i)->isHidden()) {
-                m_topicList->setCurrentRow(i);
-                break;
-            }
-        }
+        navigateHistory(1);
     });
     QObject::connect(m_searchEdit, &QLineEdit::textChanged,
                      this, &HelpTopicsWindow::filterTopics);
@@ -324,11 +310,40 @@ void HelpTopicsWindow::showCurrentTopic()
         return;
     }
 
+    const int row = m_topicList->row(current);
+    if (!m_navigatingHistory) {
+        if (m_historyPosition >= 0 && m_historyPosition < m_topicHistory.size() - 1) {
+            m_topicHistory.resize(m_historyPosition + 1);
+        }
+        if (m_topicHistory.isEmpty() || m_topicHistory.last() != row) {
+            m_topicHistory.push_back(row);
+        }
+        m_historyPosition = m_topicHistory.size() - 1;
+    }
+
     const QString resource = current->data(Qt::UserRole).toString();
     m_topicView->document()->setMarkdown(loadMarkdown(resource));
     m_topicView->document()->setBaseUrl(QUrl(QStringLiteral("qrc:/help/")));
     m_topicView->setAccessibleDescription(current->text());
     m_statusLabel->setText(tr("Viewing: %1").arg(current->text()));
+}
+
+void HelpTopicsWindow::navigateHistory(int offset)
+{
+    const int target = m_historyPosition + offset;
+    if (target < 0 || target >= m_topicHistory.size()) {
+        return;
+    }
+
+    const int row = m_topicHistory.at(target);
+    if (row < 0 || row >= m_topicList->count() || m_topicList->item(row)->isHidden()) {
+        return;
+    }
+
+    m_historyPosition = target;
+    m_navigatingHistory = true;
+    m_topicList->setCurrentRow(row);
+    m_navigatingHistory = false;
 }
 
 void HelpTopicsWindow::activateTopicLink(const QUrl& url)
