@@ -26,7 +26,9 @@ The following partial implementations have been committed. These are **not marke
 - [x] Help Topics window has a classic gray-and-navy Blastmaster-branded layout, topic search, keyboard focus order, and a status line.
 - [x] Presentations Help menu uses Blastmaster branding rather than Microsoft product/support labels.
 - [ ] Rebuild and verify all four applications load their bundled help, search filters correctly, and links navigate as expected.
+- [x] Help Topics Back/Forward now follows actual topic-selection history and disables each button when that direction is unavailable; runtime validation is still required.
 - [ ] Verify the help window on a standard DPI and high-DPI Windows display, including keyboard-only operation.
+- [ ] Add section-level navigation within long application guides so each guide heading can be selected from the topic list.
 
 ## Shared desktop behavior
 
