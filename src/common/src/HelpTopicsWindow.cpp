@@ -155,15 +155,17 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
     contentsButton->setToolTip(tr("Show all help topics"));
     auto* indexButton = new QPushButton(tr("&Index"), this);
     indexButton->setToolTip(tr("Find topics by keyword"));
-    auto* backButton = new QPushButton(tr("< &Back"), this);
-    backButton->setToolTip(tr("Return to the previously selected topic"));
-    auto* forwardButton = new QPushButton(tr("&Forward >"), this);
-    forwardButton->setToolTip(tr("Move to the next topic in the list"));
+    m_backButton = new QPushButton(tr("< &Back"), this);
+    m_backButton->setToolTip(tr("Return to the previously viewed topic"));
+    m_forwardButton = new QPushButton(tr("&Forward >"), this);
+    m_forwardButton->setToolTip(tr("Return to the next topic in browsing history"));
+    m_backButton->setEnabled(false);
+    m_forwardButton->setEnabled(false);
     navigationRow->addWidget(contentsButton);
     navigationRow->addWidget(indexButton);
     navigationRow->addStretch(1);
-    navigationRow->addWidget(backButton);
-    navigationRow->addWidget(forwardButton);
+    navigationRow->addWidget(m_backButton);
+    navigationRow->addWidget(m_forwardButton);
     layout->addLayout(navigationRow);
 
     auto* searchRow = new QHBoxLayout();
@@ -229,10 +231,10 @@ HelpTopicsWindow::HelpTopicsWindow(QWidget* parent, const QString& applicationId
         m_searchEdit->setFocus();
         m_searchEdit->selectAll();
     });
-    QObject::connect(backButton, &QPushButton::clicked, this, [this]() {
+    QObject::connect(m_backButton, &QPushButton::clicked, this, [this]() {
         navigateHistory(-1);
     });
-    QObject::connect(forwardButton, &QPushButton::clicked, this, [this]() {
+    QObject::connect(m_forwardButton, &QPushButton::clicked, this, [this]() {
         navigateHistory(1);
     });
     QObject::connect(m_searchEdit, &QLineEdit::textChanged,
@@ -326,6 +328,7 @@ void HelpTopicsWindow::showCurrentTopic()
     m_topicView->document()->setBaseUrl(QUrl(QStringLiteral("qrc:/help/")));
     m_topicView->setAccessibleDescription(current->text());
     m_statusLabel->setText(tr("Viewing: %1").arg(current->text()));
+    updateNavigationButtons();
 }
 
 void HelpTopicsWindow::navigateHistory(int offset)
@@ -344,6 +347,18 @@ void HelpTopicsWindow::navigateHistory(int offset)
     m_navigatingHistory = true;
     m_topicList->setCurrentRow(row);
     m_navigatingHistory = false;
+    updateNavigationButtons();
+}
+
+void HelpTopicsWindow::updateNavigationButtons()
+{
+    if (m_backButton) {
+        m_backButton->setEnabled(m_historyPosition > 0);
+    }
+    if (m_forwardButton) {
+        m_forwardButton->setEnabled(
+            m_historyPosition >= 0 && m_historyPosition < m_topicHistory.size() - 1);
+    }
 }
 
 void HelpTopicsWindow::activateTopicLink(const QUrl& url)
