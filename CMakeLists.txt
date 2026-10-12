@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Generate Qt meta-object code for classes using Q_OBJECT.
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 option(BLASTMASTER_BUILD_PROFESSIONAL "Build the Professional edition apps." ON)
 
