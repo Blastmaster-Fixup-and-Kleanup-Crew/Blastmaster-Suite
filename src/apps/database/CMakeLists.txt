@@ -7,8 +7,13 @@ add_executable(blastmaster_database
 )
 
 if(WIN32)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_database.rc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/blastmaster_database.rc"
+        @ONLY
+    )
     target_sources(blastmaster_database PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/blastmaster_database.rc")
+        "${CMAKE_CURRENT_BINARY_DIR}/blastmaster_database.rc")
     set_target_properties(blastmaster_database PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
