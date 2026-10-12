@@ -1,5 +1,6 @@
 add_executable(blastmaster_database
     main.cpp
+    database_icons.qrc
     Access95MenuBar.cpp
     DatabaseDocument.cpp
     DatabaseDocument.h
