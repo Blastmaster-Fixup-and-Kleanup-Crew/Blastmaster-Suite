@@ -12,6 +12,9 @@
 #include <QHBoxLayout>
 #include <QWidget>
 
+// Ensure the application icon resource is registered before QIcon loads it.
+Q_INIT_RESOURCE(database_icons);
+
 #include "../Office95Style.h"
 #include "Access95MenuBar.h"
 #include "DatabaseDocument.h"
