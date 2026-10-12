@@ -18,8 +18,6 @@
 #include "DatabaseDocument.h"
 
 int main(int argc, char* argv[]) {
-    // Ensure the application icon resource is registered before QIcon loads it.
-    Q_INIT_RESOURCE(database_icons);
     QApplication app(argc, argv);
     app.setApplicationName("Blastmaster Databases");
     const QIcon databasesIcon(QStringLiteral(":/icons/databases.ico"));
