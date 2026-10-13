@@ -101,7 +101,7 @@ void Access95MenuBar::createFileMenu()
                 QObject::connect(item, &QAction::triggered, [this, path] {
                     if (!m_document->openDatabase(path)) {
                         QMessageBox::critical(m_parent, QStringLiteral("Open Database"),
-                                              QStringLiteral("Failed to open database:\n%1").arg(path));
+                                              QStringLiteral("Could not open database:\n%1\n\n%2").arg(path, m_document->lastError()));
                         return;
                     }
                     blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
@@ -139,7 +139,7 @@ void Access95MenuBar::createFileMenu()
     QObject::connect(aOpen, &QAction::triggered, [this] {
         const QString path = QFileDialog::getOpenFileName(
             m_parent, QStringLiteral("Open Database"), QString(),
-            QStringLiteral("Blastmaster Databases (*.dbbx);;SQLite databases (*.db *.sqlite *.sqlite3);;All files (*.*)"));
+            QStringLiteral("Blastmaster Databases (*.dbbx);;SQLite databases (*.db *.sqlite *.sqlite3);;Access database files (*.mdb *.mda *.mde *.mdz);;All files (*.*)"));
         if (!path.isEmpty()) {
             if (m_document->openDatabase(path)) {
                 blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
@@ -147,7 +147,7 @@ void Access95MenuBar::createFileMenu()
                     m_parent->statusBar()->showMessage(QStringLiteral("Database opened: %1").arg(path), 2500);
             } else {
                 QMessageBox::critical(m_parent, QStringLiteral("Open Database"),
-                                      QStringLiteral("Failed to open database:\n%1").arg(path));
+                                      QStringLiteral("Could not open database:\n%1\n\n%2").arg(path, m_document->lastError()));
             }
         }
     });
@@ -156,19 +156,32 @@ void Access95MenuBar::createFileMenu()
             aSaveAs->trigger();
         } else if (m_document->saveDatabase()) {
             blastmaster::RecentFiles::add(QStringLiteral("databases"), m_document->filePath());
-            m_parent->statusBar()->showMessage(QStringLiteral("Database saved."), 2500);
+            if (m_parent->statusBar()) m_parent->statusBar()->showMessage(QStringLiteral("Database saved."), 2500);
+        } else {
+            QMessageBox::critical(m_parent, QStringLiteral("Save Database"), m_document->lastError());
         }
     });
     QObject::connect(aSaveAs, &QAction::triggered, [this] {
         const QString path = QFileDialog::getSaveFileName(
             m_parent, QStringLiteral("Save Database As"), QStringLiteral("Database.dbbx"),
             QStringLiteral("Blastmaster Databases (*.dbbx);;SQLite databases (*.db *.sqlite *.sqlite3);;All files (*.*)"));
-        if (!path.isEmpty() && m_document->saveDatabaseAs(path)) {
+        if (path.isEmpty()) return;
+        if (m_document->saveDatabaseAs(path)) {
             blastmaster::RecentFiles::add(QStringLiteral("databases"), path);
-            m_parent->statusBar()->showMessage(QStringLiteral("Database saved."), 2500);
+            if (m_parent->statusBar())
+                m_parent->statusBar()->showMessage(QStringLiteral("Database saved: %1").arg(path), 3000);
+        } else {
+            QMessageBox::critical(m_parent, QStringLiteral("Save Database"),
+                                  QStringLiteral("Could not save database:\n%1\n\n%2").arg(path, m_document->lastError()));
         }
     });
-    QObject::connect(aClose, &QAction::triggered, [this] { m_document->closeDatabase(); });
+    QObject::connect(aClose, &QAction::triggered, [this] {
+        if (m_document->closeDatabase()) {
+            if (m_parent->statusBar()) m_parent->statusBar()->showMessage(QStringLiteral("Database closed."), 2500);
+        } else {
+            QMessageBox::critical(m_parent, QStringLiteral("Close Database"), m_document->lastError());
+        }
+    });
     QObject::connect(aExit, &QAction::triggered, qApp, &QApplication::quit);
     QObject::connect(aProperties, &QAction::triggered, [this] {
         QMessageBox::information(m_parent, QStringLiteral("Database Properties"),
