@@ -2,6 +2,7 @@
 #include <QIcon>
 #include <QHeaderView>
 #include <QInputDialog>
+#include <QFileInfo>
 #include <QMainWindow>
 #include <QPushButton>
 #include <QComboBox>
@@ -152,6 +153,9 @@ int main(int argc, char* argv[]) {
     QObject::connect(database, &blastmaster::database::DatabaseDocument::databaseChanged, [&]() {
         refreshTables();
         refreshRecords();
+        const QString path = database->filePath();
+        const QString documentName = path.isEmpty() ? QStringLiteral("Database1") : QFileInfo(path).fileName();
+        window.setWindowTitle(QStringLiteral("Blastmaster Databases - %1").arg(documentName));
     });
 
     refreshTables();
