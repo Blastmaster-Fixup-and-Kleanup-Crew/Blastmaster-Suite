@@ -101,6 +101,7 @@ void Excel7MenuBar::createFileMenu()
         });
     });
     m_fileMenu->addAction(aClose);
+    QObject::connect(aClose, &QAction::triggered, m_parent, &QWidget::close);
     m_fileMenu->addSeparator();
     m_fileMenu->addAction(aSave);
     m_fileMenu->addAction(aSaveAs);
