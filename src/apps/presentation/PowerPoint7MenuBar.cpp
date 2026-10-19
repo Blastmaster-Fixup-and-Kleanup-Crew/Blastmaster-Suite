@@ -254,7 +254,9 @@ void PowerPoint7MenuBar::createFileMenu()
         wireAction(action, text);
     };
 
-    add("&Close");
+    auto* closeAction = addMenuAction(m_fileMenu, "&Close", "Close this presentation");
+    closeAction->setShortcut(QKeySequence::Close);
+    QObject::connect(closeAction, &QAction::triggered, m_parent, &QWidget::close);
 
     auto* saveAction = addMenuAction(m_fileMenu, "&Save", "Save the current presentation");
     QObject::connect(saveAction, &QAction::triggered, [this]() { onFileSave(); });
