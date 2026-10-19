@@ -208,6 +208,11 @@ void Word7MenuBar::createFileMenu()
         }
     });
 
+    auto add = [this](const QString& text) {
+        QAction* action = addMenuAction(m_fileMenu, text, text + " command");
+        wireAction(action, text);
+    };
+
     auto* closeAction = addMenuAction(m_fileMenu, "&Close", "Close this document");
     closeAction->setShortcut(QKeySequence::Close);
     QObject::connect(closeAction, &QAction::triggered, m_parent, &QWidget::close);
