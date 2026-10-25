@@ -109,7 +109,8 @@ void Excel7MenuBar::createFileMenu()
         for (const QString& path : recent) {
             auto* item = recentMenu->addAction(QFileInfo(path).fileName());
             item->setToolTip(path);
-            QObject::connect(item, &QAction::triggered, [this, path]() {
+            QObject::connect(item, &QAction::triggered, [this, path, confirmReplace]() {
+                if (!confirmReplace()) return;
                 m_workbook->setFilePath(path);
                 if (!m_workbook->load()) {
                     if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Failed to open workbook", 3000);
@@ -145,13 +146,14 @@ void Excel7MenuBar::createFileMenu()
     m_fileMenu->addAction(aExit);
 
     // basic wiring
-    QObject::connect(aOpen, &QAction::triggered, [this]() {
+    QObject::connect(aOpen, &QAction::triggered, [this, confirmReplace]() {
         if (!m_workbook) return;
         QFileDialog dialog(m_parent, "Open Workbook", QString(), Workbook::fileFilter());
         dialog.setAcceptMode(QFileDialog::AcceptOpen);
         dialog.setDefaultSuffix(Workbook::fileExtension().mid(1));
         if (dialog.exec() != QDialog::Accepted || dialog.selectedFiles().isEmpty()) return;
         const QString path = dialog.selectedFiles().first();
+        if (!confirmReplace()) return;
         m_workbook->setFilePath(path);
         if (!m_workbook->load()) {
             QMessageBox::critical(m_parent, "Open Workbook", "Failed to open workbook:\n" + path);
