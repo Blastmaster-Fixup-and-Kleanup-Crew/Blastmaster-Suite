@@ -2,6 +2,7 @@
 #include "Workbook.h"
 #include "blastmaster/HelpTopicsWindow.h"
 #include "blastmaster/RecentFiles.h"
+#include "blastmaster/DocumentSwitchGuard.h"
 
 #include <QAction>
 #include <QApplication>
@@ -53,6 +54,33 @@ Excel7MenuBar::Excel7MenuBar(QMainWindow* parent, Workbook* workbook)
 void Excel7MenuBar::createFileMenu()
 {
     m_fileMenu = m_menuBar->addMenu("&File");
+
+    const auto confirmReplace = [this]() {
+        return blastmaster::ui::confirmDocumentReplacement(
+            m_parent, m_workbook && m_workbook->isDirty(), [this]() {
+                if (!m_workbook)
+                    return false;
+                if (m_workbook->filePath().isEmpty()) {
+                    QString path = QFileDialog::getSaveFileName(
+                        m_parent, QStringLiteral("Save Workbook As"), QString(),
+                        Workbook::fileFilter());
+                    if (path.isEmpty())
+                        return false;
+                    if (!path.endsWith(Workbook::fileExtension(), Qt::CaseInsensitive))
+                        path += Workbook::fileExtension();
+                    if (!m_workbook->saveAs(path)) {
+                        QMessageBox::critical(m_parent, QStringLiteral("Save Workbook"),
+                            QStringLiteral("Could not save the workbook to:\n%1").arg(path));
+                        return false;
+                    }
+                } else if (!m_workbook->save()) {
+                    QMessageBox::critical(m_parent, QStringLiteral("Save Workbook"),
+                        QStringLiteral("Could not save the workbook to:\n%1").arg(m_workbook->filePath()));
+                    return false;
+                }
+                return !m_workbook->isDirty();
+            });
+    };
 
     QAction* aNew = makeAction("&New", QKeySequence::New, m_parent);
     QAction* aOpen = makeAction("&Open...", QKeySequence::Open, m_parent);
