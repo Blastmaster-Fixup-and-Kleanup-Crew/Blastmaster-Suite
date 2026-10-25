@@ -2,6 +2,7 @@
 #include "PresentationDocument.h"
 #include "blastmaster/HelpTopicsWindow.h"
 #include "blastmaster/RecentFiles.h"
+#include "blastmaster/DocumentSwitchGuard.h"
 
 #include <QAction>
 #include <QApplication>
@@ -231,6 +232,12 @@ void PowerPoint7MenuBar::createFileMenu()
             auto* item = recentMenu->addAction(QFileInfo(path).fileName());
             item->setToolTip(path);
             QObject::connect(item, &QAction::triggered, [this, path]() {
+                if (!blastmaster::ui::confirmDocumentReplacement(
+                        m_parent, m_document->isDirty(), [this]() {
+                            onFileSave();
+                            return !m_document->isDirty();
+                        }))
+                    return;
                 m_document->setFilePath(path);
                 if (!m_document->load()) {
                     QMessageBox::critical(m_parent, "Error", "Failed to open presentation: " + path);
@@ -311,6 +318,12 @@ void PowerPoint7MenuBar::onFileOpen()
     }
 
     QString filePath = dialog.selectedFiles().first();
+    if (!blastmaster::ui::confirmDocumentReplacement(
+            m_parent, m_document->isDirty(), [this]() {
+                onFileSave();
+                return !m_document->isDirty();
+            }))
+        return;
     m_document->setFilePath(filePath);
     if (!m_document->load()) {
         QMessageBox::critical(m_parent, "Error", "Failed to open presentation: " + filePath);
