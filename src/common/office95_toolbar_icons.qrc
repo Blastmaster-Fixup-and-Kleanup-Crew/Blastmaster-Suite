@@ -1,0 +1,27 @@
+<RCC>
+  <qresource prefix="/office95">
+    <file alias="new.svg">icons/toolbar/new.svg</file>
+    <file alias="open.svg">icons/toolbar/open.svg</file>
+    <file alias="save.svg">icons/toolbar/save.svg</file>
+    <file alias="print.svg">icons/toolbar/print.svg</file>
+    <file alias="cut.svg">icons/toolbar/cut.svg</file>
+    <file alias="copy.svg">icons/toolbar/copy.svg</file>
+    <file alias="paste.svg">icons/toolbar/paste.svg</file>
+    <file alias="undo.svg">icons/toolbar/undo.svg</file>
+    <file alias="redo.svg">icons/toolbar/redo.svg</file>
+    <file alias="bold.svg">icons/toolbar/bold.svg</file>
+    <file alias="italic.svg">icons/toolbar/italic.svg</file>
+    <file alias="underline.svg">icons/toolbar/underline.svg</file>
+    <file alias="align_left.svg">icons/toolbar/align_left.svg</file>
+    <file alias="align_center.svg">icons/toolbar/align_center.svg</file>
+    <file alias="align_right.svg">icons/toolbar/align_right.svg</file>
+    <file alias="font.svg">icons/toolbar/font.svg</file>
+    <file alias="line.svg">icons/toolbar/line.svg</file>
+    <file alias="rectangle.svg">icons/toolbar/rectangle.svg</file>
+    <file alias="oval.svg">icons/toolbar/oval.svg</file>
+    <file alias="text_box.svg">icons/toolbar/text_box.svg</file>
+    <file alias="database.svg">icons/toolbar/database.svg</file>
+    <file alias="table.svg">icons/toolbar/table.svg</file>
+    <file alias="wizard.svg">icons/toolbar/wizard.svg</file>
+  </qresource>
+</RCC>
