@@ -11,6 +11,7 @@
 #include <QMainWindow>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QSize>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QApplication>
@@ -97,6 +98,41 @@ QString iconPathForAction(const QString& text)
     return QString();
 }
 
+static QString office95ToolbarIconPath(const QString& text)
+{
+    QString key = text.toLower();
+    key.remove('&');
+    key.replace(' ', '_');
+    key.replace('-', '_');
+    key.replace('.', '_');
+    if (key == "new" || key == "new_database") return QStringLiteral(":/office95/new.svg");
+    if (key == "open" || key == "open_database") return QStringLiteral(":/office95/open.svg");
+    if (key == "save" || key == "save_as") return QStringLiteral(":/office95/save.svg");
+    if (key == "print" || key == "print_preview") return QStringLiteral(":/office95/print.svg");
+    if (key == "cut") return QStringLiteral(":/office95/cut.svg");
+    if (key == "copy" || key == "format_painter") return QStringLiteral(":/office95/copy.svg");
+    if (key == "paste") return QStringLiteral(":/office95/paste.svg");
+    if (key == "undo") return QStringLiteral(":/office95/undo.svg");
+    if (key == "redo") return QStringLiteral(":/office95/redo.svg");
+    if (key == "bold") return QStringLiteral(":/office95/bold.svg");
+    if (key == "italic") return QStringLiteral(":/office95/italic.svg");
+    if (key == "underline") return QStringLiteral(":/office95/underline.svg");
+    if (key == "left" || key == "align_left") return QStringLiteral(":/office95/align_left.svg");
+    if (key == "center" || key == "align_center") return QStringLiteral(":/office95/align_center.svg");
+    if (key == "right" || key == "align_right") return QStringLiteral(":/office95/align_right.svg");
+    if (key == "font" || key == "font_color" || key == "fill_color" || key == "line_color" || key == "size")
+        return QStringLiteral(":/office95/font.svg");
+    if (key == "line" || key == "arrow") return QStringLiteral(":/office95/line.svg");
+    if (key == "rectangle") return QStringLiteral(":/office95/rectangle.svg");
+    if (key == "oval") return QStringLiteral(":/office95/oval.svg");
+    if (key == "text_box") return QStringLiteral(":/office95/text_box.svg");
+    if (key.contains("database")) return QStringLiteral(":/office95/database.svg");
+    if (key.contains("table")) return QStringLiteral(":/office95/table.svg");
+    if (key.contains("wizard") || key == "relationships" || key == "spelling")
+        return QStringLiteral(":/office95/wizard.svg");
+    return QString();
+}
+
 QAction* addMenuAction(QMenu* menu, const QString& text, const QString& statusTip = QString())
 {
     auto* action = new QAction(text, menu);
@@ -114,7 +150,8 @@ QAction* addMenuAction(QMenu* menu, const QString& text, const QString& statusTi
 QAction* addToolbarAction(QToolBar* toolbar, const QString& text, const QString& statusTip = QString())
 {
     auto* action = new QAction(text, toolbar);
-    const QString iconPath = iconPathForAction(text);
+    QString iconPath = office95ToolbarIconPath(text);
+    if (iconPath.isEmpty()) iconPath = iconPathForAction(text);
     if (!iconPath.isEmpty()) {
         action->setIcon(QIcon(iconPath));
     }
@@ -680,6 +717,8 @@ void Word7MenuBar::createHelpMenu()
 void Word7MenuBar::createToolbars()
 {
     auto* standard = new QToolBar("Standard", m_parent);
+    standard->setIconSize(QSize(16, 16));
+    standard->setToolButtonStyle(Qt::ToolButtonIconOnly);
     standard->setObjectName("word95_standard_toolbar");
     standard->setMovable(true);
     standard->setFloatable(true);
@@ -706,6 +745,8 @@ void Word7MenuBar::createToolbars()
     m_parent->addToolBarBreak();
 
     auto* formatting = new QToolBar("Formatting", m_parent);
+    formatting->setIconSize(QSize(16, 16));
+    formatting->setToolButtonStyle(Qt::ToolButtonIconOnly);
     formatting->setObjectName("word95_formatting_toolbar");
     formatting->setMovable(true);
     formatting->setFloatable(true);
@@ -755,6 +796,8 @@ void Word7MenuBar::createToolbars()
     formatting->show();
 
     auto* drawing = new QToolBar("Drawing", m_parent);
+    drawing->setIconSize(QSize(16, 16));
+    drawing->setToolButtonStyle(Qt::ToolButtonIconOnly);
     drawing->setObjectName("word95_drawing_toolbar");
     drawing->setMovable(true);
     drawing->setFloatable(true);
