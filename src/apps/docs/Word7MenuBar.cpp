@@ -1,5 +1,6 @@
 #include "Word7MenuBar.h"
 #include "blastmaster/RecentFiles.h"
+#include "blastmaster/DocumentSwitchGuard.h"
 #include "Document.h"
 #include "blastmaster/HelpTopicsWindow.h"
 
@@ -192,6 +193,12 @@ void Word7MenuBar::createFileMenu()
         for (const QString& path : recent) {
             auto* action = recentMenu->addAction(path);
             QObject::connect(action, &QAction::triggered, [this, path]() {
+                if (!blastmaster::ui::confirmDocumentReplacement(
+                        m_parent, m_document->isDirty(), [this]() {
+                            onFileSave();
+                            return !m_document->isDirty();
+                        }))
+                    return;
                 m_document->setFilePath(path);
                 if (!m_document->load()) {
                     QMessageBox::critical(m_parent, "Error", "Failed to open document: " + path);
@@ -307,6 +314,12 @@ void Word7MenuBar::onFileOpen()
     }
 
     QString filePath = dialog.selectedFiles().first();
+    if (!blastmaster::ui::confirmDocumentReplacement(
+            m_parent, m_document->isDirty(), [this]() {
+                onFileSave();
+                return !m_document->isDirty();
+            }))
+        return;
     m_document->setFilePath(filePath);
     if (!m_document->load()) {
         QMessageBox::critical(m_parent, "Error", "Failed to open document: " + filePath);
