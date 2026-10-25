@@ -120,15 +120,15 @@ static QString office95ToolbarIconPath(const QString& text)
     if (key == "left" || key == "align_left") return QStringLiteral(":/office95/align_left.svg");
     if (key == "center" || key == "align_center") return QStringLiteral(":/office95/align_center.svg");
     if (key == "right" || key == "align_right") return QStringLiteral(":/office95/align_right.svg");
-    if (key == "font" || key == "font_color" || key == "fill_color" || key == "line_color" || key == "size")
+    if (key == "font" || key == "font_color" || key == "fill_color" || key == "line_color" || key == "size" || key == "zoom")
         return QStringLiteral(":/office95/font.svg");
-    if (key == "line" || key == "arrow") return QStringLiteral(":/office95/line.svg");
-    if (key == "rectangle") return QStringLiteral(":/office95/rectangle.svg");
+    if (key == "line" || key == "arrow" || key == "freeform") return QStringLiteral(":/office95/line.svg");
+    if (key == "rectangle" || key == "select_objects") return QStringLiteral(":/office95/rectangle.svg");
     if (key == "oval") return QStringLiteral(":/office95/oval.svg");
     if (key == "text_box") return QStringLiteral(":/office95/text_box.svg");
     if (key.contains("database")) return QStringLiteral(":/office95/database.svg");
-    if (key.contains("table")) return QStringLiteral(":/office95/table.svg");
-    if (key.contains("wizard") || key == "relationships" || key == "spelling")
+    if (key.contains("table") || key.contains("chart") || key.contains("clip_art")) return QStringLiteral(":/office95/table.svg");
+    if (key.contains("wizard") || key == "relationships" || key == "spelling" || key == "bullets" || key == "promote" || key == "demote" || key == "ruler" || key == "paragraph")
         return QStringLiteral(":/office95/wizard.svg");
     return QString();
 }
