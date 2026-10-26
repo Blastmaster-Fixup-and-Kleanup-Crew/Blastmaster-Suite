@@ -136,7 +136,7 @@ void Excel7MenuBar::createFileMenu()
     m_fileMenu->addAction(aNew);
     m_fileMenu->addAction(aOpen);
     auto* recentMenu = m_fileMenu->addMenu("Recent Workbooks");
-    QObject::connect(recentMenu, &QMenu::aboutToShow, [this, recentMenu]() {
+    QObject::connect(recentMenu, &QMenu::aboutToShow, [this, recentMenu, confirmReplace]() {
         recentMenu->clear();
         const auto recent = blastmaster::RecentFiles::files(QStringLiteral("workbooks"));
         if (recent.isEmpty()) {
