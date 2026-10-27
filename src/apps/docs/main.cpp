@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QIcon>
 #include <QLabel>
 #include <QMainWindow>
 #include <QStatusBar>
@@ -15,6 +16,8 @@
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     app.setApplicationName("Blastmaster Docs");
+    const QIcon docsIcon(QStringLiteral(":/docs/icons/docs.ico"));
+    app.setWindowIcon(docsIcon);
     app.setApplicationDisplayName("Blastmaster Docs");
     app.setApplicationVersion("1.0.0");
     app.setOrganizationName("Blastmaster");
@@ -22,6 +25,7 @@ int main(int argc, char* argv[]) {
     blastmaster::ui::applyOffice95Style(app);
 
     QMainWindow window;
+    window.setWindowIcon(docsIcon);
     window.resize(900, 650);
     window.setWindowTitle("Blastmaster Docs - Untitled");
     window.setAccessibleName("Blastmaster Docs");

@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QIcon>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
@@ -19,6 +20,8 @@
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     app.setApplicationName("Blastmaster Presentations");
+    const QIcon presentationsIcon(QStringLiteral(":/presentation/icons/presentations.ico"));
+    app.setWindowIcon(presentationsIcon);
     app.setApplicationDisplayName("Blastmaster Presentations");
     app.setApplicationVersion("1.0.0");
     app.setOrganizationName("Blastmaster");
@@ -26,6 +29,7 @@ int main(int argc, char* argv[]) {
     blastmaster::ui::applyOffice95Style(app);
 
     QMainWindow window;
+    window.setWindowIcon(presentationsIcon);
     window.resize(1000, 680);
     window.setWindowTitle("Blastmaster Presentations - Untitled");
     window.setAccessibleName("Blastmaster Presentations");

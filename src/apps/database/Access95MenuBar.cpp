@@ -17,6 +17,8 @@
 #include <QTableWidget>
 #include <QColorDialog>
 #include <QFont>
+#include <QIcon>
+#include <QSize>
 #include <QFile>
 #include <QTextStream>
 #include <QDialog>
@@ -28,10 +30,47 @@
 
 namespace blastmaster::database {
 
+static QString office95ToolbarIconPath(const QString& text)
+{
+    QString key = text.toLower();
+    key.remove('&');
+    key.replace(' ', '_');
+    key.replace('-', '_');
+    key.replace('.', '_');
+    if (key == "new" || key == "new_database") return QStringLiteral(":/office95/new.svg");
+    if (key == "open" || key == "open_database") return QStringLiteral(":/office95/open.svg");
+    if (key == "save" || key == "save_as") return QStringLiteral(":/office95/save.svg");
+    if (key == "print" || key == "print_preview") return QStringLiteral(":/office95/print.svg");
+    if (key == "cut") return QStringLiteral(":/office95/cut.svg");
+    if (key == "copy" || key == "format_painter") return QStringLiteral(":/office95/copy.svg");
+    if (key == "paste") return QStringLiteral(":/office95/paste.svg");
+    if (key == "undo") return QStringLiteral(":/office95/undo.svg");
+    if (key == "redo") return QStringLiteral(":/office95/redo.svg");
+    if (key == "bold") return QStringLiteral(":/office95/bold.svg");
+    if (key == "italic") return QStringLiteral(":/office95/italic.svg");
+    if (key == "underline") return QStringLiteral(":/office95/underline.svg");
+    if (key == "left" || key == "align_left") return QStringLiteral(":/office95/align_left.svg");
+    if (key == "center" || key == "align_center") return QStringLiteral(":/office95/align_center.svg");
+    if (key == "right" || key == "align_right") return QStringLiteral(":/office95/align_right.svg");
+    if (key == "font" || key == "font_color" || key == "fill_color" || key == "line_color" || key == "size" || key == "zoom")
+        return QStringLiteral(":/office95/font.svg");
+    if (key == "line" || key == "arrow" || key == "freeform") return QStringLiteral(":/office95/line.svg");
+    if (key == "rectangle" || key == "select_objects") return QStringLiteral(":/office95/rectangle.svg");
+    if (key == "oval") return QStringLiteral(":/office95/oval.svg");
+    if (key == "text_box") return QStringLiteral(":/office95/text_box.svg");
+    if (key.contains("database")) return QStringLiteral(":/office95/database.svg");
+    if (key.contains("table") || key.contains("chart") || key.contains("clip_art")) return QStringLiteral(":/office95/table.svg");
+    if (key.contains("wizard") || key == "relationships" || key == "spelling" || key == "bullets" || key == "promote" || key == "demote" || key == "ruler" || key == "paragraph")
+        return QStringLiteral(":/office95/wizard.svg");
+    return QString();
+}
+
 static QAction* action(QObject* parent, const QString& text,
                        const QKeySequence& shortcut = QKeySequence())
 {
     auto* a = new QAction(text, parent);
+    const QString iconPath = office95ToolbarIconPath(text);
+    if (!iconPath.isEmpty()) a->setIcon(QIcon(iconPath));
     if (!shortcut.isEmpty()) a->setShortcut(shortcut);
     return a;
 }
@@ -411,6 +450,7 @@ void Access95MenuBar::createHelpMenu()
 void Access95MenuBar::createToolbars()
 {
     auto* standard = new QToolBar(QStringLiteral("Database"), m_parent);
+    standard->setToolButtonStyle(Qt::ToolButtonIconOnly);
     standard->setObjectName(QStringLiteral("toolbar_database"));
     standard->setMovable(true);
     standard->setFloatable(true);
@@ -449,6 +489,8 @@ void Access95MenuBar::createToolbars()
     standard->show();
 
     auto* formatting = new QToolBar(QStringLiteral("Formatting"), m_parent);
+    formatting->setIconSize(QSize(16, 16));
+    formatting->setToolButtonStyle(Qt::ToolButtonIconOnly);
     formatting->setObjectName(QStringLiteral("toolbar_formatting"));
     formatting->setMovable(true);
     formatting->setFloatable(true);

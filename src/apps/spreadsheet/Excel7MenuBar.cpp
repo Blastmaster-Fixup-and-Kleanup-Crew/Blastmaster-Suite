@@ -2,6 +2,7 @@
 #include "Workbook.h"
 #include "blastmaster/HelpTopicsWindow.h"
 #include "blastmaster/RecentFiles.h"
+#include "blastmaster/DocumentSwitchGuard.h"
 
 #include <QAction>
 #include <QApplication>
@@ -10,6 +11,7 @@
 #include <QComboBox>
 #include <QKeySequence>
 #include <QIcon>
+#include <QSize>
 #include <QStatusBar>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -24,9 +26,46 @@
 
 namespace blastmaster::spreadsheet {
 
+static QString office95ToolbarIconPath(const QString& text)
+{
+    QString key = text.toLower();
+    key.remove('&');
+    key.replace(' ', '_');
+    key.replace('-', '_');
+    key.replace('.', '_');
+    if (key == "new" || key == "new_database") return QStringLiteral(":/office95/new.svg");
+    if (key == "open" || key == "open_database") return QStringLiteral(":/office95/open.svg");
+    if (key == "save" || key == "save_as") return QStringLiteral(":/office95/save.svg");
+    if (key == "print" || key == "print_preview") return QStringLiteral(":/office95/print.svg");
+    if (key == "cut") return QStringLiteral(":/office95/cut.svg");
+    if (key == "copy" || key == "format_painter") return QStringLiteral(":/office95/copy.svg");
+    if (key == "paste") return QStringLiteral(":/office95/paste.svg");
+    if (key == "undo") return QStringLiteral(":/office95/undo.svg");
+    if (key == "redo") return QStringLiteral(":/office95/redo.svg");
+    if (key == "bold") return QStringLiteral(":/office95/bold.svg");
+    if (key == "italic") return QStringLiteral(":/office95/italic.svg");
+    if (key == "underline") return QStringLiteral(":/office95/underline.svg");
+    if (key == "left" || key == "align_left") return QStringLiteral(":/office95/align_left.svg");
+    if (key == "center" || key == "align_center") return QStringLiteral(":/office95/align_center.svg");
+    if (key == "right" || key == "align_right") return QStringLiteral(":/office95/align_right.svg");
+    if (key == "font" || key == "font_color" || key == "fill_color" || key == "line_color" || key == "size" || key == "zoom")
+        return QStringLiteral(":/office95/font.svg");
+    if (key == "line" || key == "arrow" || key == "freeform") return QStringLiteral(":/office95/line.svg");
+    if (key == "rectangle" || key == "select_objects") return QStringLiteral(":/office95/rectangle.svg");
+    if (key == "oval") return QStringLiteral(":/office95/oval.svg");
+    if (key == "text_box") return QStringLiteral(":/office95/text_box.svg");
+    if (key.contains("database")) return QStringLiteral(":/office95/database.svg");
+    if (key.contains("table") || key.contains("chart") || key.contains("clip_art")) return QStringLiteral(":/office95/table.svg");
+    if (key.contains("wizard") || key == "relationships" || key == "spelling" || key == "bullets" || key == "promote" || key == "demote" || key == "ruler" || key == "paragraph")
+        return QStringLiteral(":/office95/wizard.svg");
+    return QString();
+}
+
 static QAction* makeAction(const QString& text, const QKeySequence& seq = QKeySequence(), QObject* parent = nullptr)
 {
     QAction* a = new QAction(text, parent);
+    const QString iconPath = office95ToolbarIconPath(text);
+    if (!iconPath.isEmpty()) a->setIcon(QIcon(iconPath));
     if (!seq.isEmpty()) a->setShortcut(seq);
     return a;
 }
@@ -54,6 +93,33 @@ void Excel7MenuBar::createFileMenu()
 {
     m_fileMenu = m_menuBar->addMenu("&File");
 
+    const auto confirmReplace = [this]() {
+        return blastmaster::ui::confirmDocumentReplacement(
+            m_parent, m_workbook && m_workbook->isDirty(), [this]() {
+                if (!m_workbook)
+                    return false;
+                if (m_workbook->filePath().isEmpty()) {
+                    QString path = QFileDialog::getSaveFileName(
+                        m_parent, QStringLiteral("Save Workbook As"), QString(),
+                        Workbook::fileFilter());
+                    if (path.isEmpty())
+                        return false;
+                    if (!path.endsWith(Workbook::fileExtension(), Qt::CaseInsensitive))
+                        path += Workbook::fileExtension();
+                    if (!m_workbook->saveAs(path)) {
+                        QMessageBox::critical(m_parent, QStringLiteral("Save Workbook"),
+                            QStringLiteral("Could not save the workbook to:\n%1").arg(path));
+                        return false;
+                    }
+                } else if (!m_workbook->save()) {
+                    QMessageBox::critical(m_parent, QStringLiteral("Save Workbook"),
+                        QStringLiteral("Could not save the workbook to:\n%1").arg(m_workbook->filePath()));
+                    return false;
+                }
+                return !m_workbook->isDirty();
+            });
+    };
+
     QAction* aNew = makeAction("&New", QKeySequence::New, m_parent);
     QAction* aOpen = makeAction("&Open...", QKeySequence::Open, m_parent);
     QAction* aClose = makeAction("C&lose", QKeySequence("Ctrl+W"), m_parent);
@@ -70,7 +136,7 @@ void Excel7MenuBar::createFileMenu()
     m_fileMenu->addAction(aNew);
     m_fileMenu->addAction(aOpen);
     auto* recentMenu = m_fileMenu->addMenu("Recent Workbooks");
-    QObject::connect(recentMenu, &QMenu::aboutToShow, [this, recentMenu]() {
+    QObject::connect(recentMenu, &QMenu::aboutToShow, [this, recentMenu, confirmReplace]() {
         recentMenu->clear();
         const auto recent = blastmaster::RecentFiles::files(QStringLiteral("workbooks"));
         if (recent.isEmpty()) {
@@ -81,7 +147,8 @@ void Excel7MenuBar::createFileMenu()
         for (const QString& path : recent) {
             auto* item = recentMenu->addAction(QFileInfo(path).fileName());
             item->setToolTip(path);
-            QObject::connect(item, &QAction::triggered, [this, path]() {
+            QObject::connect(item, &QAction::triggered, [this, path, confirmReplace]() {
+                if (!confirmReplace()) return;
                 m_workbook->setFilePath(path);
                 if (!m_workbook->load()) {
                     if (m_parent->statusBar()) m_parent->statusBar()->showMessage("Failed to open workbook", 3000);
@@ -117,13 +184,14 @@ void Excel7MenuBar::createFileMenu()
     m_fileMenu->addAction(aExit);
 
     // basic wiring
-    QObject::connect(aOpen, &QAction::triggered, [this]() {
+    QObject::connect(aOpen, &QAction::triggered, [this, confirmReplace]() {
         if (!m_workbook) return;
         QFileDialog dialog(m_parent, "Open Workbook", QString(), Workbook::fileFilter());
         dialog.setAcceptMode(QFileDialog::AcceptOpen);
         dialog.setDefaultSuffix(Workbook::fileExtension().mid(1));
         if (dialog.exec() != QDialog::Accepted || dialog.selectedFiles().isEmpty()) return;
         const QString path = dialog.selectedFiles().first();
+        if (!confirmReplace()) return;
         m_workbook->setFilePath(path);
         if (!m_workbook->load()) {
             QMessageBox::critical(m_parent, "Open Workbook", "Failed to open workbook:\n" + path);
@@ -419,6 +487,8 @@ void Excel7MenuBar::createToolbars()
 {
     // Standard toolbar
     QToolBar* standard = new QToolBar("Standard", m_parent);
+    standard->setIconSize(QSize(16, 16));
+    standard->setToolButtonStyle(Qt::ToolButtonIconOnly);
     standard->setObjectName("toolbar_standard");
     standard->setMovable(true);
     standard->addAction(makeAction("New", QKeySequence::New, m_parent));
@@ -435,6 +505,8 @@ void Excel7MenuBar::createToolbars()
 
     // Formatting toolbar
     QToolBar* formatting = new QToolBar("Formatting", m_parent);
+    formatting->setIconSize(QSize(16, 16));
+    formatting->setToolButtonStyle(Qt::ToolButtonIconOnly);
     formatting->setObjectName("toolbar_formatting");
     formatting->setMovable(true);
 

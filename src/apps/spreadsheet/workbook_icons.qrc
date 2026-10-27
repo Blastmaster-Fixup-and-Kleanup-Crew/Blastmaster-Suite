@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/workbooks/icons">
+    <file alias="workbooks.ico">icons/workbooks.ico</file>
+  </qresource>
+</RCC>
